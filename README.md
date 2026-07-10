@@ -1,4 +1,4 @@
-# buffet-app
+# buffett-app
 
 A hobby project: a Buffett-style financial statement analyzer, designed and built in collaboration with [Claude](https://claude.com/claude-code).
 
