@@ -1,7 +1,7 @@
-# NNNN — Title (a decision, stated as a fact)
+# NNNN: Title (a decision, stated as a fact)
 
 **Status:** Proposed | Accepted | Superseded by NNNN · **Date:** YYYY-MM-DD
-**Deviates from:** the skill principle or default practice this decision consciously trades away — or "nothing; recorded as a one-way door"
+**Deviates from:** the skill principle or default practice this decision consciously trades away, or "nothing; recorded as a one-way door"
 
 ## Context
 
@@ -17,7 +17,7 @@ The credible options and the one-line reason each lost. A decision with no alter
 
 ## Consequences
 
-What this buys and what it costs — both, honestly. Include the compensating controls that make the cost acceptable.
+What this buys and what it costs, both stated honestly. Include the compensating controls that make the cost acceptable.
 
 ## Revisit when
 

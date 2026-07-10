@@ -16,7 +16,7 @@ Skills teach Claude Code repeatable, project-specific workflows (e.g., "run the 
 ```markdown
 ---
 name: skill-name
-description: What it does and when to use it — Claude matches tasks against this line, so include trigger phrases.
+description: What it does and when to use it; Claude matches tasks against this line, so include trigger phrases.
 ---
 
 Instructions for Claude: steps, commands, constraints, examples.

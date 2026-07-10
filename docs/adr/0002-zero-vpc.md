@@ -1,4 +1,4 @@
-# 0002 — Zero VPC
+# 0002: Zero VPC
 
 **Status:** Accepted · **Date:** 2026-07-10
 **Deviates from:** the classic AWS baseline of placing compute in a VPC by default. The [aws-cloud-engineer](../../.claude/skills/aws-cloud-engineer/SKILL.md) skill already advises against defaulting to a VPC; this ADR pins that stance as a standing project decision so it's a design review, not a reflex, that ever reverses it.
@@ -9,12 +9,12 @@ Nothing in this architecture requires private networking: Lambda reaches DynamoD
 
 ## Decision
 
-No VPC exists anywhere in this architecture. Any future component that demands one (a relational database, private networking to a third party) triggers a design review of that component — the burden of proof sits with the thing that wants the VPC, not with the status quo.
+No VPC exists anywhere in this architecture. Any future component that demands one (a relational database, private networking to a third party) triggers a design review of that component; the burden of proof sits with the thing that wants the VPC, not with the status quo.
 
 ## Alternatives considered
 
-- **VPC "for good hygiene"** — buys a NAT Gateway (~A$50+/month of idle tax, likely exceeding the entire projected bill), subnet and routing design, ENI cold-start penalties on Lambda, and a whole class of misconfiguration — in exchange for isolating services that IAM already isolates.
-- **VPC with VPC endpoints instead of NAT** — removes the NAT tax but keeps the design surface and solves a problem this workload doesn't have.
+- **VPC "for good hygiene"**: buys a NAT Gateway (~A$50+/month of idle tax, likely exceeding the entire projected bill), subnet and routing design, ENI cold-start penalties on Lambda, and a whole class of misconfiguration, all in exchange for isolating services that IAM already isolates.
+- **VPC with VPC endpoints instead of NAT**: removes the NAT tax but keeps the design surface and solves a problem this workload doesn't have.
 
 ## Consequences
 
@@ -22,6 +22,6 @@ One entire category of infrastructure (subnets, route tables, NAT, security grou
 
 ## Revisit when
 
-A component genuinely requires VPC placement — at which point the design review weighs that component's value against the full networking cost it drags in.
+A component genuinely requires VPC placement, at which point the design review weighs that component's value against the full networking cost it drags in.
 
 **Full argument:** [plan/plainsight-cdk.md](../plan/plainsight-cdk.md) §1.3.
