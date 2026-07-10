@@ -1,5 +1,5 @@
 ---
-name: aws-cloud-infra-engineering
+name: aws-cloud-engineer
 description: AWS cloud infrastructure engineering grounded in the Well-Architected Framework and AWS best practices. Use this skill for ANY work involving AWS — designing or reviewing architecture, writing infrastructure as code (CDK, CloudFormation, Terraform), Lambda, DynamoDB, S3, CloudFront, API Gateway, VPC/networking, IAM policies, secrets management, CI/CD pipelines to AWS, observability, cost review, or security review of cloud infrastructure. Trigger even when the user doesn't say "AWS" but the task involves deploying, provisioning, cloud cost, cloud security, or files under infra/.
 ---
 
