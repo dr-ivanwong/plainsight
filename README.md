@@ -1,10 +1,10 @@
 # Plainsight
 
-A hobby project: a Buffett-style financial statement analyzer — the numbers were in plain sight all along. Designed and built in collaboration with [Claude](https://claude.com/claude-code).
+A hobby project: a financial statement analyzer for long-term value investors — the numbers were in plain sight all along. Designed and built in collaboration with [Claude](https://claude.com/claude-code).
 
 ## What it is
 
-A single-user, local-first web app that helps a retail investor read financial statements the way Warren Buffett does: enter (or import) a company's financials, see ~12 quality metrics — margins, ROE/ROIC, leverage, free cash flow — computed and trended over ten years, get deterministic red-flag detection, compare companies side by side, and write a structured investment thesis.
+A single-user, local-first web app that helps a retail investor read financial statements like an owner: enter (or import) a company's financials, see ~12 quality metrics — margins, ROE/ROIC, leverage, free cash flow — computed and trended over ten years, get deterministic red-flag detection for eroding moats and leverage-flattered returns, compare companies side by side, and write a structured investment thesis.
 
 The core design constraint: **everything works offline**. All analysis runs in the browser with data stored on-device (IndexedDB); a backend exists only for optional extras (SEC EDGAR import, sync, AI-assisted filing extraction), and every one of them degrades gracefully to the offline core. If every server on earth is down, the app still computes, charts, and stores.
 
