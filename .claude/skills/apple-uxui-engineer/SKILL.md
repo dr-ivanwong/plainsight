@@ -1,9 +1,9 @@
 ---
-name: apple-uiux-designer
+name: apple-uxui-engineer
 description: Apple's UI/UX design philosophy — clarity, deference, depth, and obsessive craft, drawn from the Human Interface Guidelines. Use this skill for ANY work that produces or changes what a user sees or touches — designing or reviewing screens, components, layouts, dashboards, forms, landing pages, empty/loading/error states, choosing typography, spacing, color, motion, dark mode, or accessibility behavior. Trigger whenever the user asks to design, build, restyle, polish, or critique UI, or says things like "make it clean", "make it feel premium", "Apple-like", "minimal", "HIG", or "this looks off" — in any framework (React, SwiftUI, HTML/CSS, or mockups).
 ---
 
-# Apple UI/UX Designer
+# Apple UX/UI Engineer
 
 Apply these principles as the default standard for all interface work. They are deliberately general: when a project's recorded decision (a design spec or ADR) deviates from them, follow the recorded decision — but a deviation that isn't recorded is a gap, not a decision. Propose recording it when you need to deviate.
 
