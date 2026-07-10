@@ -22,6 +22,8 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 
 Decisions in the plans (see §12 decision log) are **resolved** — do not relitigate them in code. If a decision must change, update the plan in the same change.
 
+**Decision layering:** the skills in [.claude/skills/](.claude/skills/) state general engineering standards (project-agnostic by design); [docs/adr/](docs/adr/) records where this project consciously deviates from them. Check the ADR index before proposing a best-practice addition — it may already be priced and declined. When new work requires a new deviation, propose an ADR (there's a template) rather than deviating silently.
+
 ## The binding constraint
 
 **Every core feature works offline with zero backend dependency.** IndexedDB (via Dexie) is the source of truth, not a cache. The backend and AI are optional enhancements that degrade gracefully; nothing in the client serving path may ever call a model, and a total backend outage must leave the app fully functional. Every networked feature needs a no-network story (degradation matrix, main plan §5).
