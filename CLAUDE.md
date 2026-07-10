@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Plainsight** — a value-investing financial statement analyzer: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (By recorded decision — plan §12.7 — the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
 
-**Current state: planning complete, no code yet.** The `plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet — update this file when Phase 0 lands them.
+**Current state: planning complete, no code yet.** The `docs/plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet — update this file when Phase 0 lands them.
 
 ## The plans are the authority
 
@@ -14,9 +14,9 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 
 | Document | Governs |
 |---|---|
-| [plan/plainsight.md](plan/plainsight.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
-| [plan/plainsight-frontend.md](plan/plainsight-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
-| [plan/plainsight-cdk.md](plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
+| [docs/plan/plainsight.md](docs/plan/plainsight.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
+| [docs/plan/plainsight-frontend.md](docs/plan/plainsight-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
+| [docs/plan/plainsight-cdk.md](docs/plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
 **Missing from the repo:** the main plan marks `plainsight-data-model.md` (pinned metric formulas, schema, policies P-0…P-8) and `plainsight-backend.md` (DynamoDB keys, sync protocol, extraction jobs) as complete, but they are not committed. Ask the owner for them before building anything they govern — especially the calc engine, whose formulas are pinned there.
 

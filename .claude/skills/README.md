@@ -22,4 +22,4 @@ description: What it does and when to use it — Claude matches tasks against th
 Instructions for Claude: steps, commands, constraints, examples.
 ```
 
-Keep skills small and single-purpose; link to the plan documents in `plan/` rather than duplicating their content.
+Keep skills small and single-purpose; link to the plan documents in `docs/plan/` rather than duplicating their content.

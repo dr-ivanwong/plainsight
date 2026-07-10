@@ -24,6 +24,6 @@ The bill stays ≈ $0–4/month and there is nothing to page anyone about. The h
 
 ## Revisit when
 
-Anyone other than the owner gets AWS credentials (**a CloudTrail trail is the first re-add**); the app is shared beyond the owner (WAF and a legal/naming pass ride the same tripwire — see [plan/plainsight.md](../../plan/plainsight.md) §15); any actual abuse or compromise incident occurs; or the monthly bill grows to where a watching service costs less than what it watches.
+Anyone other than the owner gets AWS credentials (**a CloudTrail trail is the first re-add**); the app is shared beyond the owner (WAF and a legal/naming pass ride the same tripwire — see [plan/plainsight.md](../plan/plainsight.md) §15); any actual abuse or compromise incident occurs; or the monthly bill grows to where a watching service costs less than what it watches.
 
-**Full argument:** [plan/plainsight-cdk.md](../../plan/plainsight-cdk.md) §8 ("What's deliberately absent — the not-list").
+**Full argument:** [plan/plainsight-cdk.md](../plan/plainsight-cdk.md) §8 ("What's deliberately absent — the not-list").

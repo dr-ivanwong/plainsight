@@ -3,7 +3,7 @@
 This project layers its decisions deliberately:
 
 1. **The skills** ([`.claude/skills/`](../../.claude/skills/)) state the general engineering standards — AWS Well-Architected, Google backend practice, Meta frontend architecture, Apple design. They contain no project posture.
-2. **The plans** ([`plan/`](../../plan/)) are the build contracts — what this project is and how it's assembled.
+2. **The plans** ([`docs/plan/`](../plan/)) are the build contracts — what this project is and how it's assembled.
 3. **ADRs (here)** record where this project consciously deviates from the skills' standards, and any other significant one-way decision. A deviation that isn't recorded is a gap, not a decision.
 
 ## When to write one
