@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-A Buffett-style financial statement analyzer: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor.
+**Plainsight** — a Buffett-style financial statement analyzer: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. ("Buffett-style" is descriptive of the published investment philosophy; the product name deliberately avoids the surname — see plan §12.7.)
 
 **Current state: planning complete, no code yet.** The `plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet — update this file when Phase 0 lands them.
 
@@ -14,11 +14,11 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 
 | Document | Governs |
 |---|---|
-| [plan/buffett-app.md](plan/buffett-app.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
-| [plan/buffett-app-frontend.md](plan/buffett-app-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
-| [plan/buffett-app-cdk.md](plan/buffett-app-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
+| [plan/plainsight.md](plan/plainsight.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
+| [plan/plainsight-frontend.md](plan/plainsight-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
+| [plan/plainsight-cdk.md](plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Missing from the repo:** the main plan marks `buffett-app-data-model.md` (pinned metric formulas, schema, policies P-0…P-8) and `buffett-app-backend.md` (DynamoDB keys, sync protocol, extraction jobs) as complete, but they are not committed. Ask the owner for them before building anything they govern — especially the calc engine, whose formulas are pinned there.
+**Missing from the repo:** the main plan marks `plainsight-data-model.md` (pinned metric formulas, schema, policies P-0…P-8) and `plainsight-backend.md` (DynamoDB keys, sync protocol, extraction jobs) as complete, but they are not committed. Ask the owner for them before building anything they govern — especially the calc engine, whose formulas are pinned there.
 
 Decisions in the plans (see §12 decision log) are **resolved** — do not relitigate them in code. If a decision must change, update the plan in the same change.
 

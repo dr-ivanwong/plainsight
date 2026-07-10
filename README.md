@@ -1,6 +1,6 @@
-# buffett-app
+# Plainsight
 
-A hobby project: a Buffett-style financial statement analyzer, designed and built in collaboration with [Claude](https://claude.com/claude-code).
+A hobby project: a Buffett-style financial statement analyzer — the numbers were in plain sight all along. Designed and built in collaboration with [Claude](https://claude.com/claude-code).
 
 ## What it is
 
@@ -14,9 +14,9 @@ The core design constraint: **everything works offline**. All analysis runs in t
 
 | Document | Covers |
 |---|---|
-| [buffett-app.md](plan/buffett-app.md) | Main engineering plan — product, design, architecture, roadmap |
-| [buffett-app-frontend.md](plan/buffett-app-frontend.md) | Every route, screen, and state; component and hook inventories |
-| [buffett-app-cdk.md](plan/buffett-app-cdk.md) | AWS CDK stacks, security invariants, pipelines, cost guardrails |
+| [plainsight.md](plan/plainsight.md) | Main engineering plan — product, design, architecture, roadmap |
+| [plainsight-frontend.md](plan/plainsight-frontend.md) | Every route, screen, and state; component and hook inventories |
+| [plainsight-cdk.md](plan/plainsight-cdk.md) | AWS CDK stacks, security invariants, pipelines, cost guardrails |
 
 ## How it's being built
 

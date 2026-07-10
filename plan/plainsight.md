@@ -1,4 +1,6 @@
-# Buffett-Style Financial Statement Analyzer — Engineering Plan
+# Plainsight — Engineering Plan
+
+*A Buffett-style financial statement analyzer.*
 
 **Status:** Draft v1.0 · **Date:** July 2026 · **Type:** Design document
 **Disciplines applied:** Apple UI/UX design · Meta-calibre frontend engineering · Google-calibre backend engineering · AWS cloud infrastructure
@@ -64,7 +66,7 @@ This plan describes a web application that guides a retail investor through that
 | Cash | Free cash flow, FCF margin, FCF conversion (FCF ÷ net income) | Earnings quality; accounting-trick detector |
 | Valuation | P/E, earnings yield, FCF yield | Margin of safety inputs |
 
-> Exact pinned formulas, input requirements, and edge-case handling for every metric are specified in the companion document **`buffett-app-data-model.md`** (Data Model & Metric Dictionary).
+> Exact pinned formulas, input requirements, and edge-case handling for every metric are specified in the companion document **`plainsight-data-model.md`** (Data Model & Metric Dictionary).
 
 ### Red-flag rules engine (v1 — deterministic, client-side)
 
@@ -99,7 +101,7 @@ Three governing decisions:
 
 ### Key screens
 
-> The five screens below define the design language by example. The complete inventory — all routes, twelve screens with their empty/loading/error states, the first-run flow, and the component/hook contracts — is specified in the companion document **`buffett-app-frontend.md`**.
+> The five screens below define the design language by example. The complete inventory — all routes, twelve screens with their empty/loading/error states, the first-run flow, and the component/hook contracts — is specified in the companion document **`plainsight-frontend.md`**.
 
 **1. Library (home).** A calm list of saved companies. Each row: company name, ticker, a single composite quality indicator (small colored dot: count of active red flags), last-updated date, and a 10-year ROE microsparkline. Generous 64px row height, no borders — separation by spacing alone. Pull-to-refresh triggers a sync when online; silently does nothing when offline.
 
@@ -227,7 +229,7 @@ GET  /v1/extractions/{jobId}  (auth)             → status | structured stateme
 
 Contract rules: full resources returned from mutations; opaque page tokens (never offsets); standard error envelope (`code`, `message`, `details[]`, `requestId`) treated as part of the contract; additive changes never bump the version; breaking changes get `/v2/` with a published parallel-run and sunset timeline. **Idempotency is mandatory on sync pushes** — clients on flaky mobile networks *will* retry, and a duplicated push must be a no-op.
 
-> Implementation contract — the DynamoDB key design and access patterns, Lambda inventory, sync protocol (tombstones included), extraction job lifecycle, BYOK proxy target allowlist, and external-client etiquette — lives in the companion document **`buffett-app-backend.md`**.
+> Implementation contract — the DynamoDB key design and access patterns, Lambda inventory, sync protocol (tombstones included), extraction job lifecycle, BYOK proxy target allowlist, and external-client etiquette — lives in the companion document **`plainsight-backend.md`**.
 
 ### Data ingestion pipeline (the real backend work)
 
@@ -329,7 +331,7 @@ Reliability vs. cost vs. operational burden, resolved for a solo-maintainer prod
 
 ### IaC, environments, CI/CD
 
-- **AWS CDK (TypeScript)** — same language end to end; typed constructs; `cdk diff` as the review artifact. All resources tagged (`project`, `env`, `owner`) from day one for cost attribution. Stack decomposition, environment wiring, conventions, security invariants, and the budget kill-switch wiring are specified in the companion document **`buffett-app-cdk.md`**.
+- **AWS CDK (TypeScript)** — same language end to end; typed constructs; `cdk diff` as the review artifact. All resources tagged (`project`, `env`, `owner`) from day one for cost attribution. Stack decomposition, environment wiring, conventions, security invariants, and the budget kill-switch wiring are specified in the companion document **`plainsight-cdk.md`**.
 - **One account, one environment** (owner's call: single user, cost priority — no standing staging). Compensating controls replace the second environment: PR-time `cdk diff` + CI-blocking invariant tests, an IAM permission boundary on the deploy role standing in for SCPs, PITR on user-touching data, and **ephemeral rehearsal stacks** — a prefixed throwaway copy deployed for a day when an infra change deserves rehearsal, then destroyed. The deeper insurance is architectural: the client is local-first, so the blast radius of a bad backend deploy is "online extras degrade," never "the app breaks" or "data is lost."
 - **GitHub Actions with OIDC role assumption — zero long-lived AWS credentials anywhere.** Pipelines: (a) app pipeline — lint → typecheck (`tsc --noEmit`, blocking) → unit + component tests → build → Playwright E2E against the local preview build → deploy prod (S3 sync + targeted invalidation) → smoke check; (b) infra pipeline — separate, `cdk diff` posted to PR; on merge, stateless stacks deploy directly, while changes touching the stateful stacks (`Data`, `Auth`) pass a one-click GitHub environment gate. Infrastructure and app changes never ride the same pipeline.
 - Rollback: app = redeploy previous immutable build artifact (< 5 min); infra = `cdk deploy` of previous tag; DynamoDB = PITR.
@@ -402,15 +404,16 @@ Single environment, no staging; no market-data subscription (prices are manual, 
 4. **Resolved — thesis export ships in Phase 3.** Markdown export (near-free); PDF rides the same path.
 5. **Resolved — single-user personal tool.** See the audience decision note in §2.
 6. **Resolved — no custom domain; the app lives on the default `*.cloudfront.net` origin.** `EdgeCert` and Route 53 never deploy; the CDK config pins `domain: null`. Known cost accepted: IndexedDB is origin-bound, so any later move to a custom domain requires a manual export → import and PWA re-install per device (survivable via one-tap export, but a chore). Realistic revisit trigger: the legal-tripwire event of ever sharing the app, which forces a naming pass anyway.
+7. **Resolved — the app is named Plainsight (July 2026).** The naming pass from §15 tripwire #1 was run early, since the repository is public: the name deliberately avoids the Buffett surname to prevent any implied-endorsement / passing-off reading. References to Buffett in documentation and in-app education copy remain descriptive of the published philosophy (like any value-investing book) — only the brand avoids the name. Repository and plan filenames renamed to match.
 
 ### Remaining to complete the plan
 
-1. **Data model & metric dictionary** — ✅ `buffett-app-data-model.md`. Owner review pass outstanding (policies P-1…P-8, the ROIC/FCF definitions, rule thresholds).
-2. **Screen inventory + first-run design** — ✅ `buffett-app-frontend.md`: routes, twelve screens with empty/loading/error states, first-run flow with the sample-data decision pinned, component and hook inventories, responsive and accessibility rules, folder structure.
+1. **Data model & metric dictionary** — ✅ `plainsight-data-model.md`. Owner review pass outstanding (policies P-1…P-8, the ROIC/FCF definitions, rule thresholds).
+2. **Screen inventory + first-run design** — ✅ `plainsight-frontend.md`: routes, twelve screens with empty/loading/error states, first-run flow with the sample-data decision pinned, component and hook inventories, responsive and accessibility rules, folder structure.
 3. **Doc hygiene** — ✅ added below: §13 success criteria, §14 browser support & storage durability, §15 legal tripwires.
 4. **Golden-company confirmation** — ✅ confirmed: Apple, Microsoft, Coca-Cola, Costco, Union Pacific (US); CSL, Wesfarmers, Woolworths, JB Hi-Fi, Cochlear (ASX). Locked in the data-model spec §11.
-5. **CDK implementation plan** — ✅ `buffett-app-cdk.md`: stack decomposition, account/region wiring (Sydney primary, us-east-1 cert), code conventions, security invariants as tests, pipelines, and the budget kill-switch wiring.
-6. **Backend implementation plan** — ✅ `buffett-app-backend.md`: DynamoDB access patterns and key design, Lambda inventory, in-memory ticker search, sync protocol with tombstones, extraction job lifecycle, BYOK proxy target allowlist, EDGAR/MAP client etiquette, and the error contract.
+5. **CDK implementation plan** — ✅ `plainsight-cdk.md`: stack decomposition, account/region wiring (Sydney primary, us-east-1 cert), code conventions, security invariants as tests, pipelines, and the budget kill-switch wiring.
+6. **Backend implementation plan** — ✅ `plainsight-backend.md`: DynamoDB access patterns and key design, Lambda inventory, in-memory ticker search, sync protocol with tombstones, extraction job lifecycle, BYOK proxy target allowlist, EDGAR/MAP client etiquette, and the error contract.
 
 **Planning is complete.** Every decision is made and every build contract exists; the remaining pre-code activity is a read-through review pass of the companion specs, then Phase 0 begins.
 

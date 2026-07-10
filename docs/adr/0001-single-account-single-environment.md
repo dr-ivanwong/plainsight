@@ -30,4 +30,4 @@ Near-zero standing cost and one environment to reason about. The costs, accepted
 
 Anyone other than the owner gets credentials or uses the app; an incident occurs that a staging environment would plausibly have caught; or the permission boundary proves insufficient in an actual deploy-role compromise.
 
-**Full argument:** [plan/buffett-app-cdk.md](../../plan/buffett-app-cdk.md) §2, §9.6.
+**Full argument:** [plan/plainsight-cdk.md](../../plan/plainsight-cdk.md) §2, §9.6.

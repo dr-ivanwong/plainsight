@@ -24,4 +24,4 @@ Same encryption at rest and the same IAM-gated access path, at $0. The costs: ro
 
 Automated rotation becomes wanted (the plan names this as the explicit trigger to move back to Secrets Manager), any secret needs cross-account access, or the number of secrets grows past what manual discipline honestly maintains.
 
-**Full argument:** [plan/buffett-app-cdk.md](../../plan/buffett-app-cdk.md) §1.4, §8.
+**Full argument:** [plan/plainsight-cdk.md](../../plan/plainsight-cdk.md) §1.4, §8.

@@ -24,4 +24,4 @@ One entire category of infrastructure (subnets, route tables, NAT, security grou
 
 A component genuinely requires VPC placement — at which point the design review weighs that component's value against the full networking cost it drags in.
 
-**Full argument:** [plan/buffett-app-cdk.md](../../plan/buffett-app-cdk.md) §1.3.
+**Full argument:** [plan/plainsight-cdk.md](../../plan/plainsight-cdk.md) §1.3.
