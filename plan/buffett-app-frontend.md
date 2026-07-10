@@ -1,6 +1,6 @@
 # Frontend Specification — Routes, Screens, States & First-Run
 
-**Companion to:** `buffet-app.md` (design language, §4; frontend architecture, §5) and `buffet-app-data-model.md` (every value rendered here). **Status:** Draft for owner review · **Date:** July 2026
+**Companion to:** `buffett-app.md` (design language, §4; frontend architecture, §5) and `buffett-app-data-model.md` (every value rendered here). **Status:** Draft for owner review · **Date:** July 2026
 **Purpose:** the build contract for Phase 1–3 UI work. The main plan pins the design language (type scale, spacing, color, motion); this document pins *what exists*: every route, every screen, every screen's empty/loading/error states, the first-run flow, and the component and hook inventories. If a state can occur, its rendering is specified here — "we'll figure out the empty state later" is how craft dies.
 
 ---

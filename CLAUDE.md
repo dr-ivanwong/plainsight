@@ -14,11 +14,11 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 
 | Document | Governs |
 |---|---|
-| [plan/buffet-app.md](plan/buffet-app.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
-| [plan/buffet-app-frontend.md](plan/buffet-app-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
-| [plan/buffet-app-cdk.md](plan/buffet-app-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
+| [plan/buffett-app.md](plan/buffett-app.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
+| [plan/buffett-app-frontend.md](plan/buffett-app-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
+| [plan/buffett-app-cdk.md](plan/buffett-app-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Missing from the repo:** the main plan marks `buffet-app-data-model.md` (pinned metric formulas, schema, policies P-0…P-8) and `buffet-app-backend.md` (DynamoDB keys, sync protocol, extraction jobs) as complete, but they are not committed. Ask the owner for them before building anything they govern — especially the calc engine, whose formulas are pinned there.
+**Missing from the repo:** the main plan marks `buffett-app-data-model.md` (pinned metric formulas, schema, policies P-0…P-8) and `buffett-app-backend.md` (DynamoDB keys, sync protocol, extraction jobs) as complete, but they are not committed. Ask the owner for them before building anything they govern — especially the calc engine, whose formulas are pinned there.
 
 Decisions in the plans (see §12 decision log) are **resolved** — do not relitigate them in code. If a decision must change, update the plan in the same change.
 

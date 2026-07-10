@@ -1,6 +1,6 @@
 # AWS CDK Implementation Plan — v1 Specification
 
-**Companion to:** `buffet-app.md` §7 (infrastructure decisions). **Status:** Draft for owner review · **Date:** July 2026
+**Companion to:** `buffett-app.md` §7 (infrastructure decisions). **Status:** Draft for owner review · **Date:** July 2026
 **Purpose:** the build contract for `infra/`. The main plan decided *what* runs (S3+CloudFront → serverless API → ingestion → auth) and *how it ships* (two accounts, OIDC, separate pipelines); this document decides how that is expressed in CDK: stack decomposition, environment wiring, code conventions, security invariants as tests, and the cost guardrails as code.
 
 ---

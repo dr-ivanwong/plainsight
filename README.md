@@ -14,9 +14,9 @@ The core design constraint: **everything works offline**. All analysis runs in t
 
 | Document | Covers |
 |---|---|
-| [buffet-app.md](plan/buffet-app.md) | Main engineering plan — product, design, architecture, roadmap |
-| [buffet-app-frontend.md](plan/buffet-app-frontend.md) | Every route, screen, and state; component and hook inventories |
-| [buffet-app-cdk.md](plan/buffet-app-cdk.md) | AWS CDK stacks, security invariants, pipelines, cost guardrails |
+| [buffett-app.md](plan/buffett-app.md) | Main engineering plan — product, design, architecture, roadmap |
+| [buffett-app-frontend.md](plan/buffett-app-frontend.md) | Every route, screen, and state; component and hook inventories |
+| [buffett-app-cdk.md](plan/buffett-app-cdk.md) | AWS CDK stacks, security invariants, pipelines, cost guardrails |
 
 ## How it's being built
 
