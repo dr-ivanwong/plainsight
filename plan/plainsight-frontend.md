@@ -74,7 +74,7 @@ Purpose: the heart — hero header (name, sector, latest FY, currency), metric-c
 
 ### S4 — Metric detail sheet (query-param addressable)
 
-Slides up from the tapped card (spatial continuity); Escape/back closes. Contents, top to bottom: 10-yr chart; the pinned formula with **this year's actual inputs substituted**; denominator-basis badge (average/ending, P-4); plain-language explanation; Buffett-lens paragraph (hidden when education layer is off); per-input provenance chips (tap → source filing/page where available). States mirror S3's value states — an n/m year shows the reason inline with a one-sentence explainer.
+Slides up from the tapped card (spatial continuity); Escape/back closes. Contents, top to bottom: 10-yr chart; the pinned formula with **this year's actual inputs substituted**; denominator-basis badge (average/ending, P-4); plain-language explanation; Owner's-lens paragraph (hidden when education layer is off); per-input provenance chips (tap → source filing/page where available). States mirror S3's value states — an n/m year shows the reason inline with a one-sentence explainer.
 
 ### S5 — Data entry
 
@@ -133,7 +133,7 @@ Export (with last-export date — feeds the 30-day nudge); Import (file → **dr
 
 ## 4. First-run and sample data — decision pinned
 
-**One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads **three** golden-corpus companies — Apple (US mega-cap), Coca-Cola (the classic Buffett holding), CSL (ASX) — as `sample: true` records (schema flag added to the companion spec), each badged, all removable with one action in S11.
+**One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads **three** golden-corpus companies — Apple (US mega-cap), Coca-Cola (the classic value-investing case study), CSL (ASX) — as `sample: true` records (schema flag added to the companion spec), each badged, all removable with one action in S11.
 
 Rationale: a library that starts full lies about whose research it is — ownership of the analysis *is* the product's psychology, and an auto-populated home undermines it. The one-tap path preserves the five-second "living dashboard" wow while keeping the default state honest. Mechanics: fixtures are a lazy ~30KB JSON chunk generated from the Phase 0 golden files — meaning the demo data is *real, hand-verified* data, and the sample dashboard doubles as an acceptance test of the whole render path. Sample records sync and export like any data; they're just flagged.
 

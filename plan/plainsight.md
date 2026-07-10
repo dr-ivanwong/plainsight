@@ -1,6 +1,6 @@
 # Plainsight — Engineering Plan
 
-*A Buffett-style financial statement analyzer.*
+*A financial statement analyzer for long-term value investors.*
 
 **Status:** Draft v1.0 · **Date:** July 2026 · **Type:** Design document
 **Disciplines applied:** Apple UI/UX design · Meta-calibre frontend engineering · Google-calibre backend engineering · AWS cloud infrastructure
@@ -9,23 +9,23 @@
 
 ## 1. Context
 
-Warren Buffett's investment approach rests on reading financial statements: identifying durable competitive advantages ("moats") through consistent ROE, healthy margins, low leverage, and strong free cash flow — then buying at a margin of safety and holding long term. For a non-finance person, the barrier isn't the math (the ratios are simple division); it's knowing *which* numbers matter, *where* to find them, and *what patterns* signal quality versus risk.
+The classic long-term value-investing approach rests on reading financial statements: identifying durable competitive advantages ("moats") through consistent ROE, healthy margins, low leverage, and strong free cash flow — then buying at a margin of safety and holding long term. For a non-finance person, the barrier isn't the math (the ratios are simple division); it's knowing *which* numbers matter, *where* to find them, and *what patterns* signal quality versus risk.
 
-This plan describes a web application that guides a retail investor through that analysis: enter (or import) a company's financials, see the Buffett-relevant ratios computed and trended over time, compare companies side by side, get automated red-flag detection, and draft a structured investment thesis.
+This plan describes a web application that guides a retail investor through that analysis: enter (or import) a company's financials, see the value-investing ratios computed and trended over time, compare companies side by side, get automated red-flag detection, and draft a structured investment thesis.
 
 **The binding constraint, stated by the product owner:** the app must remain fully functional independent of any AI service's availability. This drives the single most important architectural decision in this document — **the app is local-first**. All core analysis (ratio computation, trend charting, red-flag rules, comparison, thesis templates) runs entirely in the browser with data persisted locally. A backend exists only for optional enhancements (live market data, SEC filing ingestion, cross-device sync, AI-assisted narrative analysis), and every one of those enhancements degrades gracefully to the offline core.
 
 ## 2. Goals and Non-Goals
 
-> **Audience decision (resolved):** this is a **single-user personal tool**. Cascades: the legal section reduces to a tripwire list (revisit before ever sharing a URL with anyone); Phase 3 auth becomes a single-user Cognito pool with an admin-created account and no signup flow; per-user extraction quotas are replaced by global budget alarms + kill switch; success criteria are personal utility, not growth metrics; naming stakes drop, though anything shareable should still avoid the Buffett surname.
+> **Audience decision (resolved):** this is a **single-user personal tool**. Cascades: the legal section reduces to a tripwire list (revisit before ever sharing a URL with anyone); Phase 3 auth becomes a single-user Cognito pool with an admin-created account and no signup flow; per-user extraction quotas are replaced by global budget alarms + kill switch; success criteria are personal utility, not growth metrics; naming stakes drop, though anything shareable should still avoid any investor's surname (resolved — §12.7).
 
 ### Goals
 
-1. A non-finance user can go from "I have a company's 10-K numbers" to "I understand its Buffett-quality signals" in under 10 minutes.
+1. A non-finance user can go from "I have a company's 10-K numbers" to "I understand its quality signals" in under 10 minutes.
 2. 100% of core analysis functions work offline / with zero backend dependency. If every server on earth is down, the app still computes, charts, and stores.
 3. Support 10 years of annual data per company, unlimited companies, side-by-side comparison of up to 4.
 4. Deterministic, auditable calculations — every displayed ratio can be tapped to reveal its formula and the exact inputs used. Trust is the product.
-5. Educational scaffolding built in: every metric explained in plain language, with Buffett-context ("why this matters") one interaction away.
+5. Educational scaffolding built in: every metric explained in plain language, with Owner's-lens context ("why this matters") one interaction away.
 6. Production-grade quality: performant on mid-range mobile devices, accessible (WCAG AA), tested, observable.
 
 ### Non-Goals
@@ -33,7 +33,7 @@ This plan describes a web application that guides a retail investor through that
 1. **Not a brokerage or trading tool.** No order execution, no portfolio P&L tracking against live prices (v1).
 2. **Not investment advice.** The app computes and educates; it never says "buy" or "sell." Red flags are labelled as "items to investigate," not verdicts. A persistent disclaimer covers this.
 3. **Not a Bloomberg terminal.** We deliberately support ~12 metrics done excellently, not 400 done shallowly. Scope discipline is a feature.
-4. **Not real-time.** Buffett analysis works on annual/quarterly statements. We never need sub-day data freshness; this dramatically simplifies infrastructure.
+4. **Not real-time.** Value analysis works on annual/quarterly statements. We never need sub-day data freshness; this dramatically simplifies infrastructure.
 5. **No user-generated content sharing / social features** in any planned phase.
 
 ## 3. Product Definition
@@ -58,7 +58,7 @@ This plan describes a web application that guides a retail investor through that
 
 ### The metric set (v1 — deliberately small)
 
-| Category | Metrics | Buffett signal |
+| Category | Metrics | Quality signal |
 |---|---|---|
 | Profitability | Gross margin, operating margin, net margin | Pricing power; moat evidence |
 | Returns | ROE, ROIC | Capital efficiency; ≥15% ROE sustained = quality |
@@ -90,7 +90,7 @@ Three governing decisions:
 
 1. **Typography is the interface.** Financial data is text and numbers. We invest the design budget in a rigorous type system rather than decorative chrome. Tabular figures (`font-variant-numeric: tabular-nums`) everywhere numbers align vertically — non-negotiable for scannable financial tables.
 2. **Nearly monochrome, color as meaning.** Neutrals dominate. Exactly one accent (system blue `#007AFF` family) for interactive elements. Semantic color is reserved and consistent: green = healthy signal, orange = investigate, red = red flag. Color is never decoration; a user should be able to squint at a company dashboard and read its health from color distribution alone.
-3. **Progressive disclosure.** The Learner sees a clean dashboard of ~12 numbers with sparklines. Every deeper layer (formula, inputs, 10-year table, Buffett context essay) is one tap away, never on-screen by default. The Practitioner can collapse the education layer globally.
+3. **Progressive disclosure.** The Learner sees a clean dashboard of ~12 numbers with sparklines. Every deeper layer (formula, inputs, 10-year table, Owner's-lens essay) is one tap away, never on-screen by default. The Practitioner can collapse the education layer globally.
 
 ### Type scale and spacing tokens
 
@@ -105,7 +105,7 @@ Three governing decisions:
 
 **1. Library (home).** A calm list of saved companies. Each row: company name, ticker, a single composite quality indicator (small colored dot: count of active red flags), last-updated date, and a 10-year ROE microsparkline. Generous 64px row height, no borders — separation by spacing alone. Pull-to-refresh triggers a sync when online; silently does nothing when offline.
 
-**2. Company dashboard.** The heart of the app. A hero header (company name, sector, latest fiscal year), then metric cards in a responsive grid. Each card: metric name (13px, secondary color), current value (34px display, tabular), 10-year sparkline, and a subtle delta chip (▲ improving / ▼ deteriorating over 5y). Tapping a card opens the metric detail sheet: full 10-year chart, formula with live inputs highlighted, plain-language explanation, and the "Buffett lens" paragraph. Red flags, if any, appear as a dismissible-but-persistent section beneath the grid — orange/red cards with the rule's explanation and "what to check."
+**2. Company dashboard.** The heart of the app. A hero header (company name, sector, latest fiscal year), then metric cards in a responsive grid. Each card: metric name (13px, secondary color), current value (34px display, tabular), 10-year sparkline, and a subtle delta chip (▲ improving / ▼ deteriorating over 5y). Tapping a card opens the metric detail sheet: full 10-year chart, formula with live inputs highlighted, plain-language explanation, and the "Owner's lens" paragraph. Red flags, if any, appear as a dismissible-but-persistent section beneath the grid — orange/red cards with the rule's explanation and "what to check."
 
 **3. Data entry.** The most craft-critical screen — this is where the app wins or loses the non-finance user. One statement at a time (segmented control: Income / Balance / Cash Flow), one fiscal year per column, large touch targets (≥44pt), numeric keypad, automatic thousands separators as-you-type, and an inline hint per line item ("Find this as 'Total revenue' on the first line of the income statement"). Derived subtotals compute live and are shown grayed — immediate feedback that the numbers hang together. Sticky save; every keystroke persists to local storage (no lost work, ever).
 
@@ -404,7 +404,7 @@ Single environment, no staging; no market-data subscription (prices are manual, 
 4. **Resolved — thesis export ships in Phase 3.** Markdown export (near-free); PDF rides the same path.
 5. **Resolved — single-user personal tool.** See the audience decision note in §2.
 6. **Resolved — no custom domain; the app lives on the default `*.cloudfront.net` origin.** `EdgeCert` and Route 53 never deploy; the CDK config pins `domain: null`. Known cost accepted: IndexedDB is origin-bound, so any later move to a custom domain requires a manual export → import and PWA re-install per device (survivable via one-tap export, but a chore). Realistic revisit trigger: the legal-tripwire event of ever sharing the app, which forces a naming pass anyway.
-7. **Resolved — the app is named Plainsight (July 2026).** The naming pass from §15 tripwire #1 was run early, since the repository is public: the name deliberately avoids the Buffett surname to prevent any implied-endorsement / passing-off reading. References to Buffett in documentation and in-app education copy remain descriptive of the published philosophy (like any value-investing book) — only the brand avoids the name. Repository and plan filenames renamed to match.
+7. **Resolved — the app is named Plainsight (July 2026), and no investor is named anywhere.** The naming pass from §15 tripwire #1 was run early, since the repository is public: the name avoids the surname of the famous investor whose published philosophy inspired this product, preventing any implied-endorsement / passing-off reading. By the owner's extension of the same decision, the repository's documentation and the in-app education copy also stay surname-free — the philosophy is described in concept terms (moats, margin of safety, owner mindset), and the educational layer is branded the **"Owner's lens."** Repository and plan filenames renamed to match.
 
 ### Remaining to complete the plan
 
@@ -431,7 +431,7 @@ The caveat that genuinely threatens the local-first premise: **WebKit's Intellig
 
 As a personal tool analyzing public filings on the owner's own devices, nothing is currently required. The tripwire list — events that trigger action *before* proceeding, not after:
 
-1. **Sharing the URL with anyone, even one friend** → add not-financial-advice disclaimer copy, drop any Buffett reference from the name, and sanity-check the data-redistribution posture for EDGAR/MAP-derived figures.
+1. **Sharing the URL with anyone, even one friend** → add not-financial-advice disclaimer copy, keep investor surnames out of the name and copy (done early — §12.7), and sanity-check the data-redistribution posture for EDGAR/MAP-derived figures.
 2. **Storing anyone else's data server-side** → privacy policy and Australian Privacy Act basics.
 3. **Charging money or launching publicly** → professional legal review: the Australian financial-services perimeter (general advice vs factual information under the Corporations Act), terms of use, and data-source licensing.
 4. **Publishing extracted datasets** → licensing and provenance review — facts aren't copyrightable, but compilations and source terms of use are a real consideration.
@@ -440,4 +440,4 @@ This is a checklist of *when to get advice*, not the advice itself.
 
 ---
 
-*The plan optimizes for one thing above all: an app whose core promise — help me read financial statements like Buffett — survives with zero dependencies on any service, including ours. Everything networked is an enhancement; nothing networked is a requirement.*
+*The plan optimizes for one thing above all: an app whose core promise — help me read financial statements like an owner — survives with zero dependencies on any service, including ours. Everything networked is an enhancement; nothing networked is a requirement.*

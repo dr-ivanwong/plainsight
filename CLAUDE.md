@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-**Plainsight** — a Buffett-style financial statement analyzer: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. ("Buffett-style" is descriptive of the published investment philosophy; the product name deliberately avoids the surname — see plan §12.7.)
+**Plainsight** — a value-investing financial statement analyzer: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (By recorded decision — plan §12.7 — the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
 
 **Current state: planning complete, no code yet.** The `plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet — update this file when Phase 0 lands them.
 
@@ -55,4 +55,4 @@ Decisions in the plans (see §12 decision log) are **resolved** — do not relit
 - **12-metric budget:** adding a metric requires removing or demoting one.
 - **Never buy/sell language** anywhere in copy — red flags are "items to investigate," education framing throughout (legal posture, main plan §15).
 - Every displayed number must be reproducible by hand from its detail sheet — a number the owner can't trace to inputs is a P0 bug.
-- Progressive disclosure: the dashboard stays ~12 numbers; depth (formula, inputs, Buffett context) is one tap away, never on-screen by default.
+- Progressive disclosure: the dashboard stays ~12 numbers; depth (formula, inputs, Owner's-lens context) is one tap away, never on-screen by default.
