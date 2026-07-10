@@ -1,6 +1,6 @@
 # Plainsight: Engineering Plan
 
-*A financial statement analyzer for long-term value investors.*
+*A financial statement analyser for long-term value investors.*
 
 **Status:** Draft v1.0 · **Date:** July 2026 · **Type:** Design document
 **Disciplines applied:** Apple UI/UX design · Meta-calibre frontend engineering · Google-calibre backend engineering · AWS cloud infrastructure
@@ -40,15 +40,15 @@ This plan describes a web application that guides a retail investor through that
 
 ### Personas
 
-**Primary ("The Learner"):** professionally successful, non-finance background, has read *The Intelligent Investor*, wants to analyze 3–10 companies before making their first considered stock purchase. Needs guidance and explanation at every step.
+**Primary ("The Learner"):** professionally successful, non-finance background, has read *The Intelligent Investor*, wants to analyse 3–10 companies before making their first considered stock purchase. Needs guidance and explanation at every step.
 
 **Secondary ("The Practitioner"):** knows the ratios already, wants a fast, clean tool to run the numbers on a candidate and keep a research log. Needs speed and density, not hand-holding (education layer must be dismissible).
 
 ### Core user journeys
 
-**Journey A: Analyze a company (manual entry).** User creates a company → enters 5–10 years of line items from the income statement, balance sheet, and cash flow statement (guided form, one statement at a time, with "where to find this in a 10-K" hints) → app computes the ratio dashboard → user reviews trends, taps into explanations, notes red flags → saves.
+**Journey A: Analyse a company (manual entry).** User creates a company → enters 5–10 years of line items from the income statement, balance sheet, and cash flow statement (guided form, one statement at a time, with "where to find this in a 10-K" hints) → app computes the ratio dashboard → user reviews trends, taps into explanations, notes red flags → saves.
 
-**Journey B: Analyze a company (import).** User pastes a ticker → app fetches standardized financials from the backend (SEC EDGAR–derived) → pre-fills the same model → user reviews and proceeds as in Journey A. *Requires connectivity; falls back to Journey A when offline.*
+**Journey B: Analyse a company (import).** User pastes a ticker → app fetches standardised financials from the backend (SEC EDGAR–derived) → pre-fills the same model → user reviews and proceeds as in Journey A. *Requires connectivity; falls back to Journey A when offline.*
 
 **Journey C: Compare.** User selects 2–4 saved companies → side-by-side ratio table and overlaid trend charts → identifies the strongest moat signals.
 
@@ -89,7 +89,7 @@ Financial tools default to dense, intimidating, terminal-like interfaces. That a
 Three governing decisions:
 
 1. **Typography is the interface.** Financial data is text and numbers. We invest the design budget in a rigorous type system rather than decorative chrome. Tabular figures (`font-variant-numeric: tabular-nums`) everywhere numbers align vertically. Non-negotiable for scannable financial tables.
-2. **Nearly monochrome, color as meaning.** Neutrals dominate. Exactly one accent (system blue `#007AFF` family) for interactive elements. Semantic color is reserved and consistent: green = healthy signal, orange = investigate, red = red flag. Color is never decoration; a user should be able to squint at a company dashboard and read its health from color distribution alone.
+2. **Nearly monochrome, colour as meaning.** Neutrals dominate. Exactly one accent (system blue `#007AFF` family) for interactive elements. Semantic colour is reserved and consistent: green = healthy signal, orange = investigate, red = red flag. Colour is never decoration; a user should be able to squint at a company dashboard and read its health from colour distribution alone.
 3. **Progressive disclosure.** The Learner sees a clean dashboard of ~12 numbers with sparklines. Every deeper layer (formula, inputs, 10-year table, Owner's-lens essay) is one tap away, never on-screen by default. The Practitioner can collapse the education layer globally.
 
 ### Type scale and spacing tokens
@@ -103,11 +103,11 @@ Three governing decisions:
 
 > The five screens below define the design language by example. The complete inventory (all routes, twelve screens with their empty/loading/error states, the first-run flow, and the component/hook contracts) is specified in the companion document **`plainsight-frontend.md`**.
 
-**1. Library (home).** A calm list of saved companies. Each row: company name, ticker, a single composite quality indicator (small colored dot: count of active red flags), last-updated date, and a 10-year ROE microsparkline. Generous 64px row height, no borders: separation by spacing alone. Pull-to-refresh triggers a sync when online; silently does nothing when offline.
+**1. Library (home).** A calm list of saved companies. Each row: company name, ticker, a single composite quality indicator (small coloured dot: count of active red flags), last-updated date, and a 10-year ROE microsparkline. Generous 64px row height, no borders: separation by spacing alone. Pull-to-refresh triggers a sync when online; silently does nothing when offline.
 
-**2. Company dashboard.** The heart of the app. A hero header (company name, sector, latest fiscal year), then metric cards in a responsive grid. Each card: metric name (13px, secondary color), current value (34px display, tabular), 10-year sparkline, and a subtle delta chip (▲ improving / ▼ deteriorating over 5y). Tapping a card opens the metric detail sheet: full 10-year chart, formula with live inputs highlighted, plain-language explanation, and the "Owner's lens" paragraph. Red flags, if any, appear as a dismissible-but-persistent section beneath the grid: orange/red cards with the rule's explanation and "what to check."
+**2. Company dashboard.** The heart of the app. A hero header (company name, sector, latest fiscal year), then metric cards in a responsive grid. Each card: metric name (13px, secondary colour), current value (34px display, tabular), 10-year sparkline, and a subtle delta chip (▲ improving / ▼ deteriorating over 5y). Tapping a card opens the metric detail sheet: full 10-year chart, formula with live inputs highlighted, plain-language explanation, and the "Owner's lens" paragraph. Red flags, if any, appear as a dismissible-but-persistent section beneath the grid: orange/red cards with the rule's explanation and "what to check."
 
-**3. Data entry.** The most craft-critical screen: this is where the app wins or loses the non-finance user. One statement at a time (segmented control: Income / Balance / Cash Flow), one fiscal year per column, large touch targets (≥44pt), numeric keypad, automatic thousands separators as-you-type, and an inline hint per line item ("Find this as 'Total revenue' on the first line of the income statement"). Derived subtotals compute live and are shown grayed (immediate feedback that the numbers hang together). Sticky save; every keystroke persists to local storage (no lost work, ever).
+**3. Data entry.** The most craft-critical screen: this is where the app wins or loses the non-finance user. One statement at a time (segmented control: Income / Balance / Cash Flow), one fiscal year per column, large touch targets (≥44pt), numeric keypad, automatic thousands separators as-you-type, and an inline hint per line item ("Find this as 'Total revenue' on the first line of the income statement"). Derived subtotals compute live and are shown greyed (immediate feedback that the numbers hang together). Sticky save; every keystroke persists to local storage (no lost work, ever).
 
 **4. Compare.** Up to 4 companies as columns, metrics as rows, best-in-row subtly highlighted. Overlaid trend charts beneath, one metric at a time via segmented control. Deliberately restrained: no radar charts, no scores; the user forms the judgment.
 
@@ -118,11 +118,11 @@ Three governing decisions:
 - Spring curves only (`cubic-bezier(0.2, 0.8, 0.2, 1)`), 200–350ms. Metric detail sheets slide up from the tapped card (spatial continuity); dismissing returns them there.
 - Dashboard cards stagger in at 30ms intervals on first load (once, subtly).
 - Buttons scale to 0.97 on press. Charts animate their draw-in only on first render, never on data updates (updates should feel instant, not theatrical).
-- `prefers-reduced-motion` honored globally: all transitions become opacity fades ≤150ms.
+- `prefers-reduced-motion` honoured globally: all transitions become opacity fades ≤150ms.
 
 ### Dark mode and accessibility
 
-- Dark mode from day one, designed not inverted: elevated surfaces at `#1C1C1E`-family grays, never pure black cards on pure black. Chart palettes re-derived for dark backgrounds (desaturated, higher luminance).
+- Dark mode from day one, designed not inverted: elevated surfaces at `#1C1C1E`-family greys, never pure black cards on pure black. Chart palettes re-derived for dark backgrounds (desaturated, higher luminance).
 - WCAG AA contrast minimum (4.5:1 body, 3:1 large text) verified in CI via automated checks on the token palette.
 - Full keyboard operability; focus rings designed as part of the aesthetic, never stripped. Charts have table-fallback views for screen readers (every chart is backed by the same data grid, exposed via an accessible toggle).
 - Dynamic type: layout tested at 130% text scale.
@@ -142,7 +142,7 @@ Three governing decisions:
 | Local persistence | **IndexedDB via Dexie.js** | The primary datastore (see local-first section). localStorage rejected: 5MB limit and synchronous API are both disqualifying |
 | Charts | **Recharts** for dashboard sparklines/cards; **visx** if/when custom interactions outgrow it | Recharts is fast to ship and adequate for v1's chart complexity |
 | Validation | **Zod** | Single schema source: validates form input, IndexedDB reads, API responses, and import files. Types inferred, never duplicated |
-| Testing | **Vitest + React Testing Library + Playwright** | Unit (calc engine), component (behavior), E2E (journeys) |
+| Testing | **Vitest + React Testing Library + Playwright** | Unit (calc engine), component (behaviour), E2E (journeys) |
 | PWA | **vite-plugin-pwa (Workbox)** | Installability + offline shell caching; this is how "works when everything is down" is actually delivered |
 
 ### The local-first data layer (the availability answer)
@@ -180,7 +180,7 @@ This is the architectural centerpiece, and it directly answers the product owner
 Strict smart/presentational split, with the container role played by hooks:
 
 - **Presentational:** `MetricCard`, `TrendChart`, `RedFlagBanner`, `StatementGrid`, `ComparisonTable`: pure functions of props, no data fetching, no store access. Storybook-driven development; visual regression via Playwright screenshots (free) on the design-token layer.
-- **Container hooks:** `useCompany(id)`, `useMetrics(companyId)`, `useRedFlags(companyId)`, `useSyncStatus()`: own Dexie reads (via `dexie-react-hooks` live queries, so the UI is reactively bound to IndexedDB), memoize calc-engine invocations, and expose typed results.
+- **Container hooks:** `useCompany(id)`, `useMetrics(companyId)`, `useRedFlags(companyId)`, `useSyncStatus()`: own Dexie reads (via `dexie-react-hooks` live queries, so the UI is reactively bound to IndexedDB), memoise calc-engine invocations, and expose typed results.
 - **Compound components** where shared state warrants it: `<Comparison>` / `<Comparison.Column>` / `<Comparison.MetricRow>`.
 - Component budget discipline: any component crossing ~8 props triggers a design review; it's probably two components.
 
@@ -190,9 +190,9 @@ Budgets set now, enforced in CI (Lighthouse CI + `size-limit`):
 
 - **Initial JS ≤ 180KB gzipped.** Route-level code splitting (Library shell loads first; charts, compare, and thesis editor are lazy chunks). Recharts is the biggest line item; it loads with the dashboard chunk, not the shell.
 - **TTI < 2s on a mid-range Android over 4G; < 1s repeat visits** (service worker shell).
-- Calc engine invocations memoized per `(companyId, dataVersion)`; a full 10-year, 12-metric computation is microseconds, but memoization prevents chart re-render cascades.
-- **State colocation over memoization:** data-entry keystrokes update per-field local state; the statement grid commits to Dexie on blur/debounce. A keystroke must never re-render the dashboard.
-- Virtualized lists if the library grows past ~100 companies (react-virtuoso), deferred until measured need.
+- Calc engine invocations memoised per `(companyId, dataVersion)`; a full 10-year, 12-metric computation is microseconds, but memoisation prevents chart re-render cascades.
+- **State colocation over memoisation:** data-entry keystrokes update per-field local state; the statement grid commits to Dexie on blur/debounce. A keystroke must never re-render the dashboard.
+- Virtualised lists if the library grows past ~100 companies (react-virtuoso), deferred until measured need.
 
 ### Error handling
 
@@ -214,7 +214,7 @@ The API is a product for the client, not a mirror of storage. Resources and stan
 
 ```
 GET  /v1/companies/{ticker}                      → company profile (name, sector, CIK)
-GET  /v1/companies/{ticker}/financials           → standardized annual statements
+GET  /v1/companies/{ticker}/financials           → standardised annual statements
        ?years=10&statements=income,balance,cashflow
 GET  /v1/companies/{ticker}/quote                → delayed price (for P/E), cache-friendly
 GET  /v1/search?q=apple                          → ticker search, paginated (opaque page tokens)
@@ -235,8 +235,8 @@ Contract rules: full resources returned from mutations; opaque page tokens (neve
 
 Financial data quality is the hard problem; the API is trivial by comparison.
 
-- **Source:** SEC EDGAR `companyfacts` XBRL API (free, canonical, US-listed companies). Standardization layer maps XBRL concepts (`us-gaap:Revenues`, `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax`, …) onto our ~25 canonical line items; this mapping table is the crown-jewel asset and is version-controlled with golden tests against hand-verified filings.
-- **Pipeline shape: on-demand first.** Annual reports change once a year; a nightly sweep pays for freshness nobody uses. A ticker's first request triggers fetch → normalize → validate → store; thereafter a **weekly** EventBridge sweep checks only watched tickers for new filings. Validation is unchanged (Zod-equivalent in the pipeline; reject-and-quarantine on anomaly, e.g., balance sheet that doesn't balance beyond rounding tolerance). Failures go to a DLQ with alerting; a poisoned filing must never block the pipeline (blast radius = that one company).
+- **Source:** SEC EDGAR `companyfacts` XBRL API (free, canonical, US-listed companies). Standardisation layer maps XBRL concepts (`us-gaap:Revenues`, `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax`, …) onto our ~25 canonical line items; this mapping table is the crown-jewel asset and is version-controlled with golden tests against hand-verified filings.
+- **Pipeline shape: on-demand first.** Annual reports change once a year; a nightly sweep pays for freshness nobody uses. A ticker's first request triggers fetch → normalise → validate → store; thereafter a **weekly** EventBridge sweep checks only watched tickers for new filings. Validation is unchanged (Zod-equivalent in the pipeline; reject-and-quarantine on anomaly, e.g., balance sheet that doesn't balance beyond rounding tolerance). Failures go to a DLQ with alerting; a poisoned filing must never block the pipeline (blast radius = that one company).
 - **Serving store:** **DynamoDB**, single-table: `PK=TICKER#{t}`, `SK=FY#{year}#STMT#{type}`, plus a `PROFILE` item. Access patterns are exactly "all years for one ticker" and "one profile": key-value at its purest, and the data model is small enough that DynamoDB lock-in risk is acceptable against its operational silence. (Aurora was considered; rejected: no relational queries exist in the serving path.)
 - **Quote data:** a market-data API (e.g., Polygon/Twelve Data tier; both cover ASX quotes) behind a 15-minute-TTL cache; delayed quotes are explicitly fine (non-goal #4).
 
@@ -246,13 +246,13 @@ Financial data quality is the hard problem; the API is trivial by comparison.
 
 **ASX (Phase 2.5):** Australia has no EDGAR equivalent. As of this writing, listed-company financial reports are not lodged in mandatory structured XBRL/iXBRL (voluntary SBR lodgement exists with negligible uptake); annual and half-year reports arrive on the **ASX Market Announcements Platform (MAP) as PDFs**. Three sourcing options were evaluated:
 
-1. **Commercial fundamentals API** (e.g., EOD Historical Data covers ASX). Fastest path, but it would become the plan's dominant recurring cost (~US$50–80/month), redistribution/caching licence terms are restrictive and need legal reading, and provenance is the vendor's standardization rather than the filing itself, which cuts against the product's core trust promise.
+1. **Commercial fundamentals API** (e.g., EOD Historical Data covers ASX). Fastest path, but it would become the plan's dominant recurring cost (~US$50–80/month), redistribution/caching licence terms are restrictive and need legal reading, and provenance is the vendor's standardisation rather than the filing itself, which cuts against the product's core trust promise.
 2. **LLM-assisted PDF extraction from MAP filings** (*chosen*). The source is canonical (the actual lodged annual report) and free; the extraction is the hard part, and modern document-capable models make it tractable inside the existing batch pipeline.
 3. **Manual entry**: already exists as the universal fallback (Journey A) and remains the day-one answer for anything the pipeline hasn't covered.
 
 **Chosen design: extraction in the batch pipeline, on-demand per ticker.** When a user first requests an ASX ticker (or nightly for watched tickers): fetch the annual/half-year report PDF from MAP → locate the financial-statements section → LLM extraction (Claude, table-aware) into the canonical line-item schema with per-field confidence → **hard validation gates** (balance sheet cross-foots within rounding tolerance, subtotals recompute, YoY deltas sanity-checked) → anything failing a gate is quarantined to a human review queue and *never served* → validated data written to DynamoDB with provenance. Filings are immutable, so extraction happens once per document and is cached forever; cost scales with usage, not with the ~2,000-company ASX universe.
 
-**Why this doesn't violate the availability constraint:** the constraint governs the *client runtime*, not the ingestion path. AI here is an offline batch dependency. If the extraction service is down, the blast radius is "this ASX ticker isn't pre-fillable yet; enter it manually," which is identical to the app's existing offline behavior. The app itself cannot break, because nothing in the serving or client path calls a model.
+**Why this doesn't violate the availability constraint:** the constraint governs the *client runtime*, not the ingestion path. AI here is an offline batch dependency. If the extraction service is down, the blast radius is "this ASX ticker isn't pre-fillable yet; enter it manually," which is identical to the app's existing offline behaviour. The app itself cannot break, because nothing in the serving or client path calls a model.
 
 **IFRS mapping variant:** ASX reporters file under AASB/IFRS, not US GAAP: different statement presentation and terminology ("profit for the year," classification differences), June 30 fiscal year-ends dominate, reporting cadence is half-yearly rather than quarterly, and the currency is AUD. This is a second mapping table alongside the XBRL one, **not an engine change**; the calc engine already carries currency, unit, and fiscal-calendar metadata by design. Golden-file tests extend to 5 hand-verified ASX annual reports across sectors.
 
@@ -260,7 +260,7 @@ Financial data quality is the hard problem; the API is trivial by comparison.
 
 **Provenance upgrade:** every extracted figure stores a reference to its source document (MAP announcement ID + page number), so the dashboard's tap-to-see-formula transparency extends to **tap-to-see-source-filing**, a stronger trust story than any commercial aggregator can offer.
 
-**Scope decision: launch large-cap-only.** The automated pipeline covers ASX large caps (ASX 200) at launch (the cleanest, most standardized reports, and the right corpus to learn on), expanding down-market only as measured extraction accuracy proves out. The prototype gate stands: 10 large caps, proceed only at ≥ 99.5% post-validation field accuracy; the fallback ladder (revisit commercial API on licence terms → manual entry) remains. The small-cap tail is served from day one by user-uploaded filings, below.
+**Scope decision: launch large-cap-only.** The automated pipeline covers ASX large caps (ASX 200) at launch (the cleanest, most standardised reports, and the right corpus to learn on), expanding down-market only as measured extraction accuracy proves out. The prototype gate stands: 10 large caps, proceed only at ≥ 99.5% post-validation field accuracy; the fallback ladder (revisit commercial API on licence terms → manual entry) remains. The small-cap tail is served from day one by user-uploaded filings, below.
 
 ### User-uploaded filings: covering the small-cap tail (and everything else)
 
@@ -271,7 +271,7 @@ Everything outside the automated pipeline (ASX small caps, NZX, LSE, unlisted co
 - **Private-library isolation: the integrity boundary.** Upload-derived data writes only to the requesting user's own library, never to the shared canonical store. Provenance is labelled `source: user_upload (filename, extraction date)` and rendered visually distinct from `EDGAR` / `ASX MAP` data. A mistaken (or doctored) PDF can never contaminate the canonical dataset or any other user.
 - **Upload mechanics:** presigned S3 PUT (annual reports run 5–30MB+, which rules out proxying through API Gateway's 10MB limit) → magic-byte and size validation (PDF/XLSX/CSV only, ≤50MB) → async extraction job (`POST /v1/extractions` returns a job id; client polls; 30–120s typical). Uploaded files are transient by default (lifecycle-deleted after 7 days); an optional "keep source document" toggle stores it in the user's partition to power tap-to-see-source on uploaded data too.
 - **Auth-gated, quota'd, budget-capped.** Each extraction spends real model tokens, so the endpoint ships in Phase 3 behind Cognito with a per-user quota (e.g., 10 extractions/month) and a global monthly budget alarm wired to a feature-flag kill switch. (It *can* ship earlier with per-IP throttles and the same kill switch, at higher abuse risk: an anonymous endpoint that spends tokens is a cost-abuse magnet.)
-- **Scanned documents work.** The extraction path rasterizes pages for the model, so image-only PDFs (common among micro-caps) are handled, at lower confidence, which review mode surfaces prominently.
+- **Scanned documents work.** The extraction path rasterising pages for the model, so image-only PDFs (common among micro-caps) are handled, at lower confidence, which review mode surfaces prominently.
 
 ### Multi-provider extraction layer
 
@@ -279,7 +279,7 @@ The extraction service treats the model as a swappable component behind a narrow
 
 - **One interface, three adapters.** `ExtractionProvider.extract(document, schemaVersion) → candidate statements + per-field confidence`. Most target providers (DeepSeek, Alibaba Qwen (DashScope), Moonshot Kimi, Zhipu GLM, Groq, Mistral, OpenRouter) expose **OpenAI-compatible APIs**, so a single `openai-compatible` adapter covers nearly the whole registry; native `anthropic` and `gemini` adapters complete the set. Adding a provider is a config entry (base URL, model id, capabilities, cost tier, data policy), not a deployment.
 - **Prompting is lowest-common-denominator by design.** Schema-first "respond only with JSON matching this schema" prompting plus Zod parsing with a single repair retry works on every provider; per-provider structured-output and tool-calling features vary too much to build against. Prompts are versioned (`promptVersion` in provenance).
-- **Capability-aware routing.** The preprocessor normalizes every document up front (PDF → page images + extracted text layer; XLSX/CSV → parsed sheets + compact text tables), and the router matches document needs to declared provider capabilities. Scanned PDFs and complex statement tables require **vision-capable** models (Claude, Gemini, Qwen-VL, GLM-4V); born-digital text layers and spreadsheet label-mapping run happily on cheap **text-only** models.
+- **Capability-aware routing.** The preprocessor normalises every document up front (PDF → page images + extracted text layer; XLSX/CSV → parsed sheets + compact text tables), and the router matches document needs to declared provider capabilities. Scanned PDFs and complex statement tables require **vision-capable** models (Claude, Gemini, Qwen-VL, GLM-4V); born-digital text layers and spreadsheet label-mapping run happily on cheap **text-only** models.
 - **Spreadsheets are the cheap case, deliberately.** XLSX/CSV is already structured: SheetJS parses cells deterministically, and the model's only job is *semantic mapping* (which row label corresponds to which canonical line item) over a small text snippet. Cell values are copied from the parse, never retyped by a model, which eliminates transcription hallucination entirely for spreadsheets. Any provider on the registry can do this; token cost is near-nil.
 - **Cheap-first escalation ladder.** Routing policy: free tier → budget provider → frontier, escalating automatically when a rung errors, rate-limits, or, crucially, produces output that **fails the validation gates**. Clean large-cap reports mostly extract on the cheap rungs; hard documents earn frontier tokens. Free-tier rate limits that would cripple a batch product are a non-issue for a single user extracting one filing at a time.
 - **The gates are what make this safe.** Cross-footing, balance checks, confidence thresholds, quarantine, and review-before-save are provider-agnostic and unchanged. Provider quality therefore affects *pass rate and review burden*, never the correctness of served data: a weak model costs retries, not trust. This is precisely why free-tier and budget-provider experimentation is risk-free here when it wouldn't be in an unvalidated pipeline.
@@ -292,7 +292,7 @@ The extraction service treats the model as a swappable component behind a narrow
 - **Device-local by design.** Keys live in a dedicated IndexedDB table on the device and are **excluded from the export file and from sync by construction** (re-entered per device, deliberately), so a shared backup or a synced library can never leak a credential. Masked display, reveal toggle, and a per-provider "test connection" button.
 - **Client-direct calls where the provider allows it.** With the user's own key, the browser calls the provider directly. No backend involved. CORS support is provider-dependent: Anthropic supports browser calls behind an explicit opt-in header designed for exactly this pattern (`anthropic-dangerous-direct-browser-access`), Gemini, OpenRouter, and Groq allow browser origins; several others (DeepSeek, DashScope, Moonshot, Zhipu) are unverified and churn. The registry carries a `browserCors` flag, and the test-connection button doubles as a runtime CORS probe.
 - **Proxy fallback for the rest.** Providers without browser CORS route through an authenticated Lambda pass-through: the key travels per-request in a header, is **never stored and never logged**, and the response streams back. The proxy stays behind Cognito (an unauthenticated key-relay is an abuse magnet: stolen keys laundered through our egress IP), but per-user quotas vanish: it's the user's key and the user's spend. The budget kill switch now guards only the canonical pipeline's own keys.
-- **Preprocessing moves client-side in direct mode.** PDF.js rasterizes pages in-browser (a lazy-loaded chunk, never in the shell bundle) and SheetJS already runs in the browser, so in client-direct mode the document goes **device → chosen provider and never touches our infrastructure**, the strongest possible privacy posture for confidential uploads. Adapters, prompts, Zod schemas, and validation gates live in an isomorphic `extraction-core` package consumed identically by the browser and by Lambda: one implementation, two runtimes.
+- **Preprocessing moves client-side in direct mode.** PDF.js rasterising pages in-browser (a lazy-loaded chunk, never in the shell bundle) and SheetJS already runs in the browser, so in client-direct mode the document goes **device → chosen provider and never touches our infrastructure**, the strongest possible privacy posture for confidential uploads. Adapters, prompts, Zod schemas, and validation gates live in an isomorphic `extraction-core` package consumed identically by the browser and by Lambda: one implementation, two runtimes.
 - **CSP consequence.** `connect-src` widens from self + our API to a **fixed allowlist** of registered provider origins (CloudFront response-headers policy). Adding a provider is an ops change that includes the CSP update; nothing becomes dynamic.
 - **Key hygiene guidance in the UI.** Settings copy nudges the practices that actually matter: create a dedicated key per app, set the provider-side monthly spend cap, rotate if a device is lost. At-rest passphrase encryption (WebCrypto) was considered and deferred: the key must be plaintext in memory to be used, device compromise defeats it anyway, and the effective controls are the strict CSP, device security, and provider-side spend caps.
 - **Same keys power Phase 4.** The optional AI thesis-critique layer rides the identical registry and BYOK credentials (client-direct where possible), so even the AI garnish never requires our backend.
@@ -331,10 +331,10 @@ Reliability vs. cost vs. operational burden, resolved for a solo-maintainer prod
 
 ### IaC, environments, CI/CD
 
-- **AWS CDK (TypeScript)**: same language end to end; typed constructs; `cdk diff` as the review artifact. All resources tagged (`project`, `env`, `owner`) from day one for cost attribution. Stack decomposition, environment wiring, conventions, security invariants, and the budget kill-switch wiring are specified in the companion document **`plainsight-cdk.md`**.
+- **AWS CDK (TypeScript)**: same language end to end; typed constructs; `cdk diff` as the review artefact. All resources tagged (`project`, `env`, `owner`) from day one for cost attribution. Stack decomposition, environment wiring, conventions, security invariants, and the budget kill-switch wiring are specified in the companion document **`plainsight-cdk.md`**.
 - **One account, one environment** (owner's call: single user, cost priority; no standing staging). Compensating controls replace the second environment: PR-time `cdk diff` + CI-blocking invariant tests, an IAM permission boundary on the deploy role standing in for SCPs, PITR on user-touching data, and **ephemeral rehearsal stacks** (a prefixed throwaway copy deployed for a day when an infra change deserves rehearsal, then destroyed). The deeper insurance is architectural: the client is local-first, so the blast radius of a bad backend deploy is "online extras degrade," never "the app breaks" or "data is lost."
 - **GitHub Actions with OIDC role assumption: zero long-lived AWS credentials anywhere.** Pipelines: (a) app pipeline: lint → typecheck (`tsc --noEmit`, blocking) → unit + component tests → build → Playwright E2E against the local preview build → deploy prod (S3 sync + targeted invalidation) → smoke check; (b) infra pipeline: separate, `cdk diff` posted to PR; on merge, stateless stacks deploy directly, while changes touching the stateful stacks (`Data`, `Auth`) pass a one-click GitHub environment gate. Infrastructure and app changes never ride the same pipeline.
-- Rollback: app = redeploy previous immutable build artifact (< 5 min); infra = `cdk deploy` of previous tag; DynamoDB = PITR.
+- Rollback: app = redeploy previous immutable build artefact (< 5 min); infra = `cdk deploy` of previous tag; DynamoDB = PITR.
 - Frontend observability: none paid; the only user files his own bug reports. Errors surface through the error-boundary UI and the console; free-tier Sentry is an optional add if silent errors ever become a nuisance. RUM at an audience of one is a dashboard about yourself.
 
 ### Security posture
@@ -349,7 +349,7 @@ Reliability vs. cost vs. operational burden, resolved for a solo-maintainer prod
 |---|---|---|---|
 | **0: Foundations** | Repo, CDK skeleton, design tokens, calc-engine package with golden tests, CI green | 1 wk | Calc engine passes golden files for 5 real 10-Ks |
 | **1: Offline core (MVP)** | PWA shell, Library, data entry, dashboard, metric details, red-flag engine, export/import, dark mode, S3+CF deploy | 3–4 wks | Full Journey A completable in airplane mode; Lighthouse PWA ✓; budgets met |
-| **2: Import** | EDGAR pipeline (on-demand + weekly sweep of watched tickers), standardization mapping, read API, ticker search, edge caching | 3 wks | Journey B: ticker → pre-filled 10-year model in < 10 s; on-demand ingest and weekly sweep exercised end to end |
+| **2: Import** | EDGAR pipeline (on-demand + weekly sweep of watched tickers), standardisation mapping, read API, ticker search, edge caching | 3 wks | Journey B: ticker → pre-filled 10-year model in < 10 s; on-demand ingest and weekly sweep exercised end to end |
 | **2.5: ASX import** | MAP filing fetcher, LLM extraction (batch, on-demand per ticker), **multi-provider adapter layer (registry + 3 adapters) with cheap-first escalation**, IFRS mapping table, validation gates + review queue, ASX golden files, provider bake-off harness, tap-to-source-filing provenance | 3 wks | 10-company prototype ≥ 99.5% field accuracy post-validation; Journey B works for ASX tickers; every figure links to its source page; **provider scorecard produced and default ladder configured from measured results** |
 | **3: Compare + Thesis + Sync + Uploads** | Comparison view, thesis editor with versioned snapshots, Cognito auth, multi-device sync, BYOK provider settings screen, filing upload + extraction review mode (client-direct BYOK by default; auth'd server-proxy pass-through for non-CORS providers) | 3–4 wks | Two devices converge after offline edits on both; thesis history immutable; uploaded annual report → reviewed and saved company in < 5 min; export file verified key-free |
 | **4: Optional AI layer** | Clearly-separated enhancement: thesis critique, red-flag narrative, "explain this trend"; via Anthropic API, feature-flagged, invisible when unreachable | 2 wks | Killing the AI endpoint leaves zero broken UI |
@@ -361,7 +361,7 @@ Total to a genuinely complete product: **~16 weeks** of focused effort, with a u
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | **Calc or mapping error erodes trust** (the existential risk) | Med | High | Golden-file tests vs. hand-verified 10-Ks; tap-to-see-formula transparency; property tests; quarantine-on-anomaly in pipeline; every displayed number traceable to its inputs |
-| XBRL standardization is messier than planned (custom extensions, restatements) | High | Med | Start with large-cap filers (cleanest tags); surface "source: as-reported / standardized" provenance; manual-override always available (Journey A is the fallback) |
+| XBRL standardisation is messier than planned (custom extensions, restatements) | High | Med | Start with large-cap filers (cleanest tags); surface "source: as-reported / standardised" provenance; manual-override always available (Journey A is the fallback) |
 | **ASX PDF extraction errors** (LLM-parsed figure is wrong) | Med | High | Hard validation gates (cross-footing, balance checks, YoY sanity); quarantine + human review queue (unvalidated data is never served); per-field confidence scores; tap-to-source-filing lets users verify; 10-company prototype gate before committing to Phase 2.5 |
 | **User-uploaded filing risks** (wrong/doctored document; token-cost abuse) | Med | Med | Private-library isolation (uploads never touch the canonical store); distinct provenance labelling; review-before-save (user confirms every figure); auth + per-user quotas + global budget kill switch; PDF magic-byte and size validation |
 | **Provider sprawl risks** (quality variance; free-tier ToS and rate-limit churn; offshore data policies) | Med | Low–Med | Gates are provider-agnostic (bad output fails validation and never serves); bake-off scorecard sets the ladder empirically; registry-as-config makes provider churn an ops tweak, not a release; sensitivity routing keeps confidential documents on paid, no-training endpoints |
@@ -377,10 +377,10 @@ Total to a genuinely complete product: **~16 weeks** of focused effort, with a u
 1. **Full-stack from day one (server-rendered app + Postgres).** Rejected: violates the availability requirement at its root, adds standing cost and operational surface, and the domain (single-user analytical records) simply doesn't need server-side truth.
 2. **Native iOS/Android (SwiftUI/Compose).** Best-possible feel, but doubles-to-triples effort, and the PWA delivers offline + installability + one codebase. Revisit if the product finds an audience; the calc engine and API are reusable as-is.
 3. **Local files (no IndexedDB): "just a spreadsheet, but pretty."** Simplicity is attractive, but loses live queries, transactions, migrations, and the reactive UI binding. Export/import keeps the file-based escape hatch anyway.
-4. **AI-first architecture (Claude analyzes pasted 10-K text as the core loop).** Explicitly rejected per the product owner's constraint: AI availability must never gate core function. Inverted instead: deterministic core, AI as Phase 4 garnish.
+4. **AI-first architecture (Claude analyses pasted 10-K text as the core loop).** Explicitly rejected per the product owner's constraint: AI availability must never gate core function. Inverted instead: deterministic core, AI as Phase 4 garnish.
 5. **Scraping Yahoo or other third-party financial sites instead of EDGAR.** Rejected: ToS risk, brittleness, and unverifiable provenance. EDGAR is the primary source of record; provenance is a trust feature.
 6. **CRDTs for sync.** Overkill for single-user multi-device; LWW + server-side version history for prose achieves the same user-visible guarantees at a fraction of the complexity.
-7. **Next.js (or Remix) instead of Vite + React.** Rejected: Next is a server-rendering framework, and this product's centerpiece is the opposite: a fully static, local-first PWA with zero backend in Phase 1 and no SEO to serve at an audience of one. Static export (`output: 'export'`) neuters the features that justify Next's complexity (SSR/RSC, middleware, ISR, image optimization), while deploying it un-neutered on AWS means OpenNext/Lambda@Edge machinery the CDK plan deliberately refuses. Vite delivers exactly the needed subset (instant HMR, the PWA plugin, lazy route chunks, plain static output to S3) with nothing installed-but-disabled.
+7. **Next.js (or Remix) instead of Vite + React.** Rejected: Next is a server-rendering framework, and this product's centerpiece is the opposite: a fully static, local-first PWA with zero backend in Phase 1 and no SEO to serve at an audience of one. Static export (`output: 'export'`) neuters the features that justify Next's complexity (SSR/RSC, middleware, ISR, image optimisation), while deploying it un-neutered on AWS means OpenNext/Lambda@Edge machinery the CDK plan deliberately refuses. Vite delivers exactly the needed subset (instant HMR, the PWA plugin, lazy route chunks, plain static output to S3) with nothing installed-but-disabled.
 
 ## 11. Cost Model (steady state, hobby scale)
 
@@ -419,17 +419,17 @@ Single environment, no staging; no market-data subscription (prices are manual, 
 
 ## 13. Success criteria (personal-tool definition of "working")
 
-Activation: a first real company fully entered and analyzed within the first week after Phase 1 ships. Depth: ten-year data for at least five companies within a month, and a written thesis for every company owned or seriously considered. Trust, the non-negotiable one: **zero instances of a displayed number the owner cannot reproduce by hand from the detail sheet**; any such instance is a P0 bug regardless of size. Habit: the app is opened before any buy/sell decision, the honest personal test of whether the tool earns its place. Hygiene: a full export taken at least quarterly, and the calc-engine golden tests green on every dependency update.
+Activation: a first real company fully entered and analysed within the first week after Phase 1 ships. Depth: ten-year data for at least five companies within a month, and a written thesis for every company owned or seriously considered. Trust, the non-negotiable one: **zero instances of a displayed number the owner cannot reproduce by hand from the detail sheet**; any such instance is a P0 bug regardless of size. Habit: the app is opened before any buy/sell decision, the honest personal test of whether the tool earns its place. Hygiene: a full export taken at least quarterly, and the calc-engine golden tests green on every dependency update.
 
 ## 14. Browser support and storage durability
 
 Support matrix: evergreen Chrome, Edge, and Firefox, plus Safari 17+ on macOS and iOS (in practice, the owner's desktop and phone). Playwright E2E runs Chromium and WebKit.
 
-The caveat that genuinely threatens the local-first premise: **WebKit's Intelligent Tracking Prevention deletes all script-writable storage, including IndexedDB, after 7 days without interaction, for web apps not installed to the home screen.** Installed PWAs are exempt. Layered mitigations, in order: (1) on iOS Safari, a one-time, dismissible, honestly-worded "Add to Home Screen" explainer on the Library screen; (2) `navigator.storage.persist()` requested wherever honored; (3) a storage-status readout in Settings → Data (persisted?, usage vs quota via `storage.estimate()`); (4) an export nudge when no backup has been taken in 30 days; (5) Phase 3 sync as belt-and-braces. Quota exhaustion is detected proactively and surfaced with an export prompt before writes begin failing.
+The caveat that genuinely threatens the local-first premise: **WebKit's Intelligent Tracking Prevention deletes all script-writable storage, including IndexedDB, after 7 days without interaction, for web apps not installed to the home screen.** Installed PWAs are exempt. Layered mitigations, in order: (1) on iOS Safari, a one-time, dismissible, honestly-worded "Add to Home Screen" explainer on the Library screen; (2) `navigator.storage.persist()` requested wherever honoured; (3) a storage-status readout in Settings → Data (persisted?, usage vs quota via `storage.estimate()`); (4) an export nudge when no backup has been taken in 30 days; (5) Phase 3 sync as belt-and-braces. Quota exhaustion is detected proactively and surfaced with an export prompt before writes begin failing.
 
 ## 15. Legal tripwires (personal-use posture)
 
-As a personal tool analyzing public filings on the owner's own devices, nothing is currently required. The tripwire list (events that trigger action *before* proceeding, not after):
+As a personal tool analysing public filings on the owner's own devices, nothing is currently required. The tripwire list (events that trigger action *before* proceeding, not after):
 
 1. **Sharing the URL with anyone, even one friend** → add not-financial-advice disclaimer copy, keep investor surnames out of the name and copy (done early: §12.7), and sanity-check the data-redistribution posture for EDGAR/MAP-derived figures.
 2. **Storing anyone else's data server-side** → privacy policy and Australian Privacy Act basics.
@@ -440,4 +440,4 @@ This is a checklist of *when to get advice*, not the advice itself.
 
 ---
 
-*The plan optimizes for one thing above all: an app whose core promise (help me read financial statements like an owner) survives with zero dependencies on any service, including ours. Everything networked is an enhancement; nothing networked is a requirement.*
+*The plan optimises for one thing above all: an app whose core promise (help me read financial statements like an owner) survives with zero dependencies on any service, including ours. Everything networked is an enhancement; nothing networked is a requirement.*

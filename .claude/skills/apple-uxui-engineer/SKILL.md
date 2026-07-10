@@ -1,6 +1,6 @@
 ---
 name: apple-uxui-engineer
-description: Apple's UI/UX design philosophy (clarity, deference, depth, and obsessive craft), drawn from the Human Interface Guidelines. Use this skill for ANY work that produces or changes what a user sees or touches; designing or reviewing screens, components, layouts, dashboards, forms, landing pages, empty/loading/error states, choosing typography, spacing, color, motion, dark mode, or accessibility behavior. Trigger whenever the user asks to design, build, restyle, polish, or critique UI, or says things like "make it clean", "make it feel premium", "Apple-like", "minimal", "HIG", or "this looks off", in any framework (React, SwiftUI, HTML/CSS, or mockups).
+description: Apple's UI/UX design philosophy (clarity, deference, depth, and obsessive craft), drawn from the Human Interface Guidelines. Use this skill for ANY work that produces or changes what a user sees or touches; designing or reviewing screens, components, layouts, dashboards, forms, landing pages, empty/loading/error states, choosing typography, spacing, colour, motion, dark mode, or accessibility behaviour. Trigger whenever the user asks to design, build, restyle, polish, or critique UI, or says things like "make it clean", "make it feel premium", "Apple-like", "minimal", "HIG", or "this looks off", in any framework (React, SwiftUI, HTML/CSS, or mockups).
 ---
 
 # Apple UX/UI Engineer
@@ -31,10 +31,10 @@ The test for every screen: *does it feel inevitable, as if it couldn't have been
 - **Touch targets ≥ 44×44pt**, always, even when the visible glyph is smaller; pad the hit area.
 - **One primary action per screen.** It's visually unmistakable; everything else is subordinate. Screens with three competing accented buttons have decided nothing.
 
-## Color is meaning, not decoration
+## Colour is meaning, not decoration
 
-- **Neutrals dominate; one accent.** A restrained near-monochrome base with a single accent color for interactive elements teaches users that "color = tappable/meaningful." Semantic colors (green = good, orange = caution, red = problem) are reserved exclusively for semantics, never used decoratively, and never the only channel (pair with text or iconography for color-blind users).
-- **Design dark mode, don't invert it.** Dark surfaces are elevated grays (e.g., the #1C1C1E family), never pure-black cards on pure black; shadows give way to surface lightness as the elevation cue; colors re-derived for dark backgrounds (slightly desaturated, higher luminance). Both modes ship from day one or the second one will always feel bolted on.
+- **Neutrals dominate; one accent.** A restrained near-monochrome base with a single accent colour for interactive elements teaches users that "colour = tappable/meaningful." Semantic colours (green = good, orange = caution, red = problem) are reserved exclusively for semantics, never used decoratively, and never the only channel (pair with text or iconography for colour-blind users).
+- **Design dark mode, don't invert it.** Dark surfaces are elevated greys (e.g., the #1C1C1E family), never pure-black cards on pure black; shadows give way to surface lightness as the elevation cue; colours re-derived for dark backgrounds (slightly desaturated, higher luminance). Both modes ship from day one or the second one will always feel bolted on.
 - **Contrast is a floor, not a goal:** WCAG AA minimum (4.5:1 body, 3:1 large text) verified mechanically, not by eye.
 
 ## Motion has a job
@@ -42,14 +42,14 @@ The test for every screen: *does it feel inevitable, as if it couldn't have been
 - Animation exists to explain: where something came from, where it went, what just changed. If a transition doesn't communicate spatial or causal structure, cut it.
 - **Springs, not linear eases** (`cubic-bezier(0.2, 0.8, 0.2, 1)` territory), 200–350ms. Detail views emerge from the element that summoned them and return there on dismissal; spatial continuity is how users build a mental map.
 - Subtle feedback on interaction (press states ~0.97 scale, immediate highlight) makes the interface feel physical. Celebrate nothing: entrance flourishes run once, never on every data update; updates should feel instant, not theatrical.
-- **`prefers-reduced-motion` is honored globally:** all movement collapses to quick fades (≤150ms). This is an accessibility contract, not a nice-to-have.
+- **`prefers-reduced-motion` is honoured globally:** all movement collapses to quick fades (≤150ms). This is an accessibility contract, not a nice-to-have.
 
 ## Interaction principles
 
 - **Direct manipulation and immediate feedback.** Every action produces a visible response within 100ms, even if it's just a pressed state while work continues. Nothing the user does should feel like shouting into a void.
 - **Progressive disclosure.** Show the essential layer by default; put depth (settings, explanations, advanced fields) one deliberate step away. Experts get density through opt-in, not by making novices pay for it.
-- **Forgiveness over confirmation.** Prefer undo to "Are you sure?" dialogs; confirmation prompts train users to click through them. Reserve type-to-confirm ceremony for genuinely destructive, irreversible acts.
-- **Respect platform conventions.** Back gestures/buttons must close the topmost layer (sheet, modal) before leaving the screen; system behaviors (scroll physics, text selection, keyboard types: numeric keypads for numbers) work the way the platform trained users to expect. Fighting the platform always loses.
+- **Forgiveness over confirmation.** Prefer undo to "Are you sure?" dialogues; confirmation prompts train users to click through them. Reserve type-to-confirm ceremony for genuinely destructive, irreversible acts.
+- **Respect platform conventions.** Back gestures/buttons must close the topmost layer (sheet, modal) before leaving the screen; system behaviours (scroll physics, text selection, keyboard types: numeric keypads for numbers) work the way the platform trained users to expect. Fighting the platform always loses.
 - **Never block on the network for local intent.** Autosave continuously and say so quietly ("Saved · just now"); a user should never lose work, ever.
 
 ## Every state is designed

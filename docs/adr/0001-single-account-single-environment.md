@@ -11,7 +11,7 @@ One user (the owner), one maintainer, cost as an explicit priority. A second acc
 
 Run one AWS account with one environment (`prod`). No Organizations, no SCPs, no standing staging. Compensating controls replace what's given up:
 
-- **PR-time `cdk diff`** posted as a comment: the diff is the review artifact.
+- **PR-time `cdk diff`** posted as a comment: the diff is the review artefact.
 - **CI-blocking invariant tests + cdk-nag**: security posture enforced structurally, not by a reviewer's memory.
 - **IAM permission boundary** on the OIDC deploy role, standing in for SCPs.
 - **Ephemeral rehearsal stacks** (`--context env=rehearsal`): a prefixed throwaway copy deployed for a day when a change deserves rehearsal, then destroyed.

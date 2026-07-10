@@ -1,6 +1,6 @@
 ---
 name: google-backend-engineer
-description: Google-calibre backend engineering principles (API design, data modeling, SRE reliability practice, testing culture, and code health). Use this skill for ANY server-side or systems work; designing or reviewing APIs and services, database schema or key design, data pipelines, sync protocols, background jobs, queues, pagination, error contracts, idempotency, SLOs and alerting, or "make this production-ready". Trigger even when the user doesn't say "backend" but the task involves server code, data contracts, or anything a client calls over a network.
+description: Google-calibre backend engineering principles (API design, data modelling, SRE reliability practice, testing culture, and code health). Use this skill for ANY server-side or systems work; designing or reviewing APIs and services, database schema or key design, data pipelines, sync protocols, background jobs, queues, pagination, error contracts, idempotency, SLOs and alerting, or "make this production-ready". Trigger even when the user doesn't say "backend" but the task involves server code, data contracts, or anything a client calls over a network.
 ---
 
 # Google Backend Engineer
@@ -13,10 +13,10 @@ Anything non-trivial gets a short written design first: context, goals, **non-go
 
 ## API design: a product for the client, never a mirror of storage
 
-- **Resource-oriented first.** Model nouns (resources) with standard methods (get, list, create, update, delete) before inventing custom verbs; custom methods are for genuinely non-CRUD operations, not for skipping the modeling work. Uniformity is the feature: a client that has used one resource can predict the rest.
+- **Resource-oriented first.** Model nouns (resources) with standard methods (get, list, create, update, delete) before inventing custom verbs; custom methods are for genuinely non-CRUD operations, not for skipping the modelling work. Uniformity is the feature: a client that has used one resource can predict the rest.
 - **Contract rules that age well:** return the full resource from mutations; paginate with opaque tokens, never offsets (offsets break under concurrent writes and leak implementation); use one standard error envelope (`code`, `message`, `details`, `requestId`) and treat it as part of the contract; clients will parse it whether you meant them to or not.
-- **Compatibility is a promise.** Additive changes never break clients and never bump the version; breaking changes get a new version with a published parallel-run and sunset window. Once an API has one external caller, every observable behavior is load-bearing (Hyrum's Law); change behavior deliberately or not at all.
-- **Idempotency is mandatory on retryable mutations.** Clients on flaky networks *will* retry; a duplicated request must be a no-op (idempotency keys, conditional writes). This is a correctness requirement, not an optimization.
+- **Compatibility is a promise.** Additive changes never break clients and never bump the version; breaking changes get a new version with a published parallel-run and sunset window. Once an API has one external caller, every observable behaviour is load-bearing (Hyrum's Law); change behaviour deliberately or not at all.
+- **Idempotency is mandatory on retryable mutations.** Clients on flaky networks *will* retry; a duplicated request must be a no-op (idempotency keys, conditional writes). This is a correctness requirement, not an optimisation.
 
 ## Data: model from access patterns
 
@@ -35,4 +35,4 @@ Most tests are **small and hermetic**: fast, deterministic, no network, no real 
 
 ## Code health
 
-Code is read hundreds of times more than it's written. Optimize for the reader: boring, obvious code beats clever code; consistency within a codebase beats personal style. Simplicity is a feature with a maintenance dividend, so delete dead code on sight (version control remembers) and treat every new dependency as a liability with a real cost (supply chain, upgrades, cognitive load) to be priced before adoption. Build observability in from the start (structured logs with a request ID propagated end to end), because you operate what you build, and future-you at 11pm is the caller you're really designing for.
+Code is read hundreds of times more than it's written. Optimise for the reader: boring, obvious code beats clever code; consistency within a codebase beats personal style. Simplicity is a feature with a maintenance dividend, so delete dead code on sight (version control remembers) and treat every new dependency as a liability with a real cost (supply chain, upgrades, cognitive load) to be priced before adoption. Build observability in from the start (structured logs with a request ID propagated end to end), because you operate what you build, and future-you at 11pm is the caller you're really designing for.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-**Plainsight**, a value-investing financial statement analyzer: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (Recorded decision, plan §12.7: the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
+**Plainsight**, a value-investing financial statement analyser: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (Recorded decision, plan §12.7: the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
 
 **Current state: planning complete, no code yet.** The `docs/plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet; update this file when Phase 0 lands them.
 
@@ -24,7 +24,7 @@ Decisions in the plans (see §12 decision log) are **resolved**; do not relitiga
 
 **Decision layering:** the skills in [.claude/skills/](.claude/skills/) state general engineering standards (project-agnostic by design); [docs/adr/](docs/adr/) records where this project consciously deviates from them. Check the ADR index before proposing a best-practice addition, because it may already be priced and declined. When new work requires a new deviation, propose an ADR (there's a template) rather than deviating silently.
 
-**House style:** [docs/style.md](docs/style.md) governs all prose in this repo (docs now, UI copy later). Headline rule: no em dashes. CI enforces it; run `node scripts/check-style.mjs` locally and write to the rules the first time rather than after the check fails.
+**House style:** [docs/style.md](docs/style.md) governs all prose in this repo (docs now, UI copy later). Headline rules: no em dashes, and AU/UK English spelling (code, US tickers, and company/product names keep theirs). CI enforces both; run `node scripts/check-style.mjs` locally and write to the rules the first time rather than after the check fails.
 
 ## The binding constraint
 

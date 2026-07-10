@@ -12,15 +12,15 @@ Apply these principles as the default standard for all AWS work. They are delibe
 ### Operational excellence
 
 - **Everything is code.** Infrastructure, pipelines, alarms, dashboards, runbooks: all versioned, reviewed, and reproducible. Console changes are drift; detect them (scheduled `diff` against deployed state) and fold them back into code or revert them.
-- **Small, reversible changes.** Prefer many small deployments over big-bang releases. Every change needs a rollback story you could execute under stress: redeploy previous artifact, previous IaC ref, or point-in-time restore.
+- **Small, reversible changes.** Prefer many small deployments over big-bang releases. Every change needs a rollback story you could execute under stress: redeploy previous artefact, previous IaC ref, or point-in-time restore.
 - **Learn from failure.** Post-incident, fix the class of problem, not the instance: add the alarm, test, or guardrail that would have caught it.
 
 ### Security
 
 - **Strong identity foundation.** Least-privilege IAM everywhere: scope actions and resources tightly, use conditions to narrow further, and treat `Action: '*'` or `Resource: '*'` as a defect requiring explicit justification. Prefer roles over users; humans and CI assume short-lived credentials (SSO, OIDC federation); long-lived access keys are a liability to be eliminated, not rotated.
 - **Secrets never touch code.** No credentials in source, IaC state, environment-variable literals, or client bundles. Use Secrets Manager (when rotation is needed) or SSM Parameter Store SecureStrings (when it isn't), referenced by name at deploy time.
-- **Defense in depth, automated.** Block public access on every S3 bucket by default; encrypt at rest (service-managed keys are fine unless compliance says otherwise) and in transit always; security headers (CSP, HSTS) at the edge. Encode security posture as CI-blocking checks (cdk-nag, policy-as-code, assertion tests) so it survives refactors; a control that lives only in a reviewer's memory doesn't exist.
-- **Keep people away from data.** Prefer mechanisms (presigned URLs, parameterized access, break-glass roles with logging) over standing human access to production data.
+- **Defence in depth, automated.** Block public access on every S3 bucket by default; encrypt at rest (service-managed keys are fine unless compliance says otherwise) and in transit always; security headers (CSP, HSTS) at the edge. Encode security posture as CI-blocking checks (cdk-nag, policy-as-code, assertion tests) so it survives refactors; a control that lives only in a reviewer's memory doesn't exist.
+- **Keep people away from data.** Prefer mechanisms (presigned URLs, parameterised access, break-glass roles with logging) over standing human access to production data.
 
 ### Reliability
 
@@ -35,7 +35,7 @@ Apply these principles as the default standard for all AWS work. They are delibe
 - **Measure, then size.** Right-size memory/CPU from observed data, not guesses; on Lambda, remember per-millisecond billing often makes more memory both faster and cheaper. Default to ARM64/Graviton (better price-performance with rarely a downside).
 - **Cache where data allows.** Edge caching (CloudFront) and TTL caches absorb read traffic cheaply; be explicit about staleness tolerance and invalidation.
 
-### Cost optimization
+### Cost optimisation
 
 - **Cost is a design input.** Estimate the monthly line for every new resource before creating it; know which components idle (idle spend on a spiky workload signals the wrong service choice; NAT gateways, ALBs, and provisioned capacity are the classic silent leaks).
 - **Attribute everything.** Consistent tags (`project`, `env`, `owner`) from day one so Cost Explorer can answer "what is this bill?".
@@ -44,11 +44,11 @@ Apply these principles as the default standard for all AWS work. They are delibe
 
 ### Sustainability
 
-- Maximize utilization (scale-to-zero beats idle fleets), prefer managed services and efficient silicon (ARM), and delete what nothing uses. Mostly this pillar is free when the others are followed.
+- Maximise utilisation (scale-to-zero beats idle fleets), prefer managed services and efficient silicon (ARM), and delete what nothing uses. Mostly this pillar is free when the others are followed.
 
 ## Cross-cutting disciplines
 
-**Infrastructure as code.** Stacks/modules are units of blast radius and deploy cadence, not service categories; keep them small enough that a diff is reviewable, because the diff *is* the review artifact. Pin environments explicitly (account/region); no environment-agnostic stacks. Express environment differences as data (typed config), not branching code. Extract shared constructs on the second use, not the first. Escape hatches to lower-level resources require a comment explaining why the abstraction couldn't express it.
+**Infrastructure as code.** Stacks/modules are units of blast radius and deploy cadence, not service categories; keep them small enough that a diff is reviewable, because the diff *is* the review artefact. Pin environments explicitly (account/region); no environment-agnostic stacks. Express environment differences as data (typed config), not branching code. Extract shared constructs on the second use, not the first. Escape hatches to lower-level resources require a comment explaining why the abstraction couldn't express it.
 
 **Networking.** Don't create a VPC by default: Lambda, DynamoDB, S3, and most managed services need none, and a VPC brings NAT cost, subnet design, and a class of misconfiguration with it. When a VPC is genuinely required (RDS, EC2, containers), design it deliberately: private subnets for workloads, VPC endpoints over NAT where traffic allows, security groups as the firewall.
 

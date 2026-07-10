@@ -23,8 +23,8 @@ Apply these principles as the default standard for all frontend work. They are d
 ## Performance is architecture, not an afterthought
 
 - **Set budgets and enforce them in CI** (initial bundle size, time-to-interactive on a mid-range device) because unbudgeted performance only ever degrades. Code-split by route so the first paint pays only for the first screen; heavy libraries (charts, editors, parsers) load with the feature that uses them, never in the shell.
-- **The render tree is the performance model.** A keystroke must never re-render the world: colocate volatile state (form fields hold local state, commit on blur/debounce) so high-frequency updates stay in a leaf. Prefer restructuring state over sprinkling memoization: `memo`/`useMemo` are targeted tools applied after measuring, not incantations applied everywhere.
-- **Measure before optimizing, virtualize when measured.** Long lists get virtualization when profiling says so; speculative optimization buys complexity with no receipt.
+- **The render tree is the performance model.** A keystroke must never re-render the world: colocate volatile state (form fields hold local state, commit on blur/debounce) so high-frequency updates stay in a leaf. Prefer restructuring state over sprinkling memoisation: `memo`/`useMemo` are targeted tools applied after measuring, not incantations applied everywhere.
+- **Measure before optimising, virtualise when measured.** Long lists get virtualisation when profiling says so; speculative optimisation buys complexity with no receipt.
 
 ## Type safety, end to end
 
@@ -36,7 +36,7 @@ TypeScript strict mode, no unexplained `any`. Types flow from a single schema so
 - **Optimistic UI with rollback** where latency would otherwise block the user: apply the change locally, reconcile with the server, and be able to undo cleanly on failure.
 - **Never lose user work.** Autosave drafts continuously; treat storage quota and write failures as designed-for states with a visible recovery path, not exceptions.
 
-## Testing: behavior, not implementation
+## Testing: behaviour, not implementation
 
 Test components the way a user experiences them: query by role and label, assert on visible outcomes, and avoid reaching into internals; tests coupled to implementation detail punish refactoring, which is exactly when you need them most. Component tests carry most of the load; a few end-to-end tests cover the journeys that matter; visual regression belongs on the design-system layer where a pixel change is meaningful. Snapshot dumps of whole trees assert everything and therefore nothing. Prefer explicit assertions.
 

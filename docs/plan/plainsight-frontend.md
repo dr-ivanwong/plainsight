@@ -1,7 +1,7 @@
 # Frontend Specification: Routes, Screens, States & First-Run
 
 **Companion to:** `plainsight.md` (design language, §4; frontend architecture, §5) and `plainsight-data-model.md` (every value rendered here). **Status:** Draft for owner review · **Date:** July 2026
-**Purpose:** the build contract for Phase 1–3 UI work. The main plan pins the design language (type scale, spacing, color, motion); this document pins *what exists*: every route, every screen, every screen's empty/loading/error states, the first-run flow, and the component and hook inventories. If a state can occur, its rendering is specified here; "we'll figure out the empty state later" is how craft dies.
+**Purpose:** the build contract for Phase 1–3 UI work. The main plan pins the design language (type scale, spacing, colour, motion); this document pins *what exists*: every route, every screen, every screen's empty/loading/error states, the first-run flow, and the component and hook inventories. If a state can occur, its rendering is specified here; "we'll figure out the empty state later" is how craft dies.
 
 ---
 
@@ -27,7 +27,7 @@
 
 ### 1.2 Navigation model
 
-Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centered column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl.
+Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl.
 
 ## 2. Global chrome and cross-cutting states
 
@@ -80,7 +80,7 @@ Slides up from the tapped card (spatial continuity); Escape/back closes. Content
 
 Purpose: the craft-critical screen. Segmented control (Income / Balance / Cash flow); fiscal years as columns; canonical line items as rows with the "find it as…" hints from companion §2.
 
-Key behaviors: `MoneyField` formats thousands separators as-you-type; the FY header shows unit scale ("figures in millions, AUD") set once per year; negative entry allowed only on P-0 signed items; derived rows (gross profit, totals) compute live in gray; a completeness meter ("9 of 11 core items") sits in the header; per-statement provenance chip; **known-zero affordance**: each field's overflow menu offers "Not reported → 0", rendering a `∅0` chip (companion §8's null-vs-zero distinction, surfaced).
+Key behaviours: `MoneyField` formats thousands separators as-you-type; the FY header shows unit scale ("figures in millions, AUD") set once per year; negative entry allowed only on P-0 signed items; derived rows (gross profit, totals) compute live in grey; a completeness meter ("9 of 11 core items") sits in the header; per-statement provenance chip; **known-zero affordance**: each field's overflow menu offers "Not reported → 0", rendering a `∅0` chip (companion §8's null-vs-zero distinction, surfaced).
 
 | State | Rendering |
 |---|---|
@@ -117,7 +117,7 @@ Four structured sections (business / moat / valuation / what kills it), distract
 
 ### S9: Settings root
 
-Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **About** (version, licenses, replay onboarding).
+Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **About** (version, licences, replay onboarding).
 
 ### S10: Settings → Providers (BYOK)
 
@@ -164,7 +164,7 @@ Any component crossing ~8 props triggers the design review per main plan §5.
 | Hook | Feeds | Source |
 |---|---|---|
 | `useCompanies()` / `useCompany(id)` | S2 / S3–S8 headers | Dexie live query |
-| `useMetrics(companyId)` | S3, S4, S7 | calc-engine, memoized per `(companyId, dataVersion)` |
+| `useMetrics(companyId)` | S3, S4, S7 | calc-engine, memoised per `(companyId, dataVersion)` |
 | `useRedFlags(companyId)` | S3 | calc-engine rules + `flagDismissals` |
 | `useThesis(companyId)` | S8 | Dexie live query + version writes |
 | `useComparison(ids)` | S7 | `useMetrics` fan-out + P-7 currency check |
@@ -177,7 +177,7 @@ Keystrokes never cross feature boundaries: `MoneyField` holds local state, commi
 
 ## 7. Responsive rules
 
-Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centered 560px panels), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(auto-fit, minmax(160px, 1fr))` → 3–4 columns). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
+Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(auto-fit, minmax(160px, 1fr))` → 3–4 columns). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 

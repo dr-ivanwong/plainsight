@@ -1,6 +1,6 @@
 # Plainsight
 
-A hobby project: a financial statement analyzer for long-term value investors. The numbers were in plain sight all along. Designed and built in collaboration with [Claude](https://claude.com/claude-code).
+A hobby project: a financial statement analyser for long-term value investors. The numbers were in plain sight all along. Designed and built in collaboration with [Claude](https://claude.com/claude-code).
 
 ## What it is
 
