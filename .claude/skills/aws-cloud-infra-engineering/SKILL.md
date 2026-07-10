@@ -1,57 +1,59 @@
 ---
 name: aws-cloud-infra-engineering
-description: AWS infrastructure engineering discipline for this repo — Well-Architected principles applied through the project's CDK contract. Use this skill for ANY work touching AWS or infra — writing or reviewing CDK stacks/constructs in infra/, Lambda functions, DynamoDB, S3/CloudFront, API Gateway, IAM policies, SSM parameters, EventBridge/Step Functions, the GitHub Actions infra pipeline, cdk diff/deploy, cost or security questions, or scaffolding infra/ in Phase 0. Trigger even when the user doesn't say "AWS" but the task involves deploying, provisioning, secrets, budgets, or anything under infra/.
+description: AWS cloud infrastructure engineering grounded in the Well-Architected Framework and AWS best practices. Use this skill for ANY work involving AWS — designing or reviewing architecture, writing infrastructure as code (CDK, CloudFormation, Terraform), Lambda, DynamoDB, S3, CloudFront, API Gateway, VPC/networking, IAM policies, secrets management, CI/CD pipelines to AWS, observability, cost review, or security review of cloud infrastructure. Trigger even when the user doesn't say "AWS" but the task involves deploying, provisioning, cloud cost, cloud security, or files under infra/.
 ---
 
 # AWS Cloud Infrastructure Engineering
 
-## Order of authority
+Apply these principles as the default standard for all AWS work. They are deliberately general: when a project's recorded decision (e.g., an ADR) deviates from them, follow the recorded decision and don't relitigate it — but a deviation that isn't recorded is a gap, not a decision. Propose an ADR when you need to deviate.
 
-1. **[plan/buffet-app-cdk.md](../../../plan/buffet-app-cdk.md)** is the build contract — stack decomposition (§3), repo layout and config shape (§4), code conventions (§5), security gates (§6), pipelines (§7), cost guardrails and the not-list (§8). Read the relevant section before writing infra code.
-2. This skill is the operating discipline: how to apply AWS best practices *within* that contract.
-3. Generic AWS best practice loses to a recorded decision. This project deliberately excludes things AWS marketing calls essential (WAF, GuardDuty, CloudTrail trails, Secrets Manager, VPC — the §8 not-list) because at one user serving public data, each costs more than the workload it protects. Re-adding one is a design review with a cost line, never a reflex. If a decision genuinely must change, change the plan document in the same PR — code and contract never diverge.
+## The Well-Architected pillars
 
-## Well-Architected, sized for this project
+### Operational excellence
 
-The six pillars apply here, but resolved for a solo-maintainer, ~$0/month, single-account serverless app:
+- **Everything is code.** Infrastructure, pipelines, alarms, dashboards, runbooks — all versioned, reviewed, and reproducible. Console changes are drift; detect them (scheduled `diff` against deployed state) and fold them back into code or revert them.
+- **Small, reversible changes.** Prefer many small deployments over big-bang releases. Every change needs a rollback story you could execute under stress: redeploy previous artifact, previous IaC ref, or point-in-time restore.
+- **Learn from failure.** Post-incident, fix the class of problem, not the instance — add the alarm, test, or guardrail that would have caught it.
 
-**Operational excellence — IaC-complete or it didn't happen.**
-Every resource exists in CDK. Console changes are drift (the weekly `cdk diff` job is the tripwire); if you're tempted to click, write the construct instead. Small stacks are the unit of blast radius and deploy cadence: stateful (`Data`, `Auth`) apart from stateless (`Api`, `Ingestion`, `StaticSite`) so an API iteration can never touch the table holding data. The `cdk diff` posted to the PR *is* the review artifact — keep stacks small enough that diffs stay readable.
+### Security
 
-**Security — protect the wallet and the keys; the data is public.**
-The threat model is inverted from a normal SaaS: filings are free on EDGAR, so the assets are AWS credentials, provider API keys, and the monthly bill. Concretely:
-- Least-privilege IAM per function; no `Action: '*'` or `Resource: '*'` outside the two documented CDK-managed exceptions. Scope DynamoDB access by key-prefix condition where sensible.
-- Secrets only as SSM SecureStrings referenced by name — never in code, CloudFormation state, env-var literals, or the client bundle.
-- No long-lived AWS credentials anywhere: GitHub Actions assumes the OIDC role; the deploy role carries a permission boundary and can only assume the CDK roles.
-- S3: `BlockPublicAccess.BLOCK_ALL` + encryption, always. CloudFront reaches the site bucket via OAC only.
-- The CSP `connect-src` allowlist is invariant-tested to equal exactly config — it can never silently widen.
+- **Strong identity foundation.** Least-privilege IAM everywhere: scope actions and resources tightly, use conditions to narrow further, and treat `Action: '*'` or `Resource: '*'` as a defect requiring explicit justification. Prefer roles over users; humans and CI assume short-lived credentials (SSO, OIDC federation) — long-lived access keys are a liability to be eliminated, not rotated.
+- **Secrets never touch code.** No credentials in source, IaC state, environment-variable literals, or client bundles. Use Secrets Manager (when rotation is needed) or SSM Parameter Store SecureStrings (when it isn't), referenced by name at deploy time.
+- **Defense in depth, automated.** Block public access on every S3 bucket by default; encrypt at rest (service-managed keys are fine unless compliance says otherwise) and in transit always; security headers (CSP, HSTS) at the edge. Encode security posture as CI-blocking checks (cdk-nag, policy-as-code, assertion tests) so it survives refactors — a control that lives only in a reviewer's memory doesn't exist.
+- **Keep people away from data.** Prefer mechanisms (presigned URLs, parameterized access, break-glass roles with logging) over standing human access to production data.
 
-**Reliability — the client is the circuit breaker.**
-The local-first frontend means a total backend failure degrades to a fully functional offline app; don't buy redundancy the architecture already provides for free. What's still owed: explicit timeout on every Lambda and every outbound call, exponential backoff + jitter on external fetches (EDGAR, MAP), DLQs with depth alarms so a poisoned filing's blast radius is one company, PITR + deletion protection on stateful prod resources, and idempotency on any mutation a flaky network can retry.
+### Reliability
 
-**Performance efficiency — serverless, ARM, short-and-fat.**
-Everything pay-per-request: no containers, no ALB, nothing idling. Lambdas are `NodejsFunction`, Node 22, ARM64. Memory is a deliberate choice per function: 256MB floor for API/sync (128MB starves Node cold starts to save micro-cents), 1024–1536MB for rasterizing extraction work — per-millisecond billing makes short-and-fat cheaper than long-and-thin. No provisioned concurrency ever; a cold start on a single-user API is a non-problem.
+- **Design for failure.** Every network call gets a timeout; every retry gets exponential backoff with jitter and a retry budget. Make mutations idempotent — clients on flaky networks will retry, and a duplicate must be a no-op.
+- **Contain blast radius.** Decompose by failure domain: a poisoned message goes to a DLQ (with a depth alarm) rather than blocking the pipeline; one component's crash degrades its feature, not the system. Separate stateful from stateless resources so routine deploys can't touch data.
+- **Protect state.** Backups/PITR on anything holding data users would miss, deletion protection and RETAIN policies on stateful production resources, and lifecycle rules so versioning doesn't become an unbounded leak. Test restores — an unexercised backup is a hope, not a plan.
+- **Throttle at the edge.** API throttles and quotas protect both availability and the bill; load-shed before saturation.
 
-**Cost optimization — the bill is a design input, not a surprise.**
-Steady state is ≈ $0–4/month and stays there by construction: always-free tiers pinned deliberately (DynamoDB provisioned 25 RCU/25 WCU — ingestion paced under the ceiling), 30-day log retention (infinite retention is AWS's quietest leak), lifecycle rules on every versioned bucket, and Budgets wired to the SSM kill switch that disables extraction at threshold. Every proposed resource answers two questions before it exists: *does it idle?* (idling means it's the wrong shape for this workload) and *what's its monthly line?* (add it to the cost model if nonzero).
+### Performance efficiency
 
-**Sustainability** falls out of the above: ARM64, scale-to-zero, no idle compute. Nothing extra to do.
+- **Serverless first, when the workload fits.** Spiky, low-duty-cycle, or unpredictable workloads belong on pay-per-request services (Lambda, DynamoDB, S3, SQS, Step Functions). Reach for containers or instances only when duty cycle, runtime limits, or ecosystem genuinely demand them.
+- **Measure, then size.** Right-size memory/CPU from observed data, not guesses; on Lambda, remember per-millisecond billing often makes more memory both faster and cheaper. Default to ARM64/Graviton — better price-performance with rarely a downside.
+- **Cache where data allows.** Edge caching (CloudFront) and TTL caches absorb read traffic cheaply; be explicit about staleness tolerance and invalidation.
 
-## Task checklists
+### Cost optimization
 
-**Adding a resource:**
-1. Which stack? Decide by blast radius and deploy cadence, not service category (§3 table). Stateful → `Data`/`Auth` behind the environment gate.
-2. Removal policy from `config.protectData` — prod stateful gets RETAIN + deletion protection; rehearsal gets DESTROY.
-3. Feature-flag it to its roadmap phase in config (`features.*`) — the app must never synthesize infrastructure ahead of the phase that needs it. Flags in config, not commented-out code.
-4. Check the §8 not-list before adding any new AWS service.
-5. New security-relevant property → pin it with an assertion test in `test/invariants.test.ts` so it survives refactors.
+- **Cost is a design input.** Estimate the monthly line for every new resource before creating it; know which components idle (idle spend on a spiky workload signals the wrong service choice — NAT gateways, ALBs, and provisioned capacity are the classic silent leaks).
+- **Attribute everything.** Consistent tags (`project`, `env`, `owner`) from day one so Cost Explorer can answer "what is this bill?".
+- **Guardrails, not vigilance.** AWS Budgets with staged alerts, cost anomaly detection, and — where a component can spend meaningfully (LLM calls, data egress, per-request services exposed publicly) — an automated kill switch, because a human reading an email is not an incident response.
+- **Cap the quiet leaks.** Explicit log retention (the default is *forever*), lifecycle policies on buckets, cleanup of unattached volumes/old snapshots/stale environments. Exploit free tiers deliberately, and revisit provisioned-vs-on-demand as traffic patterns become known.
 
-**Writing a Lambda:** `NodejsFunction`, Node 22, ARM64, explicit `timeout` (a missing timeout is a rejected PR), deliberate `memorySize`, `logRetention: 30 days`, X-Ray only on the ingestion path. Extract a shared construct on the second use, never the first — expected extractions are `AppFunction` and `AlarmedQueue`.
+### Sustainability
 
-**Escape hatches and suppressions:** no L1 escape hatch without a comment explaining why the L2 couldn't express it. Every `cdk-nag` suppression carries an inline justification string; the WAF-family findings are pre-authorized with the not-list rationale.
+- Maximize utilization (scale-to-zero beats idle fleets), prefer managed services and efficient silicon (ARM), and delete what nothing uses. Mostly this pillar is free when the others are followed.
 
-**Before any deploy:** `pnpm test` (invariants + cdk-nag) → `cdk synth` → read the `cdk diff` yourself. Deploys go through the pipeline (`infra.yml`), not a laptop, once it exists. A change that deserves rehearsal gets an ephemeral `--context env=rehearsal` copy — deployed, verified, destroyed same-day. Rollback is redeploying the previous git ref.
+## Cross-cutting disciplines
 
-## Environment facts
+**Infrastructure as code.** Stacks/modules are units of blast radius and deploy cadence, not service categories — keep them small enough that a diff is reviewable, because the diff *is* the review artifact. Pin environments explicitly (account/region); no environment-agnostic stacks. Express environment differences as data (typed config), not branching code. Extract shared constructs on the second use, not the first. Escape hatches to lower-level resources require a comment explaining why the abstraction couldn't express it.
 
-Single account, single environment (`prod` + ephemeral rehearsal overlays), region `ap-southeast-2` — the sole exception is a us-east-1 cert stack, and only if the custom-domain decision is ever reversed (currently `domain: null`, default `*.cloudfront.net` origin). Every stack pins `env: { account, region }`; tags (`project`, `env`, `owner`) applied once at the app root. Phase 1 synthesizes exactly `Foundation`, `GithubOidc`, `StaticSite` — a bucket and a CDN, zero compute, which is the point.
+**Networking.** Don't create a VPC by default — Lambda, DynamoDB, S3, and most managed services need none, and a VPC brings NAT cost, subnet design, and a class of misconfiguration with it. When a VPC is genuinely required (RDS, EC2, containers), design it deliberately: private subnets for workloads, VPC endpoints over NAT where traffic allows, security groups as the firewall.
+
+**Deployment pipelines.** CI assumes an OIDC-federated role — zero stored cloud credentials. Separate infrastructure pipelines from application pipelines; changes to stateful resources get an approval gate. Deploys happen from the pipeline, not laptops. Smoke-check after deploy; keep rollback under five minutes.
+
+**Observability.** Structured JSON logs with a request ID propagated end to end. Alert on symptoms (error rate, latency percentiles, DLQ depth, missed schedules), not causes — symptom alerts survive refactors and don't page for non-problems. Dashboards follow the four golden signals per endpoint. Tracing (X-Ray) where multi-hop debugging will actually happen, not everywhere.
+
+**Right-size the controls to the workload.** The Framework itself says trade-offs depend on context: org-scale controls (multi-account Organizations + SCPs, GuardDuty, Security Hub, WAF, Config) earn their cost at org scale; a small single-account workload may legitimately meet the same goals with cheaper mechanisms — permission boundaries, invariant tests, throttles, budget kill switches. What's non-negotiable at any scale: least privilege, no long-lived credentials, encrypted data, blocked-public buckets, backups on real data, and a written record (ADR) wherever you consciously deviate from the default.
