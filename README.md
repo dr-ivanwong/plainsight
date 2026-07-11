@@ -10,7 +10,7 @@ The core design constraint: **everything works offline**. All analysis runs in t
 
 ## Status
 
-**Planning.** The engineering plans in [`docs/plan/`](docs/plan/) are complete (the data model is reviewed and pinned; the backend spec's short review list waits for Phase 2) and code has not started. Next up is Phase 0: monorepo scaffold, design tokens, and the calculation engine with golden-file tests against hand-verified 10-Ks.
+**Phase 0 (foundations) is built.** The pnpm monorepo carries `packages/calc-engine` (the full pinned metric dictionary M1 to M14 and red-flag rules R1 to R7, 100% branch coverage, golden-file tests against five real companies' as-filed EDGAR data), `apps/web` (the typed design-token system with a WCAG contrast gate and a placeholder Library route), and `infra/` (the Foundation, GithubOidc, and StaticSite stacks with cdk-nag and invariant tests), wired into CI. Phase 1, the offline PWA core, is next; the engineering plans in [`docs/plan/`](docs/plan/) remain the build contracts (the backend spec's short review list waits for Phase 2).
 
 | Document | Covers |
 |---|---|

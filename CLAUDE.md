@@ -6,7 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Plainsight**, a value-investing financial statement analyser: a **single-user, local-first PWA** that computes 12 dashboard metrics from a pinned 14-metric dictionary (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (Recorded decision, plan §12.7: the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
 
-**Current state: planning complete, no code yet.** The `docs/plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet; update this file when Phase 0 lands them.
+**Current state: Phase 0 (foundations) landed 2026-07-11.** The workspace: `packages/calc-engine` (complete per the data-model spec: M1 to M14, R1 to R7, P-0 to P-8, 100% branch coverage enforced, golden corpus green), `apps/web` (Vite + React 19 + TanStack Router + Vanilla Extract tokens with a CI contrast gate; placeholder Library route only), `infra/` (Foundation, GithubOidc, StaticSite; invariant and cdk-nag suites). Phase 1 (offline PWA core: Dexie layer, screens S1 to S12, PWA shell) is the next work.
+
+### Build and test commands
+
+pnpm runs via corepack (`corepack pnpm ...`); Node 22+. TypeScript is pinned to the 5.9 line (typescript-eslint and parts of the toolchain do not support TS 6/7 yet).
+
+- `corepack pnpm install`, then `corepack pnpm -r typecheck`, `corepack pnpm -r test`, `corepack pnpm -r build` (root scripts fan out to every workspace)
+- calc-engine tests enforce 100% branch coverage as a threshold; the golden fixtures regenerate with `EDGAR_CONTACT=you@example.com node tools/generate-fixtures.mjs` from `packages/calc-engine` (read `fixtures/README.md` first: it records the mapping and the interpretation notes awaiting owner review)
+- infra: `corepack pnpm -C infra synth` and `corepack pnpm -C infra test`; the StaticSite snapshot is reviewed on change, never regenerated blindly
+- `node scripts/check-style.mjs` checks every tracked Markdown file; write to the rules the first time
 
 ## The plans are the authority
 
