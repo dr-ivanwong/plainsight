@@ -1,0 +1,1044 @@
+{
+  "meta": {
+    "name": "Union Pacific",
+    "ticker": "UNP",
+    "exchange": "NYSE",
+    "cik": "0000100885",
+    "edgarEntityName": "UNION PACIFIC CORP",
+    "currency": "USD",
+    "source": "SEC EDGAR companyfacts (XBRL)",
+    "selectionPolicy": "Annual periods from 10-K filings, as-originally-reported: each period takes its value from the earliest 10-K reporting it; 10-K/A only where no original exists.",
+    "generatedAt": "2026-07-11T05:02:10.943Z",
+    "mapping": {
+      "revenue": [
+        "RevenueFromContractWithCustomerExcludingAssessedTax"
+      ],
+      "operatingIncome": [
+        "OperatingIncomeLoss"
+      ],
+      "interestExpense": [
+        "InterestExpense",
+        "InterestExpenseNonoperating"
+      ],
+      "pretaxIncome": [
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+      ],
+      "taxExpense": [
+        "IncomeTaxExpenseBenefit"
+      ],
+      "netIncome": [
+        "NetIncomeLoss"
+      ],
+      "dilutedShares": [
+        "WeightedAverageNumberOfDilutedSharesOutstanding"
+      ],
+      "cashAndEquivalents": [
+        "CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "currentAssets": [
+        "AssetsCurrent"
+      ],
+      "totalAssets": [
+        "Assets"
+      ],
+      "currentLiabilities": [
+        "LiabilitiesCurrent"
+      ],
+      "shortTermDebt": [
+        "CommercialPaper+LongTermDebtAndCapitalLeaseObligationsCurrent"
+      ],
+      "longTermDebt": [
+        "LongTermDebtAndCapitalLeaseObligations"
+      ],
+      "totalLiabilities": [
+        "Liabilities"
+      ],
+      "totalEquity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+      ],
+      "operatingCashFlow": [
+        "NetCashProvidedByUsedInOperatingActivities"
+      ],
+      "capex": [
+        "PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      "depreciationAmortisation": [
+        "Depreciation"
+      ],
+      "dividendsPaid": [
+        "PaymentsOfDividends"
+      ],
+      "shareRepurchases": [
+        "PaymentsForRepurchaseOfCommonStock"
+      ]
+    },
+    "notes": []
+  },
+  "price": {
+    "amountMinor": 24000,
+    "currency": "USD",
+    "asOf": "2026-07-10",
+    "note": "Fixture price chosen to exercise the valuation metrics; not verified market data."
+  },
+  "years": [
+    {
+      "fy": "FY2020",
+      "endDate": "2020-12-31",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1953300000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 783400000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 114100000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 698000000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 163100000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 534900000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 679100000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 179900000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 421400000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 6239800000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 417300000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 114400000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 2566000000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 4544000000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1695800000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 854000000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 292700000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 221000000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 262600000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 370500000000
+        }
+      },
+      "sourceRef": {
+        "system": "EDGAR",
+        "accessions": [
+          "0000100885-21-000068",
+          "0001437749-22-002494"
+        ]
+      }
+    },
+    {
+      "fy": "FY2021",
+      "endDate": "2021-12-31",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 2180400000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 933800000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 115700000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 847800000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 195500000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 652300000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 655400000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 96000000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 355100000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 6352500000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 574400000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 256600000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 2756300000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 4936400000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1416100000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 903200000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 293600000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 220800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 280000000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 729100000000
+        }
+      },
+      "sourceRef": {
+        "system": "EDGAR",
+        "accessions": [
+          "0001437749-22-002494"
+        ]
+      }
+    },
+    {
+      "fy": "FY2022",
+      "endDate": "2022-12-31",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 2487500000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 991700000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 127100000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 907200000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 207400000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 699800000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 624000000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 97300000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 395200000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 6544900000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 552000000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 187800000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 3164800000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 5328600000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1216300000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 936200000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 362000000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 224600000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 315900000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 628200000000
+        }
+      },
+      "sourceRef": {
+        "system": "EDGAR",
+        "accessions": [
+          "0001437749-23-002959"
+        ]
+      }
+    },
+    {
+      "fy": "FY2023",
+      "endDate": "2023-12-31",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 2411900000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 908200000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 134000000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 823300000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 185400000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 637900000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 610200000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 105500000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 414800000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 6713200000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 510600000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 142300000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 3115600000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 5234400000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1478800000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 837900000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 360600000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 231800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 317300000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 70500000000
+        }
+      },
+      "sourceRef": {
+        "system": "EDGAR",
+        "accessions": [
+          "0001437749-24-003599"
+        ]
+      }
+    },
+    {
+      "fy": "FY2024",
+      "endDate": "2024-12-31",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 2425000000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 971300000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 126900000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 879400000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 204700000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 674700000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 608600000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 101600000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 402100000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 6771500000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 525400000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 142500000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 2976700000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 5082500000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1689000000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 934600000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 345200000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 239800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 321300000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 150500000000
+        }
+      },
+      "sourceRef": {
+        "system": "EDGAR",
+        "accessions": [
+          "0000100885-25-000042"
+        ]
+      }
+    },
+    {
+      "fy": "FY2025",
+      "endDate": "2025-12-31",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 2451000000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 984600000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 130900000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 916600000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 202800000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 713800000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 595900000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 126600000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 455500000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 6969800000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 501400000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 152000000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 3029400000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 5123100000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1846700000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 929000000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 379100000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 246500000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 323600000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 267900000000
+        }
+      },
+      "sourceRef": {
+        "system": "EDGAR",
+        "accessions": [
+          "0000100885-26-000037"
+        ]
+      }
+    }
+  ],
+  "expected": {
+    "metrics": {
+      "M1": {
+        "FY2020": {
+          "status": "insufficient_data",
+          "missing": [
+            "costOfRevenue"
+          ]
+        },
+        "FY2021": {
+          "status": "insufficient_data",
+          "missing": [
+            "costOfRevenue"
+          ]
+        },
+        "FY2022": {
+          "status": "insufficient_data",
+          "missing": [
+            "costOfRevenue"
+          ]
+        },
+        "FY2023": {
+          "status": "insufficient_data",
+          "missing": [
+            "costOfRevenue"
+          ]
+        },
+        "FY2024": {
+          "status": "insufficient_data",
+          "missing": [
+            "costOfRevenue"
+          ]
+        },
+        "FY2025": {
+          "status": "insufficient_data",
+          "missing": [
+            "costOfRevenue"
+          ]
+        }
+      },
+      "M2": {
+        "FY2020": {
+          "status": "ok",
+          "display": "40.1%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "42.8%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "39.9%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "37.7%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "40.1%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "40.2%"
+        }
+      },
+      "M3": {
+        "FY2020": {
+          "status": "ok",
+          "display": "27.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "29.9%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "28.1%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "26.4%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "27.8%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "29.1%"
+        }
+      },
+      "M4": {
+        "FY2020": {
+          "status": "ok",
+          "display": "31.5%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "41.9%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "53.2%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "47.3%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "42.6%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "40.4%",
+          "basis": "average"
+        }
+      },
+      "M5": {
+        "FY2020": {
+          "status": "ok",
+          "display": "14.3%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "16.8%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "17.4%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "15.5%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "16.0%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "16.0%",
+          "basis": "average"
+        }
+      },
+      "M6": {
+        "FY2020": {
+          "status": "ok",
+          "display": "1.58"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "2.13"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "2.76"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "2.20"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "1.85"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "1.72"
+        }
+      },
+      "M7": {
+        "FY2020": {
+          "status": "ok",
+          "display": "1.01"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "0.62"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "0.72"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "0.81"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.77"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "0.91"
+        }
+      },
+      "M8": {
+        "FY2020": {
+          "status": "ok",
+          "display": "6.9×"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "8.1×"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "7.8×"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "6.8×"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "7.7×"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "7.5×"
+        }
+      },
+      "M9": {
+        "FY2020": {
+          "status": "ok",
+          "display": "$5.61b"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "$6.10b"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "$5.74b"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "$4.77b"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "$5.89b"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "$5.50b"
+        }
+      },
+      "M10": {
+        "FY2020": {
+          "status": "ok",
+          "display": "28.7%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "28.0%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "23.1%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "19.8%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "24.3%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "22.4%"
+        }
+      },
+      "M11": {
+        "FY2020": {
+          "status": "ok",
+          "display": "104.9%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "93.5%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "82.1%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "74.8%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "87.4%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "77.0%"
+        }
+      },
+      "M12": {
+        "FY2020": {
+          "status": "ok",
+          "display": "30.47"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "24.11"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "21.40"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "22.96"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "21.65"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "20.04"
+        }
+      },
+      "M13": {
+        "FY2020": {
+          "status": "ok",
+          "display": "3.3%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "4.1%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "4.7%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "4.4%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "4.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "5.0%"
+        }
+      },
+      "M14": {
+        "FY2020": {
+          "status": "ok",
+          "display": "3.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "3.9%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "3.8%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "3.3%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "4.0%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "3.8%"
+        }
+      }
+    },
+    "flags": []
+  }
+}
