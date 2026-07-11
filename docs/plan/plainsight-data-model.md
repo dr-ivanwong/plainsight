@@ -9,7 +9,7 @@
 
 - **"Pinned" means contract.** Changing a pinned formula, threshold, or policy requires updating this document in the same change, plus a regression test capturing the old and new behaviour. The calc engine implements this document; it does not interpret it.
 - The engine is `(statements) → MetricsReport`: pure, zero-dependency, no I/O (main plan §5). It consumes the §2 line items typed per §3, applies the §4 policies, and emits §6 metric values and §7 rule results as discriminated unions. The UI renders unions; it never recomputes.
-- Two decisions are deliberately left open for the owner (§12: D1 sample corpus, D2 metric budget). Everything else in this draft is pinned pending the review pass.
+- One decision remains open for the owner (§12 D2, the metric budget); D1 (the sample corpus) is resolved in §12. Everything else in this draft is pinned pending the review pass.
 
 ## 2. Canonical line items
 
@@ -252,9 +252,9 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 | Apple | AAPL | NASDAQ | 10-K | 10 | 0 |
 | Microsoft | MSFT | NASDAQ | 10-K | 6 | 0 |
 | Coca-Cola | KO | NYSE | 10-K | 10 | 0 |
-| Costco | COST | NASDAQ | 10-K | 6 | 0 |
+| Costco | COST | NASDAQ | 10-K | 10 | 0 |
 | Union Pacific | UNP | NYSE | 10-K | 6 | 0 |
-| CSL | CSL | ASX | Annual report (IFRS) | 10 | 2.5 (or 0, per D1) |
+| CSL | CSL | ASX | Annual report (IFRS) | 10 | 2.5 |
 | Wesfarmers | WES | ASX | Annual report | 6 | 2.5 |
 | Woolworths | WOW | ASX | Annual report | 6 | 2.5 |
 | JB Hi-Fi | JBH | ASX | Annual report | 6 | 2.5 |
@@ -262,16 +262,12 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 - **Fixture format:** one JSON file per company: canonical line items per FY in minor units, a per-statement source reference (filing id + page), the expected `MetricsReport` computed by hand at display precision, and the expected red-flag results.
 - **Acceptance:** line items equal the filing exactly (integer equality); metric values equal the hand computation at P-2 display precision; every bug ever found adds a regression fixture (main plan §5).
-- **Depth rationale:** 10 FYs for sample-data companies (their fixtures back the S2/S3 ten-year sparklines end to end); 6 FYs minimum elsewhere, which covers the widest windows in the system (the 5-year delta chip needs 6 labels; R2 needs 4). Hand-verifying ten years for all ten companies (~6,000 figures) buys nothing the 6-year floor doesn't.
-- **Sample subset:** the S2 "See it with sample data" fixtures are generated from this corpus (frontend §4). Which three companies constitute the sample set is decision D1.
+- **Depth rationale:** 10 FYs for sample-data companies (their fixtures back the S2/S3 ten-year sparklines end to end); 6 FYs minimum elsewhere, which covers the widest windows in the system (the 5-year delta chip needs 6 labels; R2 needs 4). Hand-verifying ten years for all ten companies (~6,000 figures) buys nothing the 6-year floor doesn't. CSL keeps 10 FYs because it joins the sample set with Phase 2.5 (D1).
+- **Sample subset:** the S2 "See it with sample data" fixtures are generated from this corpus (frontend §4). The sample set is Apple, Coca-Cola, Costco (D1, resolved); CSL joins it when Phase 2.5 lands.
 
 ## 12. Open decisions and the owner review list
 
-**D1: the sample trio vs the Phase 0 corpus.** Frontend §4 pins the sample set as Apple, Coca-Cola, CSL, generated from Phase 0 golden files; but the Phase 0 exit criterion covers the five US 10-Ks, and CSL's golden file is Phase 2.5 scope. Options:
-
-- **(a) Swap CSL for Costco in the Phase 1 sample trio** (recommended): zero added Phase 0 scope; CSL joins the samples when Phase 2.5 lands and the sample set becomes the showcase for ASX support at exactly the moment it exists. One-line frontend §4 update.
-- **(b) Hand-verify CSL in Phase 0:** pulls AUD, a 2025-06-30 style year-end, and IFRS presentation through the entire Phase 1 render path early (roughly a day of verification work; the IFRS mapping table itself stays in 2.5). Strongest end-to-end test, mildly bigger week one.
-- **(c) Ship the sample set as the US pair only.** Two companies still demonstrate compare; weakest wow.
+**D1: the sample trio vs the Phase 0 corpus. Resolved (owner, 2026-07-11): option (a).** The Phase 1 sample set is **Apple, Coca-Cola, Costco**, generated from the Phase 0 golden files (Costco's fixture verified to 10 FYs accordingly, §11); CSL joins the sample set when Phase 2.5's ASX golden files land, making the samples the showcase for ASX support at exactly the moment it exists. Zero added Phase 0 scope. The declined alternatives, for the record: hand-verifying CSL in Phase 0 (strongest end-to-end test of AUD + 30 June year-ends, at the cost of a bigger week one) and shipping a US-only pair (weakest wow). Frontend §4 updated to match.
 
 **D2: the metric budget number.** This dictionary pins 14 metrics; the main plan says "~12" and CLAUDE.md enforces a "12-metric budget". Options:
 
@@ -283,4 +279,4 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 ---
 
-*Review focus for the owner: D1 and D2 (§12), the ROIC and FCF definitions (§6, notes N1/N2), the P-2 tolerance, and the R1–R7 thresholds. Everything else here is the mechanical consequence of decisions already recorded in the main plan.*
+*Review focus for the owner: D2 (§12; D1 is resolved), the ROIC and FCF definitions (§6, notes N1/N2), the P-2 tolerance, and the R1–R7 thresholds. Everything else here is the mechanical consequence of decisions already recorded in the main plan.*

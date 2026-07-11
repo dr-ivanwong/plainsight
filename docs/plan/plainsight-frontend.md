@@ -133,7 +133,7 @@ Export (with last-export date; feeds the 30-day nudge); Import (file → **dry-r
 
 ## 4. First-run and sample data: decision pinned
 
-**One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads **three** golden-corpus companies: Apple (US mega-cap), Coca-Cola (the classic value-investing case study), CSL (ASX), as `sample: true` records (schema flag added to the companion spec), each badged, all removable with one action in S11.
+**One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads **three** golden-corpus companies: Apple (US mega-cap), Coca-Cola (the classic value-investing case study), Costco (the membership-moat case study), as `sample: true` records (schema flag per companion §9), each badged, all removable with one action in S11. CSL joins the sample set when Phase 2.5's ASX golden files exist (companion §12, D1 resolved), so the samples showcase ASX support the moment it arrives.
 
 Rationale: a library that starts full lies about whose research it is: ownership of the analysis *is* the product's psychology, and an auto-populated home undermines it. The one-tap path preserves the five-second "living dashboard" wow while keeping the default state honest. Mechanics: fixtures are a lazy ~30KB JSON chunk generated from the Phase 0 golden files, meaning the demo data is *real, hand-verified* data, and the sample dashboard doubles as an acceptance test of the whole render path. Sample records sync and export like any data; they're just flagged.
 

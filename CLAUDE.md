@@ -20,7 +20,7 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 | [docs/plan/plainsight-backend.md](docs/plan/plainsight-backend.md) | API contract and error envelope, DynamoDB key design, sync protocol (§4), ingestion, extraction jobs, BYOK proxy |
 | [docs/plan/plainsight-cdk.md](docs/plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Draft status (2026-07-11):** the data-model and backend specs are drafted but awaiting the owner's review pass. Two decisions are open in the data-model spec §12: **D1** (which companies form the sample-data set, given CSL's golden file is Phase 2.5 scope) and **D2** (the metric budget: the dictionary pins M1–M14 while the budget says 12). Do not freeze calc-engine formulas or generate sample fixtures until D1/D2 and the review land.
+**Draft status (2026-07-11):** the data-model and backend specs are drafted but awaiting the owner's review pass. **D1 is resolved** (Phase 1 sample set: Apple, Coca-Cola, Costco; CSL joins when Phase 2.5's golden files land). One decision remains open in the data-model spec §12: **D2** (the metric budget: the dictionary pins M1–M14 while the budget says 12). Do not freeze calc-engine formulas until D2 and the review land.
 
 Decisions in the plans (see §12 decision log) are **resolved**; do not relitigate them in code. If a decision must change, update the plan in the same change.
 
