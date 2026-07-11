@@ -9,38 +9,114 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as SettingsDataRouteImport } from './routes/settings.data'
+import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
+import { Route as CompanyIdEntryRouteImport } from './routes/company.$id.entry'
 
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsDataRoute = SettingsDataRouteImport.update({
+  id: '/settings/data',
+  path: '/settings/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
+  id: '/company/$id/',
+  path: '/company/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyIdEntryRoute = CompanyIdEntryRouteImport.update({
+  id: '/company/$id/entry',
+  path: '/company/$id/entry',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/onboarding': typeof OnboardingRoute
+  '/settings/data': typeof SettingsDataRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/company/$id/entry': typeof CompanyIdEntryRoute
+  '/company/$id/': typeof CompanyIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/onboarding': typeof OnboardingRoute
+  '/settings/data': typeof SettingsDataRoute
+  '/settings': typeof SettingsIndexRoute
+  '/company/$id/entry': typeof CompanyIdEntryRoute
+  '/company/$id': typeof CompanyIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/onboarding': typeof OnboardingRoute
+  '/settings/data': typeof SettingsDataRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/company/$id/entry': typeof CompanyIdEntryRoute
+  '/company/$id/': typeof CompanyIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/onboarding'
+    | '/settings/data'
+    | '/settings/'
+    | '/company/$id/entry'
+    | '/company/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/onboarding'
+    | '/settings/data'
+    | '/settings'
+    | '/company/$id/entry'
+    | '/company/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/onboarding'
+    | '/settings/data'
+    | '/settings/'
+    | '/company/$id/entry'
+    | '/company/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OnboardingRoute: typeof OnboardingRoute
+  SettingsDataRoute: typeof SettingsDataRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+  CompanyIdEntryRoute: typeof CompanyIdEntryRoute
+  CompanyIdIndexRoute: typeof CompanyIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +124,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/data': {
+      id: '/settings/data'
+      path: '/settings/data'
+      fullPath: '/settings/data'
+      preLoaderRoute: typeof SettingsDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company/$id/': {
+      id: '/company/$id/'
+      path: '/company/$id'
+      fullPath: '/company/$id/'
+      preLoaderRoute: typeof CompanyIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company/$id/entry': {
+      id: '/company/$id/entry'
+      path: '/company/$id/entry'
+      fullPath: '/company/$id/entry'
+      preLoaderRoute: typeof CompanyIdEntryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OnboardingRoute: OnboardingRoute,
+  SettingsDataRoute: SettingsDataRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+  CompanyIdEntryRoute: CompanyIdEntryRoute,
+  CompanyIdIndexRoute: CompanyIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

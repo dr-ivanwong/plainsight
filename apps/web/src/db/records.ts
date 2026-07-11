@@ -11,6 +11,7 @@
  * field this version does not know about is healthy, not corrupt.
  */
 import {
+  isFyLabel,
   LINE_ITEMS,
   LINE_ITEM_IDS,
   RULE_IDS,
@@ -31,8 +32,8 @@ const isoDateTime = z.iso.datetime({ offset: true });
 const isoDate = z.iso.date();
 const currencyCode = z.string().regex(/^[A-Z]{3}$/, 'expected an ISO 4217 code like USD');
 
-const fyLabel = z.custom<FyLabel>(
-  (value) => typeof value === 'string' && /^FY\d{4}$/.test(value),
+export const fyLabelSchema = z.custom<FyLabel>(
+  (value) => typeof value === 'string' && isFyLabel(value),
   'expected a fiscal-year label like FY2024'
 );
 
@@ -108,7 +109,7 @@ export type CompanyRecord = z.infer<typeof companyRecordSchema>;
 export const statementRecordSchema = z
   .object({
     companyId: nonEmpty,
-    fy: fyLabel,
+    fy: fyLabelSchema,
     statement: enumOf(STATEMENT_KINDS),
     endDate: isoDate,
     entryScale: scaleEnum,
@@ -172,7 +173,7 @@ export type ThesisRecord = z.infer<typeof thesisRecordSchema>;
  * exactly as they stood when the thesis was written.
  */
 const snapshotYear = z.object({
-  fy: fyLabel,
+  fy: fyLabelSchema,
   endDate: isoDate,
   currency: currencyCode,
   entryScale: scaleEnum,
@@ -205,7 +206,7 @@ export type ThesisVersionRecord = z.infer<typeof thesisVersionRecordSchema>;
 export const flagDismissalRecordSchema = z.object({
   companyId: nonEmpty,
   ruleId: enumOf(RULE_IDS),
-  dismissedAtFy: fyLabel,
+  dismissedAtFy: fyLabelSchema,
   dismissedAt: isoDateTime
 });
 

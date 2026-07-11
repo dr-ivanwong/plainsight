@@ -20,6 +20,7 @@ export {
   companyRecordSchema,
   entryValueSchema,
   financialsSnapshotSchema,
+  fyLabelSchema,
   flagDismissalRecordSchema,
   metaRecordSchema,
   priceRecordSchema,
