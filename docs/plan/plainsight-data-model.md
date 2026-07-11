@@ -159,14 +159,14 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. A
 
 **N5: no-debt coverage.** When `interestExpense` is ∅0 or zero, M8 renders "n/m: no interest burden" (a healthy state, the explainer says so) and R4 abstains.
 
-## 7. Red-flag rules R1–R7 (thresholds pinned; all flagged for owner review)
+## 7. Red-flag rules R1–R7 (thresholds pinned; owner-confirmed 2026-07-11)
 
 Common contract: each rule emits `{ ruleId, severity: 'orange' | 'red', firedWith, explanation, whatToCheck }`, phrased as items to investigate, never verdicts (main plan non-goal 2). A rule whose data window is not covered **abstains silently** (abstention is not a pass). Dismissals are keyed `(companyId, ruleId, latestFy)`: adding a new fiscal year invalidates the dismissal and the rule re-evaluates (frontend S3 "dismissible-but-persistent").
 
 | Id | Name | Fires when (pinned) | Severity |
 |---|---|---|---|
-| R1 | Earnings quality | operatingCashFlow < netIncome in each of the latest 3 consecutive FYs | orange |
-| R2 | Eroding moat | gross margin or operating margin declines year-over-year for ≥ 3 consecutive steps (4 labelled years) | orange; red at ≥ 5 steps |
+| R1 | Earnings quality | operatingCashFlow < netIncome in each of the latest 3 consecutive FYs, and cumulative OCF ÷ cumulative NI < 0.9 over the window (the magnitude test keeps working-capital wobble from firing) | orange |
+| R2 | Eroding moat | gross margin or operating margin declines year-over-year for ≥ 3 consecutive steps (4 labelled years), with a cumulative decline ≥ 2 pp over the window (the floor keeps basis-point drift from firing) | orange; red at ≥ 5 steps |
 | R3 | Leverage-flattered returns | M6 rises ≥ 0.3 absolute over the latest 3 years while M4 rises ≤ 1 pp over the same window | orange |
 | R4 | Fragility | latest M8 < 3.0× | orange; red when < 1.5× or negative (abstains per N5) |
 | R5 | Dilution | dilutedShares CAGR over the latest 3 years > 2%/yr and revenue CAGR over the same window < 2 × that share CAGR | orange |
@@ -273,7 +273,7 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 **D2: the metric budget number. Resolved (owner, 2026-07-11): option (a).** The dictionary stays pinned at 14; **exactly 12 render as dashboard cards**. M13 (earnings yield: the inverse of M12 with identical inputs) renders inside M12's detail sheet, and M10 (FCF margin) inside M11's (conversion is the stronger earnings-quality signal). Ids stay stable; nothing is deleted; the compare grid mirrors the 12 card metrics; and the 12-card budget is the enforced discipline: adding a card requires removing or demoting one. The declined alternatives, for the record: restating the budget as 14, and deleting two metrics outright. Main plan §2–§4 copy, frontend S3/S4, and CLAUDE.md updated to match.
 
-**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance: **confirmed 2026-07-11**, tightened to `max(3 × scaleUnit, 0.1%)` with display precisions as drafted; the R1–R7 thresholds (§7): pending; policies P-1 and P-3…P-8, and the §11 depth decision (10/6 FYs): pending.
+**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance: **confirmed 2026-07-11**, tightened to `max(3 × scaleUnit, 0.1%)` with display precisions as drafted; the R1–R7 thresholds (§7): **confirmed 2026-07-11**, with two de-noising amendments (R1: cumulative OCF ÷ NI < 0.9; R2: cumulative decline ≥ 2 pp); policies P-1 and P-3…P-8, and the §11 depth decision (10/6 FYs): pending.
 
 ---
 
