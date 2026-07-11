@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 
-// S2 Library, true-empty state (frontend spec §3): the one-line promise and
+// The Library's true-empty state (frontend spec §3): the one-line promise and
 // both starting actions, queried by role the way a user would find them.
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { LibraryEmpty } from '../features/library/LibraryEmpty';
 
-describe('S2 Library, true-empty state', () => {
+describe('the Library, true-empty state', () => {
   it('shows the one-line promise', () => {
     render(<LibraryEmpty />);
 

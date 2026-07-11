@@ -109,7 +109,7 @@ export const space = {
 export const layout = {
   /** The standard centred content column (frontend spec §1.2). */
   columnMax: '720px',
-  /** The wider column for S3 dashboard and S7 compare (frontend spec §7). */
+  /** The wider column for the dashboard and compare screens (frontend spec §7). */
   columnWideMax: '960px',
   /** Width cap for a stacked action group in hero empty states. */
   actionColumnMax: '320px',

@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import * as styles from './libraryEmpty.css';
 
 /**
- * S2 Library, true-empty state (frontend spec §3): a one-line promise and the
+ * The Library's true-empty state (frontend spec §3): a one-line promise and the
  * two starting actions. The buttons are inert placeholders in Phase 0; Phase 1
  * wires them to company creation and the sample-data loader.
  */
