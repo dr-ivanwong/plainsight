@@ -151,7 +151,7 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. A
 
 **N1: ROIC definition (pinned; owner-confirmed 2026-07-11).** NOPAT = operatingIncome × (1 − effective tax rate), where effective tax rate = taxExpense ÷ pretaxIncome clamped to [0, 0.45]; when pretaxIncome ≤ 0 the rate is taken as 0. Invested capital = shortTermDebt + longTermDebt + totalEquity − cashAndEquivalents, averaged per P-4. Deliberately simple: no lease capitalisation, no goodwill adjustments in v1; the detail sheet states this plainly.
 
-**N2: FCF definition (pinned; flagged for owner review).** operatingCashFlow − capex, where capex is purchases of property, plant and equipment only: no software or intangible add-backs, leases as-reported. The classic conservative definition, stated on the detail sheet.
+**N2: FCF definition (pinned; owner-confirmed 2026-07-11).** operatingCashFlow − capex, where capex is purchases of property, plant and equipment only: no software or intangible add-backs, leases as-reported. The classic conservative definition, stated on the detail sheet. Two implementation notes for the M9 detail-sheet copy, recorded with the confirmation: the Owner's-lens paragraph names the SBC blind spot (FCF ignores share-based pay because OCF adds it back; R5 is the countervailing dilution flag), and the 2019 lease seam (IFRS 16 / ASC 842 moved lease principal repayments out of operating flows, boosting OCF for lease-heavy companies mid-way through ten-year trends). A `leaseRepayments` contextual line item was considered and declined for v1.
 
 **N3: price.** Manual entry with as-of date (main plan §12.1); one price record per company feeds M12–M14 and the staleness badge (S3). Market cap = price × latest complete FY's `dilutedShares`.
 
@@ -273,7 +273,7 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 **D2: the metric budget number. Resolved (owner, 2026-07-11): option (a).** The dictionary stays pinned at 14; **exactly 12 render as dashboard cards**. M13 (earnings yield: the inverse of M12 with identical inputs) renders inside M12's detail sheet, and M10 (FCF margin) inside M11's (conversion is the stronger earnings-quality signal). Ids stay stable; nothing is deleted; the compare grid mirrors the 12 card metrics; and the 12-card budget is the enforced discipline: adding a card requires removing or demoting one. The declined alternatives, for the record: restating the budget as 14, and deleting two metrics outright. Main plan §2–§4 copy, frontend S3/S4, and CLAUDE.md updated to match.
 
-**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): pending; the P-2 tolerance numbers: pending; the R1–R7 thresholds (§7): pending; policies P-1 and P-3…P-8, and the §11 depth decision (10/6 FYs): pending.
+**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance numbers: pending; the R1–R7 thresholds (§7): pending; policies P-1 and P-3…P-8, and the §11 depth decision (10/6 FYs): pending.
 
 ---
 
