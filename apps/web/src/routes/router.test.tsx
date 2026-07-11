@@ -2,7 +2,9 @@
 
 // The Phase 1 route skeleton (frontend spec §1.1): every route renders, the
 // search params are typed contracts, and unrecognised values degrade to the
-// plain screen instead of an error.
+// plain screen instead of an error. The library route reads the app database,
+// so IndexedDB must exist before the route tree loads.
+import 'fake-indexeddb/auto';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

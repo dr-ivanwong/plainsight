@@ -43,4 +43,12 @@ export {
   type ThesisSections,
   type ThesisVersionRecord
 } from './records';
-export { validateRow, validateRows, type ValidatedTableName } from './safeRead';
+export {
+  moveToQuarantine,
+  partitionRows,
+  validateRow,
+  validateRows,
+  type InvalidRow,
+  type PartitionedRows,
+  type ValidatedTableName
+} from './safeRead';

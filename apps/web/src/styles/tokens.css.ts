@@ -125,6 +125,9 @@ export const radius = {
 /** Hairline width for subtle borders and separators. */
 export const hairline = '1px';
 
+/** The dimmed backdrop behind modal sheets; identical in both themes. */
+export const scrim = 'rgba(0, 0, 0, 0.4)';
+
 /** Minimum touch target on every interactive element (main plan §4). */
 export const touchTarget = '44px';
 

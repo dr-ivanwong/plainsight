@@ -4,6 +4,11 @@
  * quarantine table instead of crashing a screen. "Moves" is literal: the row
  * leaves its home table in the same transaction, so a corrupt record is seen
  * once, not on every read.
+ *
+ * Validation and the move are split on purpose. Dexie live queries must stay
+ * pure (no writes inside the querier), so hooks partition synchronously with
+ * partitionRows and run moveToQuarantine from an effect; imperative reads use
+ * validateRows, which does both in one call.
  */
 import type { IndexableType, Table } from 'dexie';
 import type { ZodError, ZodType } from 'zod';
@@ -12,9 +17,14 @@ import type { PlainsightDb, TableName } from './db';
 /** Tables whose reads pass a schema. Quarantine itself is read permissively; it never re-quarantines. */
 export type ValidatedTableName = Exclude<TableName, 'quarantine'>;
 
-interface InvalidRow {
+export interface InvalidRow {
   raw: unknown;
   reason: string;
+}
+
+export interface PartitionedRows<T> {
+  valid: T[];
+  invalid: InvalidRow[];
 }
 
 const MAX_REPORTED_ISSUES = 3;
@@ -52,18 +62,43 @@ function primaryKeyOf(raw: unknown, keyPath: unknown): IndexableType | undefined
   return undefined;
 }
 
-async function moveToQuarantine(
+/** Pure split of raw rows into parsed records and quarantine candidates; safe inside a live query. */
+export function partitionRows<T>(rows: readonly unknown[], schema: ZodType<T>): PartitionedRows<T> {
+  const valid: T[] = [];
+  const invalid: InvalidRow[] = [];
+  for (const raw of rows) {
+    const result = schema.safeParse(raw);
+    if (result.success) {
+      valid.push(result.data);
+    } else {
+      invalid.push({ raw, reason: reasonFrom(result.error) });
+    }
+  }
+  return { valid, invalid };
+}
+
+/**
+ * Moves invalid rows out of their home table and into quarantine, atomically
+ * per batch. Idempotent: a row that already left its table (an earlier move,
+ * or an effect re-run) is skipped rather than quarantined twice.
+ */
+export async function moveToQuarantine(
   db: PlainsightDb,
   tableName: ValidatedTableName,
   rows: readonly InvalidRow[]
 ): Promise<void> {
+  if (rows.length === 0) return;
   const table = db.table(tableName) as Table<unknown, IndexableType>;
   const { keyPath } = table.schema.primKey;
   const quarantinedAt = new Date().toISOString();
   await db.transaction('rw', [table, db.quarantine], async () => {
     for (const { raw, reason } of rows) {
       const key = primaryKeyOf(raw, keyPath);
-      if (key !== undefined) await table.delete(key);
+      if (key !== undefined) {
+        const present = await table.get(key);
+        if (present === undefined) continue;
+        await table.delete(key);
+      }
       await db.quarantine.add({ table: tableName, raw, reason, quarantinedAt });
     }
   });
@@ -79,19 +114,8 @@ export async function validateRows<T>(
   rows: readonly unknown[],
   schema: ZodType<T>
 ): Promise<T[]> {
-  const valid: T[] = [];
-  const invalid: InvalidRow[] = [];
-  for (const raw of rows) {
-    const result = schema.safeParse(raw);
-    if (result.success) {
-      valid.push(result.data);
-    } else {
-      invalid.push({ raw, reason: reasonFrom(result.error) });
-    }
-  }
-  if (invalid.length > 0) {
-    await moveToQuarantine(db, tableName, invalid);
-  }
+  const { valid, invalid } = partitionRows(rows, schema);
+  await moveToQuarantine(db, tableName, invalid);
   return valid;
 }
 
