@@ -71,17 +71,23 @@ const ISO_PADDED = /^\d{4}-\d{2}-\d{2}$/;
 // literal YYYY-MM-DD placeholder).
 const DATE_FIELD = /\*\*Date:\*\*\s+(?!(?:\d{4}-\d{2}-\d{2}|YYYY-MM-DD)\b)/g;
 
-// Rule 4: plan-item codes stay in the plans. Source files write the concept's
-// name (the metric's, rule's, policy's, note's, decision's or screen's) and
-// cite the plan by document and section; the letter-number codes are the plan
-// docs' own vocabulary. Scanned raw (strings, comments, identifiers, fixtures
-// alike), case-sensitively.
+// Rule 4: item codes stay in the documents that define them. Source files
+// write the concept's name (the metric's, rule's, policy's, screen's) or the
+// finding in words (a review's, an audit's) and cite the document by section;
+// the letter-number codes are the documents' own vocabulary. Two shapes: the
+// plans' single-letter item codes, and uppercase hyphenated families (the
+// policy codes plus whatever dimensions a review or audit mints). Scanned raw
+// (strings, comments, identifiers, fixtures alike), case-sensitively.
 // The lookbehind skips codes embedded in hyphenated external identifiers
-// (cdk-nag's "AwsSolutions-S1"): another system's id, not a plan reference.
-const PLAN_CODE = /\b(?:(?<!-)[MRNDS]\d{1,2}|P-\d{1,2})\b/g;
+// (cdk-nag's "AwsSolutions-S1"): another system's id, not a document reference.
+const PLAN_CODE = /\b(?<!-)(?:[MRNDS]\d{1,2}|[A-Z][A-Z0-9]{0,7}-\d{1,3})\b/g;
 // Amazon S3 is a proper noun, not a screen code (the one real collision);
 // exempting it mirrors rule 2's capitalisation heuristic.
 const PLAN_CODE_ALLOW = new Set(['S3']);
+// Well-known hyphenated technical terms, exempt by the leading letters of
+// their first segment: UTF-8, SHA-256, ISO- and RFC-numbered standards,
+// COVID-19, FY2024-25 ranges. Never name a review dimension after one.
+const PLAN_CODE_ALLOW_PREFIXES = new Set(['UTF', 'SHA', 'ISO', 'RFC', 'COVID', 'FY']);
 
 // Blank out SVG path data (d="M12 4v16" is drawing, not a metric) the way
 // inline code spans are blanked: lengths preserved so columns stay right.
@@ -156,7 +162,9 @@ for (const file of sourceFiles) {
     const scannable = stripSvgPathData(line);
     for (const match of scannable.matchAll(PLAN_CODE)) {
       if (PLAN_CODE_ALLOW.has(match[0])) continue;
-      findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  plan-item code "${match[0]}" in source: write the concept's name and cite the plan by section (docs/style.md rule 4)`);
+      const leadingLetters = (match[0].split('-')[0] ?? '').replace(/\d+$/, '');
+      if (match[0].includes('-') && PLAN_CODE_ALLOW_PREFIXES.has(leadingLetters)) continue;
+      findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  item code "${match[0]}" in source: write the concept or finding in words and cite its document by section (docs/style.md rule 4)`);
     }
   });
 }
