@@ -1,8 +1,8 @@
 /**
  * Canonical line items, transcribed from docs/plan/plainsight-data-model.md section 2.
  * 22 items across three statements. This module is the single in-code source for
- * item metadata: statement membership, completeness role, P-0 sign class, and the
- * "find it as" hints rendered inline on the data-entry screen (S5).
+ * item metadata: statement membership, completeness role, sign class, and the
+ * "find it as" hints rendered inline on the data-entry screen.
  */
 
 export type StatementKind = 'income' | 'balance' | 'cashflow';
@@ -10,7 +10,7 @@ export type StatementKind = 'income' | 'balance' | 'cashflow';
 /**
  * Completeness role (spec section 2):
  * - core: required for statement completeness (entered or asserted not-reported-zero).
- * - derived: computable from other items; never blocks completeness (P-8).
+ * - derived: computable from other items; never blocks completeness (as-reported precedence).
  * - contextual: enriches detail sheets and validation; blocks nothing.
  */
 export type LineItemRole = 'core' | 'derived' | 'contextual';
@@ -49,19 +49,20 @@ export interface LineItemMeta {
   readonly id: LineItemId;
   readonly statement: StatementKind;
   readonly label: string;
-  /** The S5 inline hint, verbatim from the spec's "Find it as" column. */
+  /** The data-entry inline hint, verbatim from the spec's "Find it as" column. */
   readonly findItAs: string;
   readonly role: LineItemRole;
   /**
-   * P-0 sign class: true for the signed exceptions that may be negative.
-   * Everything else is stored as a positive magnitude with fixed semantic direction.
+   * Sign class (sign-convention policy, data-model section 4): true for the
+   * signed exceptions that may be negative. Everything else is stored as a
+   * positive magnitude with fixed semantic direction.
    */
   readonly signed: boolean;
   /**
    * Items the spec marks as legitimately assertable to not-reported-zero
    * (the two debt lines and interest expense). The mechanism is general (any
-   * field's overflow menu offers it, frontend spec S5); this flag records the
-   * cases the spec calls out as expected.
+   * field's overflow menu offers it, frontend spec's data-entry screen); this
+   * flag records the cases the spec calls out as expected.
    */
   readonly zeroAssertable: boolean;
 }

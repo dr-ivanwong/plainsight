@@ -1,8 +1,9 @@
 /**
- * Display formatting: the separate, final step (P-1). Precision is pinned by
- * P-2: percentages 1 dp; ratios 2 dp; coverage 1 dp with the multiplication
- * sign; money compact to 3 significant figures with a currency symbol.
- * Not-meaningful phrases are pinned by P-5. Never blank, never 0, never NaN.
+ * Display formatting: the separate, final step the money policy requires.
+ * Precision is pinned by data-model section 4: percentages 1 dp; ratios 2 dp;
+ * coverage 1 dp with the multiplication sign; money compact to 3 significant
+ * figures with a currency symbol. Not-meaningful phrases are pinned copy from
+ * the same section. Never blank, never 0, never NaN.
  *
  * House style: negative numbers render with the true minus (U+2212).
  */
@@ -15,9 +16,9 @@ export const NOT_MEANINGFUL_PHRASES: Readonly<Record<NotMeaningfulReason, string
   no_interest_expense: 'n/m: no interest burden',
   zero_revenue: 'n/m: no revenue',
   zero_denominator: 'n/m: zero denominator',
-  // P-5 routes no_price to the enter-price card, not to a metric phrase; this
-  // string is a defensive fallback so the formatter is total and can never
-  // surface a blank.
+  // The pinned rendering routes no_price to the enter-price card, not to a
+  // metric phrase; this string is a defensive fallback so the formatter is
+  // total and can never surface a blank.
   no_price: 'n/m: no price'
 };
 

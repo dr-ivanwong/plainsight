@@ -8,7 +8,7 @@ function gate(results: ReturnType<typeof checkIdentities>, id: 'balance_sheet' |
   return found;
 }
 
-describe('P-2 tolerance', () => {
+describe('the rounding tolerance', () => {
   it('uses the 3-unit floor at small magnitudes', () => {
     // ones scale: 3 units = 300 minor; 0.1% of 100_000 minor is 100.
     const y = year('FY2024', {});
@@ -48,7 +48,7 @@ describe('balance sheet gate: assets = liabilities + equity', () => {
   });
 });
 
-describe('gross profit gate (P-8: as-reported vs derived)', () => {
+describe('gross profit gate (as-reported vs derived)', () => {
   it('passes when the reported figure matches revenue minus cost of revenue', () => {
     const y = completeYear('FY2024', { grossProfit: 40_000 });
     expect(gate(checkIdentities(y), 'gross_profit')).toMatchObject({ status: 'pass', diffMinor: 0 });

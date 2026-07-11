@@ -17,8 +17,8 @@ import type {
 import { requireValue, yearComplete } from './values.js';
 
 /**
- * N3: market cap = price times the latest complete FY's diluted shares.
- * Null without a price or without a complete year.
+ * Market cap = price times the latest complete FY's diluted shares (data-model
+ * section 6, price note). Null without a price or without a complete year.
  */
 function marketCapMinor(
   yearsAscending: readonly StatementYear[],

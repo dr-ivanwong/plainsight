@@ -1,10 +1,10 @@
 /**
- * Identity gates under the P-2 rounding tolerance.
+ * Identity gates under the pinned rounding tolerance (data-model section 4).
  *
  * A gate passes when abs(diff) <= max(3 x scaleUnit, 0.1% of the larger side),
  * where scaleUnit is one unit at the year's entry scale. A breach warns in
- * entry mode (P-8) and hard-fails in extraction review; the engine only
- * reports, it never "corrects" a filing.
+ * entry mode (as-reported precedence: the engine never "corrects" a filing)
+ * and hard-fails in extraction review.
  */
 import { scaleUnitMinor } from './money.js';
 import type { StatementYear } from './types.js';
@@ -16,7 +16,7 @@ export type GateResult =
   | { gate: GateId; status: 'not_applicable' }
   | { gate: GateId; status: 'pass' | 'fail'; diffMinor: number; toleranceMinor: number };
 
-/** P-2: max(3 x scaleUnit, 0.1% of the larger side of the identity). */
+/** The pinned tolerance: max(3 x scaleUnit, 0.1% of the larger side of the identity). */
 export function toleranceMinor(year: StatementYear, largerSideMinor: number): number {
   return Math.max(3 * scaleUnitMinor(year.entryScale), 0.001 * Math.abs(largerSideMinor));
 }
@@ -35,9 +35,10 @@ function gateResult(gate: GateId, year: StatementYear, left: number, right: numb
 
 /**
  * The two identities checkable from the canonical items in entry mode:
- * assets = liabilities + equity, and (when the filing reports gross profit,
- * P-8) grossProfit = revenue - costOfRevenue. A gate whose inputs are not all
- * present is not applicable; sufficiency is a different concern (section 10).
+ * assets = liabilities + equity, and (when the filing reports gross profit;
+ * as-reported precedence) grossProfit = revenue - costOfRevenue. A gate whose
+ * inputs are not all present is not applicable; sufficiency is a different
+ * concern (section 10).
  */
 export function checkIdentities(year: StatementYear): GateResult[] {
   const results: GateResult[] = [];

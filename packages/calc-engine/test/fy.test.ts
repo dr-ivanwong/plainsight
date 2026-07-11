@@ -30,7 +30,7 @@ describe('parseIsoDate', () => {
   });
 });
 
-describe('fyLabelFromEndDate (P-3)', () => {
+describe('fyLabelFromEndDate (the fiscal-calendar policy)', () => {
   it('labels by the calendar year containing the year end', () => {
     // The spec's own example: CSL's year ending 2025-06-30 is FY2025.
     expect(fyLabelFromEndDate('2025-06-30')).toBe('FY2025');

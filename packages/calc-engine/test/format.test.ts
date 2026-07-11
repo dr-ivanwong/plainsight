@@ -73,7 +73,7 @@ describe('formatMoneyMinor (compact, 3 significant figures)', () => {
   });
 });
 
-describe('P-5 phrases', () => {
+describe('the pinned not-meaningful phrases', () => {
   it('pins the exact copy', () => {
     expect(NOT_MEANINGFUL_PHRASES).toEqual({
       negative_equity: 'n/m: negative equity',

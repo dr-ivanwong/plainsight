@@ -1,7 +1,8 @@
 /**
- * Fiscal calendar helpers (policy P-3): the FY label is the calendar year
- * containing the year-end date. CSL's year ending 2025-06-30 is FY2025. Trends,
- * deltas, and comparisons align by label; nothing is pro-rated.
+ * Fiscal calendar helpers (the fiscal-calendar policy, data-model section 4):
+ * the FY label is the calendar year containing the year-end date. CSL's year
+ * ending 2025-06-30 is FY2025. Trends, deltas, and comparisons align by label;
+ * nothing is pro-rated.
  */
 import type { FyLabel } from './types.js';
 
@@ -38,7 +39,7 @@ export function parseIsoDate(date: string): { year: number; month: number; day: 
   return { year, month, day };
 }
 
-/** P-3: FY label = the calendar year containing the year-end date. */
+/** FY label = the calendar year containing the year-end date. */
 export function fyLabelFromEndDate(endDate: string): FyLabel {
   const { year } = parseIsoDate(endDate);
   return `FY${year}`;

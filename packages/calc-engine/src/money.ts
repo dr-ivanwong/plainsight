@@ -1,11 +1,12 @@
 /**
- * Money discipline (policy P-1): integer minor units with explicit currency and
- * scale metadata. The engine asserts safe integers at its boundary; formatting
- * is a separate, final step (see format.ts).
+ * Money discipline (the money policy, data-model section 4): integer minor
+ * units with explicit currency and scale metadata. The engine asserts safe
+ * integers at its boundary; formatting is a separate, final step (see
+ * format.ts).
  */
 import type { Scale } from './types.js';
 
-/** Minor units in one unit at each entry scale (P-2's scaleUnit). */
+/** Minor units in one unit at each entry scale (the rounding-tolerance policy's scaleUnit). */
 const SCALE_UNIT_MINOR: Readonly<Record<Scale, number>> = {
   ones: 100,
   thousands: 100_000,
