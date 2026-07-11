@@ -149,6 +149,8 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. A
 
 \* `grossProfit` derived from `revenue` − `costOfRevenue` when not entered (P-8).
 
+**Code identifiers (pinned; main plan §12.8).** The M-numbers are this document's labels and never appear in code (house-style rule 4); code, storage, exports, and search params identify each metric by its semantic id, which doubles as the `?metric=` slug: M1 `grossMargin`, M2 `operatingMargin`, M3 `netMargin`, M4 `roe`, M5 `roic`, M6 `debtToEquity`, M7 `currentRatio`, M8 `interestCoverage`, M9 `fcf`, M10 `fcfMargin`, M11 `fcfConversion`, M12 `pe`, M13 `earningsYield`, M14 `fcfYield`.
+
 **N1: ROIC definition (pinned; owner-confirmed 2026-07-11).** NOPAT = operatingIncome × (1 − effective tax rate), where effective tax rate = taxExpense ÷ pretaxIncome clamped to [0, 0.45]; when pretaxIncome ≤ 0 the rate is taken as 0. Invested capital = shortTermDebt + longTermDebt + totalEquity − cashAndEquivalents, averaged per P-4. Deliberately simple: no lease capitalisation, no goodwill adjustments in v1; the detail sheet states this plainly.
 
 **N2: FCF definition (pinned; owner-confirmed 2026-07-11).** operatingCashFlow − capex, where capex is purchases of property, plant and equipment only: no software or intangible add-backs, leases as-reported. The classic conservative definition, stated on the detail sheet. Two implementation notes for the M9 detail-sheet copy, recorded with the confirmation: the Owner's-lens paragraph names the SBC blind spot (FCF ignores share-based pay because OCF adds it back; R5 is the countervailing dilution flag), and the 2019 lease seam (IFRS 16 / ASC 842 moved lease principal repayments out of operating flows, boosting OCF for lease-heavy companies mid-way through ten-year trends). A `leaseRepayments` contextual line item was considered and declined for v1; revisit trigger: decide the fork at the start of the Phase 2.5 golden-file pass, while the ASX filings are open anyway (the addition is schema-additive, so deferral costs nothing else).
@@ -162,6 +164,8 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. A
 ## 7. Red-flag rules R1–R7 (thresholds pinned; owner-confirmed 2026-07-11)
 
 Common contract: each rule emits `{ ruleId, severity: 'orange' | 'red', firedWith, explanation, whatToCheck }`, phrased as items to investigate, never verdicts (main plan non-goal 2). A rule whose data window is not covered **abstains silently** (abstention is not a pass). Dismissals are keyed `(companyId, ruleId, latestFy)`: adding a new fiscal year invalidates the dismissal and the rule re-evaluates (frontend S3 "dismissible-but-persistent").
+
+**Code identifiers (pinned; main plan §12.8).** The R-numbers are this document's labels and never appear in code (house-style rule 4); `ruleId` values, dismissal keys included, are the semantic ids: R1 `earningsQuality`, R2 `erodingMoat`, R3 `leverageFlatteredReturns`, R4 `fragility`, R5 `dilution`, R6 `manufacturedReturns`, R7 `capitalIntensityCreep`.
 
 | Id | Name | Fires when (pinned) | Severity |
 |---|---|---|---|
