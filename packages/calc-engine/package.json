@@ -1,0 +1,30 @@
+{
+  "name": "@plainsight/calc-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pure, zero-dependency calculation engine: (statements) -> MetricsReport. Build contract: docs/plan/plainsight-data-model.md",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "fixtures:generate": "node tools/generate-fixtures.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "^4.1.10",
+    "fast-check": "^4.9.0",
+    "typescript": "~5.9.0",
+    "vitest": "^4.1.10"
+  }
+}
