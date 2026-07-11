@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-**Plainsight**, a value-investing financial statement analyser: a **single-user, local-first PWA** that computes ~12 investment-quality metrics (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (Recorded decision, plan §12.7: the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
+**Plainsight**, a value-investing financial statement analyser: a **single-user, local-first PWA** that computes 12 dashboard metrics from a pinned 14-metric dictionary (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (Recorded decision, plan §12.7: the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
 
 **Current state: planning complete, no code yet.** The `docs/plan/` directory is the build contract; Phase 0 (monorepo scaffold, design tokens, calc-engine package with golden tests, CI, CDK skeleton) is the next work. There are no build/test commands yet; update this file when Phase 0 lands them.
 
@@ -20,7 +20,7 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 | [docs/plan/plainsight-backend.md](docs/plan/plainsight-backend.md) | API contract and error envelope, DynamoDB key design, sync protocol (§4), ingestion, extraction jobs, BYOK proxy |
 | [docs/plan/plainsight-cdk.md](docs/plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Draft status (2026-07-11):** the data-model and backend specs are drafted but awaiting the owner's review pass. **D1 is resolved** (Phase 1 sample set: Apple, Coca-Cola, Costco; CSL joins when Phase 2.5's golden files land). One decision remains open in the data-model spec §12: **D2** (the metric budget: the dictionary pins M1–M14 while the budget says 12). Do not freeze calc-engine formulas until D2 and the review land.
+**Draft status (2026-07-11):** the data-model and backend specs are drafted but awaiting the owner's review pass. **D1 and D2 are both resolved** (sample set: Apple, Coca-Cola, Costco, with CSL joining at Phase 2.5; metric budget: 12 dashboard cards from the pinned 14-metric dictionary, M10/M13 in detail sheets). Do not freeze calc-engine formulas until the owner review pass lands (ROIC/FCF definitions, P-2 tolerance, R1–R7 thresholds; data-model §12 review list).
 
 Decisions in the plans (see §12 decision log) are **resolved**; do not relitigate them in code. If a decision must change, update the plan in the same change.
 
@@ -56,7 +56,7 @@ Decisions in the plans (see §12 decision log) are **resolved**; do not relitiga
 
 ## Product discipline
 
-- **12-metric budget:** adding a metric requires removing or demoting one.
+- **12-card budget** (data-model §12 D2): the dictionary pins M1–M14; exactly 12 render as dashboard cards (M10 and M13 live in their siblings' detail sheets); adding a card requires removing or demoting one.
 - **Never buy/sell language** anywhere in copy; red flags are "items to investigate," education framing throughout (legal posture, main plan §15).
 - Every displayed number must be reproducible by hand from its detail sheet; a number the owner can't trace to inputs is a P0 bug.
-- Progressive disclosure: the dashboard stays ~12 numbers; depth (formula, inputs, Owner's-lens context) is one tap away, never on-screen by default.
+- Progressive disclosure: the dashboard stays 12 numbers; depth (formula, inputs, Owner's-lens context) is one tap away, never on-screen by default.

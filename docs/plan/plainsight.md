@@ -32,7 +32,7 @@ This plan describes a web application that guides a retail investor through that
 
 1. **Not a brokerage or trading tool.** No order execution, no portfolio P&L tracking against live prices (v1).
 2. **Not investment advice.** The app computes and educates; it never says "buy" or "sell." Red flags are labelled as "items to investigate," not verdicts. A persistent disclaimer covers this.
-3. **Not a Bloomberg terminal.** We deliberately support ~12 metrics done excellently, not 400 done shallowly. Scope discipline is a feature.
+3. **Not a Bloomberg terminal.** We deliberately support 12 dashboard metrics (from a pinned 14-metric dictionary, data-model §12 D2) done excellently, not 400 done shallowly. Scope discipline is a feature.
 4. **Not real-time.** Value analysis works on annual/quarterly statements. We never need sub-day data freshness; this dramatically simplifies infrastructure.
 5. **No user-generated content sharing / social features** in any planned phase.
 
@@ -66,7 +66,7 @@ This plan describes a web application that guides a retail investor through that
 | Cash | Free cash flow, FCF margin, FCF conversion (FCF ÷ net income) | Earnings quality; accounting-trick detector |
 | Valuation | P/E, earnings yield, FCF yield | Margin of safety inputs |
 
-> Exact pinned formulas, input requirements, and edge-case handling for every metric are specified in the companion document **`plainsight-data-model.md`** (Data Model & Metric Dictionary).
+> Exact pinned formulas, input requirements, and edge-case handling for every metric are specified in the companion document **`plainsight-data-model.md`** (Data Model & Metric Dictionary). The dictionary pins 14 metrics; 12 render as dashboard cards, with FCF margin (M10) and earnings yield (M13) as detail-sheet metrics (resolved: data-model §12, D2).
 
 ### Red-flag rules engine (v1: deterministic, client-side)
 
@@ -90,7 +90,7 @@ Three governing decisions:
 
 1. **Typography is the interface.** Financial data is text and numbers. We invest the design budget in a rigorous type system rather than decorative chrome. Tabular figures (`font-variant-numeric: tabular-nums`) everywhere numbers align vertically. Non-negotiable for scannable financial tables.
 2. **Nearly monochrome, colour as meaning.** Neutrals dominate. Exactly one accent (system blue `#007AFF` family) for interactive elements. Semantic colour is reserved and consistent: green = healthy signal, orange = investigate, red = red flag. Colour is never decoration; a user should be able to squint at a company dashboard and read its health from colour distribution alone.
-3. **Progressive disclosure.** The Learner sees a clean dashboard of ~12 numbers with sparklines. Every deeper layer (formula, inputs, 10-year table, Owner's-lens essay) is one tap away, never on-screen by default. The Practitioner can collapse the education layer globally.
+3. **Progressive disclosure.** The Learner sees a clean dashboard of 12 numbers with sparklines. Every deeper layer (formula, inputs, 10-year table, Owner's-lens essay) is one tap away, never on-screen by default. The Practitioner can collapse the education layer globally.
 
 ### Type scale and spacing tokens
 
@@ -190,7 +190,7 @@ Budgets set now, enforced in CI (Lighthouse CI + `size-limit`):
 
 - **Initial JS ≤ 180KB gzipped.** Route-level code splitting (Library shell loads first; charts, compare, and thesis editor are lazy chunks). Recharts is the biggest line item; it loads with the dashboard chunk, not the shell.
 - **TTI < 2s on a mid-range Android over 4G; < 1s repeat visits** (service worker shell).
-- Calc engine invocations memoised per `(companyId, dataVersion)`; a full 10-year, 12-metric computation is microseconds, but memoisation prevents chart re-render cascades.
+- Calc engine invocations memoised per `(companyId, dataVersion)`; a full 10-year, 14-metric computation is microseconds, but memoisation prevents chart re-render cascades.
 - **State colocation over memoisation:** data-entry keystrokes update per-field local state; the statement grid commits to Dexie on blur/debounce. A keystroke must never re-render the dashboard.
 - Virtualised lists if the library grows past ~100 companies (react-virtuoso), deferred until measured need.
 
@@ -368,7 +368,7 @@ Total to a genuinely complete product: **~16 weeks** of focused effort, with a u
 | **BYOK key exposure** (XSS theft; accidental inclusion in backups) | Low | Med | Keys are device-local IndexedDB records excluded from export and sync by construction (asserted by test); strict CSP with fixed connect-src allowlist is the XSS control; masked UI; guidance toward dedicated, spend-capped keys; proxy mode never stores or logs keys |
 | IndexedDB eviction / storage loss on device | Low | High | `navigator.storage.persist()` requested; prominent export habit built into UX (periodic "back up your library" nudge); Phase 3 sync as belt-and-braces |
 | Regulatory perception: "is this investment advice?" | Low | High | Non-goal #2 enforced in copy review: no buy/sell language anywhere, education framing, persistent disclaimer; red flags phrased as questions to investigate |
-| Scope creep toward "Bloomberg junior" | High | Med | Non-goal #3; metric additions require removing or demoting something (the 12-metric budget is a design constraint, not a starting point) |
+| Scope creep toward "Bloomberg junior" | High | Med | Non-goal #3; metric additions require removing or demoting something (the 12-card budget is a design constraint, not a starting point) |
 | Market-data API cost/terms change | Med | Low | Quote layer is one adapter behind an interface; P/E degrades to manual-price entry (already the offline path) |
 | Solo-maintainer bus factor / ops burden | Med | Med | Serverless-only, no pageable infrastructure, IaC-complete rebuildability, runbook in repo |
 

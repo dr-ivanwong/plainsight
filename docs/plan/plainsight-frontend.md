@@ -59,13 +59,13 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 
 ### S3: Company dashboard
 
-Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (M1–M14), red-flag section, entry points to S4/S5/S8.
+Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards; M10 and M13 render in their siblings' detail sheets per companion §12 D2), red-flag section, entry points to S4/S5/S8.
 
 | State | Rendering |
 |---|---|
 | Complete years | Cards: label (13px secondary), value (34px tabular), sparkline, 5-yr delta chip |
 | Partial year(s) | Affected cards render `insufficient_data` as "Add the 2 missing numbers"; tappable, deep-links into S5 at those fields (companion §10) |
-| No price entered | The three valuation cards collapse into one "Enter today's price" card; on entry, they expand in place |
+| No price entered | The two valuation cards (M12, M14) collapse into one "Enter today's price" card; on entry, they expand in place |
 | Stale price | Valuation cards show "as of ⟨YYYY-MM-DD⟩" badge; amber past 90 days |
 | Flags fired | Orange/red cards beneath the grid: what fired (with numbers), why it matters, what to check |
 | Flags dismissed | Collapsed "1 dismissed" link; tap to review/undo |
@@ -74,7 +74,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 
 ### S4: Metric detail sheet (query-param addressable)
 
-Slides up from the tapped card (spatial continuity); Escape/back closes. Contents, top to bottom: 10-yr chart; the pinned formula with **this year's actual inputs substituted**; denominator-basis badge (average/ending, P-4); plain-language explanation; Owner's-lens paragraph (hidden when education layer is off); per-input provenance chips (tap → source filing/page where available). States mirror S3's value states; an n/m year shows the reason inline with a one-sentence explainer.
+Slides up from the tapped card (spatial continuity); Escape/back closes. Contents, top to bottom: 10-yr chart; the pinned formula with **this year's actual inputs substituted**; denominator-basis badge (average/ending, P-4); plain-language explanation; Owner's-lens paragraph (hidden when education layer is off); per-input provenance chips (tap → source filing/page where available). Companion metrics per D2 render here as a secondary value row: M12's sheet carries M13 (earnings yield), M11's carries M10 (FCF margin), each with its own formula disclosure. States mirror S3's value states; an n/m year shows the reason inline with a one-sentence explainer.
 
 ### S5: Data entry
 

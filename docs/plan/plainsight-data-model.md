@@ -9,7 +9,7 @@
 
 - **"Pinned" means contract.** Changing a pinned formula, threshold, or policy requires updating this document in the same change, plus a regression test capturing the old and new behaviour. The calc engine implements this document; it does not interpret it.
 - The engine is `(statements) → MetricsReport`: pure, zero-dependency, no I/O (main plan §5). It consumes the §2 line items typed per §3, applies the §4 policies, and emits §6 metric values and §7 rule results as discriminated unions. The UI renders unions; it never recomputes.
-- One decision remains open for the owner (§12 D2, the metric budget); D1 (the sample corpus) is resolved in §12. Everything else in this draft is pinned pending the review pass.
+- Both §12 decisions are resolved (D1 the sample corpus, D2 the metric budget). Everything else in this draft is pinned pending the review pass.
 
 ## 2. Canonical line items
 
@@ -126,7 +126,7 @@ Illegal states are unrepresentable end to end: a metric on incomplete inputs is 
 
 ## 6. Metric dictionary (M1–M14, pinned)
 
-All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2.
+All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. All 14 are pinned dictionary entries; **12 render as dashboard cards** and two are detail-sheet metrics (D2): M13 lives in M12's sheet, M10 in M11's. Compare (S7) shows the 12 card metrics.
 
 | Id | Metric | Formula (pinned) | Inputs | Basis | Not meaningful when |
 |---|---|---|---|---|---|
@@ -139,10 +139,10 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2.
 | M7 | Current ratio | currentAssets ÷ currentLiabilities | both | ending | currentLiabilities = 0 |
 | M8 | Interest coverage | operatingIncome ÷ interestExpense | both | | interestExpense = 0 or ∅0 (note N5) |
 | M9 | Free cash flow | operatingCashFlow − capex (note N2) | both | | never (money value) |
-| M10 | FCF margin | M9 ÷ revenue | M9 inputs, `revenue` | | revenue = 0 |
+| M10 | FCF margin (detail-sheet, D2) | M9 ÷ revenue | M9 inputs, `revenue` | | revenue = 0 |
 | M11 | FCF conversion | M9 ÷ netIncome | M9 inputs, `netIncome` | | netIncome ≤ 0 |
 | M12 | P/E | price ÷ (netIncome ÷ dilutedShares) | price record, `netIncome`, `dilutedShares` | | EPS ≤ 0; no price |
-| M13 | Earnings yield | (netIncome ÷ dilutedShares) ÷ price | as M12 | | EPS ≤ 0; no price |
+| M13 | Earnings yield (detail-sheet, D2) | (netIncome ÷ dilutedShares) ÷ price | as M12 | | EPS ≤ 0; no price |
 | M14 | FCF yield | M9 ÷ (price × dilutedShares) | M9 inputs, price, `dilutedShares` | | no price (negative FCF renders negative) |
 
 \* `grossProfit` derived from `revenue` − `costOfRevenue` when not entered (P-8).
@@ -269,14 +269,10 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 **D1: the sample trio vs the Phase 0 corpus. Resolved (owner, 2026-07-11): option (a).** The Phase 1 sample set is **Apple, Coca-Cola, Costco**, generated from the Phase 0 golden files (Costco's fixture verified to 10 FYs accordingly, §11); CSL joins the sample set when Phase 2.5's ASX golden files land, making the samples the showcase for ASX support at exactly the moment it exists. Zero added Phase 0 scope. The declined alternatives, for the record: hand-verifying CSL in Phase 0 (strongest end-to-end test of AUD + 30 June year-ends, at the cost of a bigger week one) and shipping a US-only pair (weakest wow). Frontend §4 updated to match.
 
-**D2: the metric budget number.** This dictionary pins 14 metrics; the main plan says "~12" and CLAUDE.md enforces a "12-metric budget". Options:
-
-- **(a) Budget the dashboard at 12 cards, keep the dictionary at 14** (recommended): demote M13 (earnings yield: the inverse of M12 with identical inputs) into M12's detail sheet, and M10 (FCF margin) into M11's detail sheet (conversion is the stronger earnings-quality signal). The dashboard reads exactly 12; ids stay stable; nothing is deleted; frontend S3's valuation-card copy adjusts from three cards to two.
-- **(b) Keep all 14 on the dashboard** and restate the budget as "the pinned dictionary M1–M14"; one-line CLAUDE.md edit.
-- **(c) Delete two metrics outright.** Loses real information for tidiness; not recommended.
+**D2: the metric budget number. Resolved (owner, 2026-07-11): option (a).** The dictionary stays pinned at 14; **exactly 12 render as dashboard cards**. M13 (earnings yield: the inverse of M12 with identical inputs) renders inside M12's detail sheet, and M10 (FCF margin) inside M11's (conversion is the stronger earnings-quality signal). Ids stay stable; nothing is deleted; the compare grid mirrors the 12 card metrics; and the 12-card budget is the enforced discipline: adding a card requires removing or demoting one. The declined alternatives, for the record: restating the budget as 14, and deleting two metrics outright. Main plan §2–§4 copy, frontend S3/S4, and CLAUDE.md updated to match.
 
 **Review list (per main plan §12.1):** policies P-1…P-8 as pinned in §4, with the P-2 tolerance numbers first; the ROIC construction (N1: NOPAT, the tax-rate clamp, the invested-capital formula); the FCF definition (N2); every R1–R7 threshold in §7; and the §11 depth decision (10/6 FYs).
 
 ---
 
-*Review focus for the owner: D2 (§12; D1 is resolved), the ROIC and FCF definitions (§6, notes N1/N2), the P-2 tolerance, and the R1–R7 thresholds. Everything else here is the mechanical consequence of decisions already recorded in the main plan.*
+*Review focus for the owner: the ROIC and FCF definitions (§6, notes N1/N2), the P-2 tolerance, and the R1–R7 thresholds; both §12 decisions are resolved. Everything else here is the mechanical consequence of decisions already recorded in the main plan.*
