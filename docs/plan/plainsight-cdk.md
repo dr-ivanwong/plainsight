@@ -1,7 +1,7 @@
 # AWS CDK Implementation Plan: v1 Specification
 
 **Companion to:** `plainsight.md` §7 (infrastructure decisions). **Status:** Draft for owner review · **Date:** 2026-07-10
-**Purpose:** the build contract for `infra/`. The main plan decided *what* runs (S3+CloudFront → serverless API → ingestion → auth) and *how it ships* (two accounts, OIDC, separate pipelines); this document decides how that is expressed in CDK: stack decomposition, environment wiring, code conventions, security invariants as tests, and the cost guardrails as code.
+**Purpose:** the build contract for `infra/`. The main plan decided *what* runs (S3+CloudFront → serverless API → ingestion → auth) and *how it ships* (one account, OIDC, separate pipelines); this document decides how that is expressed in CDK: stack decomposition, environment wiring, code conventions, security invariants as tests, and the cost guardrails as code.
 
 ---
 
@@ -9,7 +9,7 @@
 
 1. **Stacks are units of blast radius and deploy cadence, not service categories.** Stateful resources live apart from stateless ones so an API iteration can never touch the table holding data. Small stacks → fast, readable `cdk diff`s → the review artefact stays reviewable.
 2. **Everything phased.** Each stack maps to a roadmap phase; Phase 1 synthesises exactly two stacks and zero compute. The CDK app must never force infrastructure ahead of the phase that needs it (feature flags in config, not commented-out code).
-3. **Zero VPC: a decision, not an omission.** Nothing in this architecture requires one: Lambda reaches DynamoDB, S3, and Secrets Manager over AWS endpoints with IAM; there is no RDS, no EC2, no container. No VPC means no NAT Gateway (~A$50+/month of pure tax), no subnet design, no ENI cold-start penalty, and one entire class of misconfiguration deleted. If a future component demands a VPC, that's a design review, not a default.
+3. **Zero VPC: a decision, not an omission.** Nothing in this architecture requires one: Lambda reaches DynamoDB, S3, and SSM Parameter Store over AWS endpoints with IAM; there is no RDS, no EC2, no container. No VPC means no NAT Gateway (~A$50+/month of pure tax), no subnet design, no ENI cold-start penalty, and one entire class of misconfiguration deleted. If a future component demands a VPC, that's a design review, not a default.
 4. **Secrets never touch code or state.** The canonical pipeline's provider keys live in **SSM Parameter Store as SecureStrings** (standard tier: free, KMS-encrypted with the AWS-managed key), created out-of-band and referenced by name; CDK code and CloudFormation state contain parameter names only. Secrets Manager was traded out deliberately (US$0.40/secret/month for rotation automation these personal keys don't use; see §8's not-list); wanting automated rotation is the trigger to move back.
 
 ## 2. Account, region, bootstrap
@@ -73,7 +73,7 @@ export interface EnvConfig {
 - **Lambdas:** `NodejsFunction` (esbuild bundling), Node 22 (the active LTS: Node 20 is maintenance-only in 2026; new projects start on 22), **ARM64** (Graviton: cheaper, no downside here), explicit `timeout` on every function (a missing timeout is a rejected PR), `memorySize` deliberate per function, `logRetention: 30 days` (the default of *infinite* log retention is the quietest cost leak in AWS). X-Ray tracing on the ingestion path only.
 - **Compute sizing floor:** 256MB default for API/sync functions (128MB is tempting but Node cold starts suffer for savings measured in micro-cents); 1024–1536MB burst for the rasterising extraction Lambda (per-millisecond billing makes short-and-fat cheaper than long-and-thin). **No provisioned concurrency, ever** (a cold start on a single-user API is a non-problem), and no containers exist anywhere in this architecture to size in the first place.
 - **Constructs:** extract a shared construct on the **second** use, never the first (code is a liability). Expected extractions by Phase 2: `AppFunction` (the Lambda defaults above) and `AlarmedQueue` (queue + DLQ + depth alarm).
-- **Removal policies:** driven by `config.protectData`: prod stateful resources get `RemovalPolicy.RETAIN` + deletion protection + PITR; staging gets `DESTROY` so teardown/rebuild stays a five-minute operation and the IaC-complete-rebuild claim is actually exercised.
+- **Removal policies:** driven by `config.protectData`: prod stateful resources get `RemovalPolicy.RETAIN` + deletion protection + PITR; rehearsal copies get `DESTROY` so teardown/rebuild stays a five-minute operation and the IaC-complete-rebuild claim is actually exercised.
 - **No L1 escape hatches without a comment** explaining why the L2 couldn't express it; escape hatches are where drift and surprise live.
 
 ## 6. Security and quality gates as code
@@ -105,7 +105,7 @@ Rollback: stacks are small, so rollback = redeploy the previous git ref (< 5 min
 
 - **DynamoDB provisioned at 25 RCU / 25 WCU, inside the always-free tier, so the table costs $0 forever at this scale.** On-demand was the "traffic unknown" default; at one user, traffic is known: negligible. Ingestion writes are paced under the ceiling (Step Functions map concurrency 1–2) and burst capacity absorbs the rest. PITR (Phase 3) bills ~$0.20/GB-month on a table measured in megabytes: pennies. Revisiting on-demand requires a traffic pattern this product cannot generate.
 - **Budgets → kill switch, wired end-to-end:** AWS Budgets (monthly, `config.budgets.monthlyAud`) alerts to SNS at 50/80/100%; at the `killSwitchAt` threshold, a 10-line Lambda flips `/app/{env}/features/extraction` to `false` in SSM. The extraction and proxy Lambdas read the flag per invocation (60s cache) and return a clean "temporarily disabled" error the client already knows how to render. Budgets can't cap AWS spend, but this converts an overspend alert into an automatic stop for the only component that can spend meaningfully.
-- **Cost anomaly detection** on both accounts, alerting to the same SNS topic.
+- **Cost anomaly detection** on the account, alerting to the same SNS topic.
 - The zero-VPC decision (§1.3) *is* the largest single cost guardrail: no NAT, no idle anything. Expected steady-state infra bill matches the main plan's model (§11).
 
 ### What's deliberately absent: the not-list
@@ -132,7 +132,7 @@ What stays, and why it stays at ≈ $0: S3 Block Public Access (prevents the buc
 2. **Terraform.** Rejected in the main plan; reaffirmed here: one language (TypeScript) end to end, with Zod schemas, calc engine, Lambdas, and infra sharing types and tooling.
 3. **SST.** Attractive DX (live Lambda dev), rejected: a framework layer on top of CDK is one more dependency with its own churn on a project designed to survive neglect. Revisit only if Lambda-side iteration speed genuinely hurts.
 4. **One monolithic stack per environment.** Rejected: unreadable diffs, maximal blast radius, and stateful/stateless coupling (the exact failure modes stack decomposition exists to prevent).
-5. **LocalStack for local infra testing.** Rejected: assertion tests catch structural errors, staging catches behavioural ones; emulator fidelity chasing is time this project doesn't have.
+5. **LocalStack for local infra testing.** Rejected: assertion tests catch structural errors, rehearsal stacks catch behavioural ones; emulator fidelity chasing is time this project doesn't have.
 6. **A standing staging environment.** Rejected on the owner's call: single user, cost priority. Replaced by three cheaper controls: PR-time `cdk diff` + the invariant suite, ephemeral rehearsal stacks torn down same-day, and the local-first client itself, which converts a bad backend deploy into degraded online extras rather than a broken app or lost data.
 
 ## 10. Phase 0 CDK checklist (the concrete first-week list)

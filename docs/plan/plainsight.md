@@ -151,7 +151,7 @@ This is the architectural centerpiece, and it directly answers the product owner
 
 - **IndexedDB is the source of truth**, not a cache. Every company, every statement, every thesis lives on-device first. The app boots, reads, computes, and writes with zero network calls.
 - **Service worker (Workbox)** precaches the app shell (HTML/JS/CSS/fonts) with a stale-while-revalidate strategy. After first visit, the app cold-starts offline, forever, until the user clears storage. The PWA is installable to home screen / dock.
-- **Sync is an optional overlay (Phase 3).** When enabled and online, a sync engine reconciles IndexedDB with the backend using last-write-wins per field with vector timestamps (single-user data → no complex CRDT needed; conflicts only arise from the user's own multiple devices). Sync failures are silent-and-retried; the UI never blocks on them.
+- **Sync is an optional overlay (Phase 3).** When enabled and online, a sync engine reconciles IndexedDB with the backend using last-write-wins per record with Lamport timestamps and a device-id tiebreak (single-user data → no complex CRDT needed; conflicts only arise from the user's own multiple devices). Sync failures are silent-and-retried; the UI never blocks on them.
 - **Import/export as the trust escape hatch:** one-tap export of the entire library to a versioned JSON file (Zod-schema'd), and import of the same. The user's research is never hostage to us, to a browser profile, or to any service.
 
 **Degradation matrix (every feature has a no-network story):**
@@ -216,7 +216,7 @@ The API is a product for the client, not a mirror of storage. Resources and stan
 GET  /v1/companies/{ticker}                      → company profile (name, sector, CIK)
 GET  /v1/companies/{ticker}/financials           → standardised annual statements
        ?years=10&statements=income,balance,cashflow
-GET  /v1/companies/{ticker}/quote                → delayed price (for P/E), cache-friendly
+GET  /v1/companies/{ticker}/quote                → delayed price (deferred to Phase 3+, §12.1)
 GET  /v1/search?q=apple                          → ticker search, paginated (opaque page tokens)
 
 POST /v1/sync/push        (auth)                 → client changes since checkpoint, idempotency-key required
@@ -235,10 +235,10 @@ Contract rules: full resources returned from mutations; opaque page tokens (neve
 
 Financial data quality is the hard problem; the API is trivial by comparison.
 
-- **Source:** SEC EDGAR `companyfacts` XBRL API (free, canonical, US-listed companies). Standardisation layer maps XBRL concepts (`us-gaap:Revenues`, `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax`, …) onto our ~25 canonical line items; this mapping table is the crown-jewel asset and is version-controlled with golden tests against hand-verified filings.
+- **Source:** SEC EDGAR `companyfacts` XBRL API (free, canonical, US-listed companies). Standardisation layer maps XBRL concepts (`us-gaap:Revenues`, `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax`, …) onto our 22 canonical line items (data-model spec §2); this mapping table is the crown-jewel asset and is version-controlled with golden tests against hand-verified filings.
 - **Pipeline shape: on-demand first.** Annual reports change once a year; a nightly sweep pays for freshness nobody uses. A ticker's first request triggers fetch → normalise → validate → store; thereafter a **weekly** EventBridge sweep checks only watched tickers for new filings. Validation is unchanged (Zod-equivalent in the pipeline; reject-and-quarantine on anomaly, e.g., balance sheet that doesn't balance beyond rounding tolerance). Failures go to a DLQ with alerting; a poisoned filing must never block the pipeline (blast radius = that one company).
 - **Serving store:** **DynamoDB**, single-table: `PK=TICKER#{t}`, `SK=FY#{year}#STMT#{type}`, plus a `PROFILE` item. Access patterns are exactly "all years for one ticker" and "one profile": key-value at its purest, and the data model is small enough that DynamoDB lock-in risk is acceptable against its operational silence. (Aurora was considered; rejected: no relational queries exist in the serving path.)
-- **Quote data:** a market-data API (e.g., Polygon/Twelve Data tier; both cover ASX quotes) behind a 15-minute-TTL cache; delayed quotes are explicitly fine (non-goal #4).
+- **Quote data (deferred to Phase 3+; resolved §12.1: v1 price entry is manual):** a market-data API (e.g., Polygon/Twelve Data tier; both cover ASX quotes) behind a 15-minute-TTL cache; delayed quotes are explicitly fine (non-goal #4).
 
 ### Multi-market strategy: US + ASX
 
@@ -250,7 +250,7 @@ Financial data quality is the hard problem; the API is trivial by comparison.
 2. **LLM-assisted PDF extraction from MAP filings** (*chosen*). The source is canonical (the actual lodged annual report) and free; the extraction is the hard part, and modern document-capable models make it tractable inside the existing batch pipeline.
 3. **Manual entry**: already exists as the universal fallback (Journey A) and remains the day-one answer for anything the pipeline hasn't covered.
 
-**Chosen design: extraction in the batch pipeline, on-demand per ticker.** When a user first requests an ASX ticker (or nightly for watched tickers): fetch the annual/half-year report PDF from MAP → locate the financial-statements section → LLM extraction (Claude, table-aware) into the canonical line-item schema with per-field confidence → **hard validation gates** (balance sheet cross-foots within rounding tolerance, subtotals recompute, YoY deltas sanity-checked) → anything failing a gate is quarantined to a human review queue and *never served* → validated data written to DynamoDB with provenance. Filings are immutable, so extraction happens once per document and is cached forever; cost scales with usage, not with the ~2,000-company ASX universe.
+**Chosen design: extraction in the batch pipeline, on-demand per ticker.** When a user first requests an ASX ticker (or via the weekly sweep for watched tickers): fetch the annual/half-year report PDF from MAP → locate the financial-statements section → LLM extraction (Claude, table-aware) into the canonical line-item schema with per-field confidence → **hard validation gates** (balance sheet cross-foots within rounding tolerance, subtotals recompute, YoY deltas sanity-checked) → anything failing a gate is quarantined to a human review queue and *never served* → validated data written to DynamoDB with provenance. Filings are immutable, so extraction happens once per document and is cached forever; cost scales with usage, not with the ~2,000-company ASX universe.
 
 **Why this doesn't violate the availability constraint:** the constraint governs the *client runtime*, not the ingestion path. AI here is an offline batch dependency. If the extraction service is down, the blast radius is "this ASX ticker isn't pre-fillable yet; enter it manually," which is identical to the app's existing offline behaviour. The app itself cannot break, because nothing in the serving or client path calls a model.
 
@@ -312,19 +312,19 @@ Structured JSON logs (requestId propagated from edge to Lambda to DynamoDB annot
 
 ### Guiding tension
 
-Reliability vs. cost vs. operational burden, resolved for a solo-maintainer product: **minimum architecture meeting requirements, managed services only, serverless because the workload is genuinely spiky** (nightly ingestion bursts, sparse daytime reads). No containers, no VPC, no load balancer, no WAF: nothing that idles and nothing that pages; every serving-path component (CloudFront → S3, API Gateway → Lambda, DynamoDB) is pay-per-request.
+Reliability vs. cost vs. operational burden, resolved for a solo-maintainer product: **minimum architecture meeting requirements, managed services only, serverless because the workload is genuinely spiky** (weekly ingestion bursts, sparse daytime reads). No containers, no VPC, no load balancer, no WAF: nothing that idles and nothing that pages; every serving-path component (CloudFront → S3, API Gateway → Lambda, DynamoDB) is pay-per-request.
 
 ### Architecture by phase
 
 **Phase 1 (static PWA, no backend):**
 - S3 (private, versioned) + **CloudFront** with OAC. `index.html` no-cache; hashed assets `max-age=1y, immutable`; service worker script no-cache (stale SWs are a classic PWA foot-gun).
-- Route 53 + ACM. Security headers (CSP, HSTS) via CloudFront response-headers policy.
+- Security headers (CSP, HSTS) via CloudFront response-headers policy. Route 53 + ACM exist only in custom-domain mode, which is resolved off (§12.6): the app lives on the default `*.cloudfront.net` origin.
 - Cost: **≈ $1–5/month.** Availability story: CloudFront's, i.e., better than anything we could build.
 
 **Phase 2 (read API + ingestion):**
 - **API Gateway (HTTP API) → Lambda (Node 22, TypeScript) → DynamoDB** (provisioned within the always-free tier; see the CDK spec §8).
 - Ingestion: EventBridge Scheduler → Step Functions (map over changed CIKs, per-item retry/catch) → Lambdas → DynamoDB; SQS DLQ; CloudWatch alarm on DLQ depth.
-- CloudFront in front of API Gateway for edge caching of `GET financials` (data changes nightly; cache TTL 6h, invalidated by the pipeline on write). This alone absorbs most read traffic at the edge.
+- CloudFront in front of API Gateway for edge caching of `GET financials` (data changes at most weekly per ticker; cache TTL 6h, invalidated by the pipeline on write). This alone absorbs most read traffic at the edge.
 - Cost at hobby scale: **≈ $10–30/month** (DynamoDB on-demand + Lambda + market-data API subscription being the swing factor).
 
 **Phase 3 (auth + sync):** Cognito (hosted UI, no password handling by us) + sync Lambdas + a `SYNC#{userId}` item collection in the same DynamoDB table. DynamoDB PITR turned on the day user data lands (RPO ≈ 5 min; RTO: hours, acceptable; the authoritative copy is on the user's device, which inverts the usual DR anxiety).
