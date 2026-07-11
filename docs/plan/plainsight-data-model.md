@@ -42,6 +42,8 @@
 | `totalLiabilities` | Total liabilities | `Total liabilities` (feeds the balance gate: assets = liabilities + equity) | ✓ | |
 | `totalEquity` | Total equity | `Total stockholders' equity`; IFRS: `Equity attributable to owners of the parent` | ✓ | ✓ |
 
+Lease liabilities (shown as separate lines in post-IFRS 16 / ASC 842 filings): include them in the two debt items when a lease-inclusive view of leverage and ROIC is wanted; the choice is the user's, and detail sheets show exactly what was entered (confirmed with N1, 2026-07-11).
+
 ### Cash flow statement
 
 | Id | Label | Find it as | Core | Signed |
@@ -147,7 +149,7 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. A
 
 \* `grossProfit` derived from `revenue` − `costOfRevenue` when not entered (P-8).
 
-**N1: ROIC definition (pinned; flagged for owner review).** NOPAT = operatingIncome × (1 − effective tax rate), where effective tax rate = taxExpense ÷ pretaxIncome clamped to [0, 0.45]; when pretaxIncome ≤ 0 the rate is taken as 0. Invested capital = shortTermDebt + longTermDebt + totalEquity − cashAndEquivalents, averaged per P-4. Deliberately simple: no lease capitalisation, no goodwill adjustments in v1; the detail sheet states this plainly.
+**N1: ROIC definition (pinned; owner-confirmed 2026-07-11).** NOPAT = operatingIncome × (1 − effective tax rate), where effective tax rate = taxExpense ÷ pretaxIncome clamped to [0, 0.45]; when pretaxIncome ≤ 0 the rate is taken as 0. Invested capital = shortTermDebt + longTermDebt + totalEquity − cashAndEquivalents, averaged per P-4. Deliberately simple: no lease capitalisation, no goodwill adjustments in v1; the detail sheet states this plainly.
 
 **N2: FCF definition (pinned; flagged for owner review).** operatingCashFlow − capex, where capex is purchases of property, plant and equipment only: no software or intangible add-backs, leases as-reported. The classic conservative definition, stated on the detail sheet.
 
@@ -271,7 +273,7 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 **D2: the metric budget number. Resolved (owner, 2026-07-11): option (a).** The dictionary stays pinned at 14; **exactly 12 render as dashboard cards**. M13 (earnings yield: the inverse of M12 with identical inputs) renders inside M12's detail sheet, and M10 (FCF margin) inside M11's (conversion is the stronger earnings-quality signal). Ids stay stable; nothing is deleted; the compare grid mirrors the 12 card metrics; and the 12-card budget is the enforced discipline: adding a card requires removing or demoting one. The declined alternatives, for the record: restating the budget as 14, and deleting two metrics outright. Main plan §2–§4 copy, frontend S3/S4, and CLAUDE.md updated to match.
 
-**Review list (per main plan §12.1):** policies P-1…P-8 as pinned in §4, with the P-2 tolerance numbers first; the ROIC construction (N1: NOPAT, the tax-rate clamp, the invested-capital formula); the FCF definition (N2); every R1–R7 threshold in §7; and the §11 depth decision (10/6 FYs).
+**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): pending; the P-2 tolerance numbers: pending; the R1–R7 thresholds (§7): pending; policies P-1 and P-3…P-8, and the §11 depth decision (10/6 FYs): pending.
 
 ---
 
