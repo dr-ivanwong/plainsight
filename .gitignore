@@ -1,1 +1,8 @@
 .DS_Store
+node_modules/
+dist/
+coverage/
+cdk.out/
+*.tsbuildinfo
+.vite/
+.eslintcache

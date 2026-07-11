@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+  - infra
+
+# esbuild's install script fetches its platform binary; vite and (later)
+# NodejsFunction bundling depend on it.
+allowBuilds:
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - aws-cdk@2.1130.0
+
+# pnpm is invoked through corepack (no global install); the pre-run dependency
+# verification would spawn a bare `pnpm install` that is not on PATH. CI and
+# the docs run installs explicitly.
+verifyDepsBeforeRun: false
