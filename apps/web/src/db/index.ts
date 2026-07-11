@@ -1,8 +1,21 @@
 /**
  * The client storage layer (data-model spec §9): the Dexie schema, the Zod
- * record boundary, and quarantine-on-read. Screens and hooks import from here.
+ * record boundary, quarantine-on-read, the per-table repositories, and the
+ * assembler that turns stored rows into engine input. Screens and hooks
+ * import from here.
  */
 export { PlainsightDb, TABLE_NAMES, db, type TableName } from './db';
+export {
+  bumpDataVersion,
+  createCompany,
+  getCompany,
+  listCompanies,
+  type NewCompany
+} from './companies';
+export { listStatements, upsertStatement, type StatementWrite } from './statements';
+export { getPrice, putPrice, type PriceWrite } from './prices';
+export { getMeta, setMeta, type MetaValue } from './meta';
+export { assembleFinancials } from './financials';
 export {
   companyRecordSchema,
   entryValueSchema,
