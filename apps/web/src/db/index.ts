@@ -17,6 +17,12 @@ export { getPrice, putPrice, type PriceWrite } from './prices';
 export { getMeta, setMeta, type MetaValue } from './meta';
 export { assembleFinancials } from './financials';
 export {
+  listDismissals,
+  putDismissal,
+  removeDismissal,
+  type DismissalWrite
+} from './dismissals';
+export {
   companyRecordSchema,
   entryValueSchema,
   financialsSnapshotSchema,

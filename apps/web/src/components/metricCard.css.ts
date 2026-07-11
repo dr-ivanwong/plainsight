@@ -19,6 +19,13 @@ export const label = style({
   color: colour.textSecondary
 });
 
+export const valueRow = style({
+  display: 'flex',
+  alignItems: 'baseline',
+  gap: space[8],
+  flexWrap: 'wrap'
+});
+
 export const footnote = style({
   fontSize: fontSize.caption2,
   letterSpacing: tracking.caption,

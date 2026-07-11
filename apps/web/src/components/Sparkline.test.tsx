@@ -1,0 +1,45 @@
+// @vitest-environment jsdom
+
+import { render } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { Sparkline } from './Sparkline';
+
+describe('Sparkline', () => {
+  it('draws a normalised polyline from two or more labelled years', () => {
+    const { container } = render(
+      <Sparkline
+        points={[
+          { fy: 'FY2022', value: 0.4 },
+          { fy: 'FY2023', value: 0.5 },
+          { fy: 'FY2024', value: 0.45 }
+        ]}
+      />
+    );
+    const polyline = container.querySelector('polyline');
+    expect(polyline).not.toBeNull();
+    const coords = polyline?.getAttribute('points') ?? '';
+    expect(coords.split(' ')).toHaveLength(3);
+    // The minimum sits at the bottom of the box, the maximum at the top.
+    expect(coords.startsWith('2.00,26.00')).toBe(true);
+    expect(coords).toContain('50.00,2.00');
+  });
+
+  it('renders nothing for a single year (data-sufficiency policy)', () => {
+    const { container } = render(<Sparkline points={[{ fy: 'FY2024', value: 0.4 }]} />);
+    expect(container.querySelector('svg')).toBeNull();
+  });
+
+  it('draws a centre line for a flat series instead of dividing by zero', () => {
+    const { container } = render(
+      <Sparkline
+        points={[
+          { fy: 'FY2023', value: 0.4 },
+          { fy: 'FY2024', value: 0.4 }
+        ]}
+      />
+    );
+    const coords = container.querySelector('polyline')?.getAttribute('points') ?? '';
+    expect(coords).toBe('2.00,14.00 98.00,14.00');
+  });
+});

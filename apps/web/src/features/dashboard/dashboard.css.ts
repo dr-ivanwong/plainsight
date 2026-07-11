@@ -156,3 +156,42 @@ export const priceError = style({
   fontSize: fontSize.subhead,
   color: colour.flag
 });
+
+export const trendHint = style({
+  marginTop: space[16],
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary
+});
+
+export const flagSection = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: space[12],
+  marginTop: space[40]
+});
+
+export const flagsHeading = style({
+  fontSize: fontSize.title3,
+  fontWeight: fontWeight.semibold,
+  letterSpacing: tracking.display,
+  lineHeight: lineHeight.display
+});
+
+export const dismissedToggle = style({
+  alignSelf: 'flex-start',
+  minHeight: touchTarget,
+  padding: `0 ${space[12]}`,
+  border: 'none',
+  backgroundColor: 'transparent',
+  borderRadius: radius.medium,
+  color: colour.textSecondary,
+  fontFamily: fontStack,
+  fontSize: fontSize.subhead,
+  fontWeight: fontWeight.semibold,
+  cursor: 'pointer',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: 0
+  }
+});

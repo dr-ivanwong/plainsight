@@ -153,6 +153,30 @@ describe('putPrice', () => {
   });
 });
 
+describe('dismissals', () => {
+  it('round-trips a dismissal keyed by company and rule', async () => {
+    const { listDismissals, putDismissal, removeDismissal } = await import('./dismissals');
+    await putDismissal(db, { companyId: 'apple', ruleId: 'fragility', dismissedAtFy: 'FY2024' });
+    const rows = await listDismissals(db, 'apple');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ ruleId: 'fragility', dismissedAtFy: 'FY2024' });
+
+    await removeDismissal(db, 'apple', 'fragility');
+    expect(await listDismissals(db, 'apple')).toHaveLength(0);
+  });
+
+  it('refuses a dismissal for a rule id that is not pinned', async () => {
+    const { putDismissal } = await import('./dismissals');
+    await expect(
+      putDismissal(db, {
+        companyId: 'apple',
+        ruleId: 'notARule' as never,
+        dismissedAtFy: 'FY2024'
+      })
+    ).rejects.toThrow();
+  });
+});
+
 describe('meta', () => {
   it('round-trips each setting with its own value type', async () => {
     await setMeta(db, 'theme', 'dark');

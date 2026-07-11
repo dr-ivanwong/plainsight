@@ -4,15 +4,19 @@ import {
   METRICS,
   type FyLabel,
   type LineItemId,
-  type MetricId
+  type MetricId,
+  type MetricSeries
 } from '@plainsight/calc-engine';
 import { Link } from '@tanstack/react-router';
 import { useState, type FormEvent, type ReactElement } from 'react';
 
 import { MetricCard } from '../../components/MetricCard';
 import { parseEntryText } from '../../components/moneyEntry';
+import { RedFlagBanner } from '../../components/RedFlagBanner';
+import type { SparkPoint } from '../../components/Sparkline';
 import { db, putPrice, type CompanyRecord } from '../../db';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
+import { useRedFlags } from '../../hooks/useRedFlags';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
 
@@ -115,11 +119,21 @@ function PriceCard({ company }: { company: CompanyRecord }): ReactElement {
  */
 export function Dashboard({ metrics }: { metrics: CompanyMetrics }): ReactElement {
   const { company, price, report } = metrics;
+  const flags = useRedFlags(company.id, report);
+  const [showDismissed, setShowDismissed] = useState(false);
   const hero = [company.sector, report.latestFy, company.currency]
     .filter((part): part is string => typeof part === 'string' && part !== '')
     .join(' · ');
   const priceIsStale =
     price !== null && Date.now() - Date.parse(price.asOf) > STALE_PRICE_MS;
+
+  // Sparklines draw the labelled years that computed; they need at least two
+  // (data-sufficiency policy), which Sparkline itself enforces.
+  const sparkFor = (series: MetricSeries): SparkPoint[] =>
+    report.fyLabels.flatMap((fy) => {
+      const value = series.values[fy];
+      return value !== undefined && value.status === 'ok' ? [{ fy, value: value.value }] : [];
+    });
 
   return (
     <>
@@ -155,50 +169,97 @@ export function Dashboard({ metrics }: { metrics: CompanyMetrics }): ReactElemen
           </Link>
         </section>
       ) : (
-        <section className={styles.grid} aria-label="Metrics">
-          {CARD_IDS.map((id) => {
-            const def = METRICS[id];
-            const latest = report.metrics[id].latest;
-            if (latest === null) return null;
+        <>
+          <section className={styles.grid} aria-label="Metrics">
+            {CARD_IDS.map((id) => {
+              const def = METRICS[id];
+              const series = report.metrics[id];
+              const latest = series.latest;
+              if (latest === null) return null;
 
-            const valuation = id === 'pe' || id === 'fcfYield';
-            if (valuation && price === null) {
-              // Both valuation cards collapse into the single price card.
-              return id === 'pe' ? <PriceCard key="price" company={company} /> : null;
-            }
+              const valuation = id === 'pe' || id === 'fcfYield';
+              if (valuation && price === null) {
+                // Both valuation cards collapse into the single price card.
+                return id === 'pe' ? <PriceCard key="price" company={company} /> : null;
+              }
 
-            if (latest.status === 'insufficient_data' && report.latestFy !== null) {
+              const spark = sparkFor(series);
+              if (latest.status === 'insufficient_data' && report.latestFy !== null) {
+                return (
+                  <Link
+                    key={id}
+                    to="/company/$id/entry"
+                    params={{ id: company.id }}
+                    search={entrySearchFor(latest.missing, report.latestFy)}
+                    className={styles.cardLink}
+                  >
+                    <MetricCard
+                      label={def.label}
+                      value={latest}
+                      kind={def.format}
+                      currency={company.currency}
+                      spark={spark}
+                      delta={series.delta ?? undefined}
+                    />
+                  </Link>
+                );
+              }
+
               return (
-                <Link
+                <MetricCard
                   key={id}
-                  to="/company/$id/entry"
-                  params={{ id: company.id }}
-                  search={entrySearchFor(latest.missing, report.latestFy)}
-                  className={styles.cardLink}
-                >
-                  <MetricCard
-                    label={def.label}
-                    value={latest}
-                    kind={def.format}
-                    currency={company.currency}
-                  />
-                </Link>
+                  label={def.label}
+                  value={latest}
+                  kind={def.format}
+                  currency={company.currency}
+                  spark={spark}
+                  delta={series.delta ?? undefined}
+                  footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
+                  stale={valuation && priceIsStale}
+                />
               );
-            }
+            })}
+          </section>
 
-            return (
-              <MetricCard
-                key={id}
-                label={def.label}
-                value={latest}
-                kind={def.format}
-                currency={company.currency}
-                footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
-                stale={valuation && priceIsStale}
-              />
-            );
-          })}
-        </section>
+          {report.fyLabels.length === 1 ? (
+            <p className={styles.trendHint}>Add more years to see trends.</p>
+          ) : null}
+
+          {flags !== undefined && (flags.active.length > 0 || flags.dismissed.length > 0) ? (
+            <section className={styles.flagSection} aria-label="Items to investigate">
+              <h2 className={styles.flagsHeading}>Items to investigate</h2>
+              {flags.active.map((flag) => (
+                <RedFlagBanner
+                  key={flag.ruleId}
+                  flag={flag}
+                  onDismiss={() => void flags.dismiss(flag.ruleId)}
+                />
+              ))}
+              {flags.dismissed.length > 0 ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.dismissedToggle}
+                    aria-expanded={showDismissed}
+                    onClick={() => setShowDismissed((open) => !open)}
+                  >
+                    {flags.dismissed.length} dismissed
+                  </button>
+                  {showDismissed
+                    ? flags.dismissed.map((flag) => (
+                        <RedFlagBanner
+                          key={flag.ruleId}
+                          flag={flag}
+                          muted
+                          onRestore={() => void flags.restore(flag.ruleId)}
+                        />
+                      ))
+                    : null}
+                </>
+              ) : null}
+            </section>
+          ) : null}
+        </>
       )}
     </>
   );

@@ -184,6 +184,97 @@ describe('the company dashboard', () => {
     expect(link.getAttribute('href')).toBe(`/company/${company.id}/entry`);
   });
 
+  it('draws sparklines and the five-year delta once the history supports them', async () => {
+    const company = await seedCompany();
+    // Six labelled years: the delta chip compares the latest against five labels prior.
+    for (let offset = 0; offset < 6; offset += 1) {
+      const year = 2019 + offset;
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${year}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}`);
+
+    const gross = await screen.findByRole('article', { name: 'Gross margin' });
+    expect(within(gross).getByText('45.0%')).toBeVisible();
+    expect(within(gross).getByText(/5\.0 pp/)).toHaveAttribute(
+      'aria-label',
+      'up 5.0 percentage points, FY2019 to FY2024'
+    );
+    expect(gross.querySelector('svg')).not.toBeNull();
+  });
+
+  it('hides trends behind a gentle hint while only one year exists', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+
+    const gross = await screen.findByRole('article', { name: 'Gross margin' });
+    expect(gross.querySelector('svg')).toBeNull();
+    expect(screen.getByText('Add more years to see trends.')).toBeVisible();
+  });
+
+  it('fires, dismisses and restores an item to investigate', async () => {
+    const company = await seedCompany();
+    await upsertStatement(
+      db,
+      yearWrite(company.id, 'income', {
+        revenue: e(100_000),
+        operatingIncome: e(2_000),
+        interestExpense: e(1_000)
+      })
+    );
+
+    renderAt(`/company/${company.id}`);
+
+    const section = await screen.findByRole('region', { name: 'Items to investigate' });
+    const banner = within(section).getByRole('article', { name: 'Fragility' });
+    expect(within(banner).getAllByText(/interest/i).length).toBeGreaterThan(0);
+
+    fireEvent.click(within(banner).getByRole('button', { name: 'Dismiss' }));
+    expect(await within(section).findByRole('button', { name: '1 dismissed' })).toBeVisible();
+    expect(within(section).queryByRole('button', { name: 'Dismiss' })).not.toBeInTheDocument();
+    const stored = await db.flagDismissals.get([company.id, 'fragility']);
+    expect(stored?.dismissedAtFy).toBe('FY2024');
+
+    fireEvent.click(within(section).getByRole('button', { name: '1 dismissed' }));
+    fireEvent.click(await within(section).findByRole('button', { name: 'Restore' }));
+    await waitFor(() => {
+      expect(within(section).getByRole('button', { name: 'Dismiss' })).toBeVisible();
+    });
+  });
+
+  it('lets a stale dismissal from an earlier year speak again', async () => {
+    const company = await seedCompany();
+    await upsertStatement(
+      db,
+      yearWrite(company.id, 'income', {
+        revenue: e(100_000),
+        operatingIncome: e(2_000),
+        interestExpense: e(1_000)
+      })
+    );
+    await db.flagDismissals.put({
+      companyId: company.id,
+      ruleId: 'fragility',
+      dismissedAtFy: 'FY2023',
+      dismissedAt: '2025-09-01T00:00:00Z'
+    });
+
+    renderAt(`/company/${company.id}`);
+
+    const section = await screen.findByRole('region', { name: 'Items to investigate' });
+    expect(within(section).getByRole('button', { name: 'Dismiss' })).toBeVisible();
+  });
+
   it('marks a stale price on the valuation cards', async () => {
     const company = await seedCompany();
     await seedFullYear(company.id);
