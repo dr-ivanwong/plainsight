@@ -1,0 +1,5 @@
+# cdk.context.json is deliberately NOT ignored: this app performs no account
+# lookups (spec: synth is credential-free), so the file should never exist. If
+# one ever appears in a diff, that is a lookup creeping in; review it.
+cdk.out/
+node_modules/

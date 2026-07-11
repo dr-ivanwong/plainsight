@@ -1,0 +1,25 @@
+{
+  "name": "@plainsight/infra",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "CDK app for Plainsight. Phase 0: Foundation, GithubOidc, StaticSite. Build contract: docs/plan/plainsight-cdk.md.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "synth": "cdk synth --quiet",
+    "diff": "cdk diff"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.261.0",
+    "constructs": "^10.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "aws-cdk": "^2.1130.0",
+    "cdk-nag": "^3.0.1",
+    "tsx": "^4.23.0",
+    "typescript": "~5.9.0",
+    "vitest": "^4.1.10"
+  }
+}
