@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareFyLabels, fyLabelFromEndDate, fyLabelOf, fyYear, parseIsoDate } from '../src/fy.js';
+import { compareFyLabels, fyLabelFromEndDate, fyLabelOf, fyYear, isFyLabel, parseIsoDate } from '../src/fy.js';
 
 describe('parseIsoDate', () => {
   it('parses a valid date', () => {
@@ -61,5 +61,14 @@ describe('compareFyLabels', () => {
   it('sorts ascending', () => {
     const labels = ['FY2024', 'FY2015', 'FY2020'] as const;
     expect([...labels].sort(compareFyLabels)).toEqual(['FY2015', 'FY2020', 'FY2024']);
+  });
+});
+
+describe('isFyLabel', () => {
+  it('accepts the pinned four-digit format and nothing else', () => {
+    expect(isFyLabel('FY2024')).toBe(true);
+    expect(isFyLabel('FY24')).toBe(false);
+    expect(isFyLabel('2024')).toBe(false);
+    expect(isFyLabel('FY20245')).toBe(false);
   });
 });

@@ -47,6 +47,11 @@ export function fyLabelFromEndDate(endDate: string): FyLabel {
 
 const FY_LABEL = /^FY(\d{4})$/;
 
+/** Type guard for the pinned label format; client boundaries build their validators from it. */
+export function isFyLabel(value: string): value is FyLabel {
+  return FY_LABEL.test(value);
+}
+
 /** The numeric year of a label. Throws on malformed labels (boundary assert). */
 export function fyYear(label: FyLabel): number {
   const match = FY_LABEL.exec(label);

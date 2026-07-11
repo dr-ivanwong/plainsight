@@ -38,7 +38,14 @@ export type {
   StatementYear
 } from './types.js';
 
-export { compareFyLabels, fyLabelFromEndDate, fyLabelOf, fyYear, parseIsoDate } from './fy.js';
+export {
+  compareFyLabels,
+  fyLabelFromEndDate,
+  fyLabelOf,
+  fyYear,
+  isFyLabel,
+  parseIsoDate
+} from './fy.js';
 
 export { assertSafeInteger, scaleUnitMinor } from './money.js';
 
