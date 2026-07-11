@@ -30,6 +30,7 @@ import type {
   MetricId,
   MetricSeries,
   MetricValue,
+  RuleId,
   RuleResult,
   Severity,
   StatementYear
@@ -355,6 +356,21 @@ function evaluateCapitalIntensityCreep(input: RuleInput): RuleResult | null {
       'Compare the capex trajectory with depreciation and amortisation, and check what working capital swallowed.'
   };
 }
+
+/**
+ * The seven pinned rule ids in the spec's section 7 order: the runtime
+ * companion to the RuleId type (mirroring METRIC_IDS) for consumers that
+ * enumerate or validate ids, such as the client's flag-dismissal records.
+ */
+export const RULE_IDS: readonly RuleId[] = [
+  'earningsQuality',
+  'erodingMoat',
+  'leverageFlatteredReturns',
+  'fragility',
+  'dilution',
+  'manufacturedReturns',
+  'capitalIntensityCreep'
+];
 
 const RULES = [
   evaluateEarningsQuality,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeMetricsReport } from '../src/report.js';
+import { RULE_IDS } from '../src/rules.js';
 import type { RuleId, StatementYear } from '../src/types.js';
 import { completeYear, zeroAsserted, type ValueSpec } from './helpers.js';
 
@@ -292,5 +293,19 @@ describe('rule evaluation with no data', () => {
 
   it('every rule abstains on a single sparse year', () => {
     expect(computeMetricsReport({ years: [completeYear('FY2024')] }).flags).toEqual([]);
+  });
+});
+
+describe('rule ids', () => {
+  it('exposes the seven pinned ids, in the spec section 7 order', () => {
+    expect(RULE_IDS).toEqual([
+      'earningsQuality',
+      'erodingMoat',
+      'leverageFlatteredReturns',
+      'fragility',
+      'dilution',
+      'manufacturedReturns',
+      'capitalIntensityCreep'
+    ]);
   });
 });

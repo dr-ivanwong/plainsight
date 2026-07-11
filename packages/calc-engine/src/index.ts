@@ -65,7 +65,7 @@ export {
   type MetricDef
 } from './metrics.js';
 
-export { evaluateRules, type RuleInput } from './rules.js';
+export { RULE_IDS, evaluateRules, type RuleInput } from './rules.js';
 
 export { computeMetricsReport } from './report.js';
 
