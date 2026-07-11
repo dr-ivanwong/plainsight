@@ -82,7 +82,8 @@ describe('the library', () => {
     });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add company' }));
 
-    expect(await screen.findByRole('heading', { name: 'Company dashboard' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Cochlear' })).toBeVisible();
+    expect(screen.getByText(/No statements yet/)).toBeVisible();
     const stored = await db.companies.toArray();
     expect(stored).toHaveLength(1);
     expect(stored[0]).toMatchObject({ name: 'Cochlear', ticker: 'COH', currency: 'AUD' });

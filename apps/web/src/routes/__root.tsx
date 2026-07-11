@@ -1,4 +1,4 @@
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
+import { createRootRoute, Link, Outlet, useRouterState } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
 import { Placeholder } from '../components/Placeholder';
@@ -10,9 +10,15 @@ export const Route = createRootRoute({
   notFoundComponent: NotFound,
 });
 
+/** Screens that render in the wider column (frontend spec §7): the dashboard now, compare later. */
+const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/'];
+
 function RootShell(): ReactElement {
+  const wide = useRouterState({
+    select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),
+  });
   return (
-    <main className={styles.column}>
+    <main className={wide ? styles.columnWide : styles.column}>
       <Outlet />
     </main>
   );

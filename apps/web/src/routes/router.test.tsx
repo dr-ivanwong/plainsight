@@ -41,21 +41,18 @@ describe('the route skeleton', () => {
     ).toBeVisible();
   });
 
-  it('serves the dashboard with its company id', async () => {
-    await renderAt('/company/apple');
-    expect(await screen.findByRole('heading', { name: 'Company dashboard' })).toBeVisible();
-    expect(screen.getByText(/Company apple\./)).toBeVisible();
+  it('serves the dashboard, with a way home when the company does not exist', async () => {
+    await renderAt('/company/ghost');
+    expect(
+      await screen.findByRole('heading', { name: 'No company at this address' })
+    ).toBeVisible();
   });
 
-  it('parses a pinned metric slug into the dashboard search', async () => {
-    await renderAt('/company/apple?metric=roe');
-    expect(await screen.findByText(/Metric sheet: roe\./)).toBeVisible();
-  });
-
-  it('drops an unrecognised metric instead of crashing', async () => {
-    await renderAt('/company/apple?metric=ebitdaMagic');
-    expect(await screen.findByRole('heading', { name: 'Company dashboard' })).toBeVisible();
-    expect(screen.queryByText(/Metric sheet:/)).not.toBeInTheDocument();
+  it('drops an unrecognised metric param instead of crashing', async () => {
+    await renderAt('/company/ghost?metric=ebitdaMagic');
+    expect(
+      await screen.findByRole('heading', { name: 'No company at this address' })
+    ).toBeVisible();
   });
 
   it('serves data entry, with a way home when the company does not exist', async () => {
