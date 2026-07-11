@@ -63,10 +63,15 @@ export function MoneyField({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const caretRef = useRef<number | null>(null);
   const focusedRef = useRef(false);
+  // What this field last sent upward. Enter commits and the focus move then
+  // blurs before the store's round trip refreshes the prop; without this
+  // baseline the blur would commit the same value again.
+  const lastSentRef = useRef<FieldValue | undefined>(undefined);
   const format = { scale, unit, signed };
 
   // External writes re-display, but never under an editing cursor.
   useEffect(() => {
+    lastSentRef.current = undefined;
     if (!focusedRef.current) setText(textFromValue(value, scale, unit));
   }, [value, scale, unit]);
 
@@ -105,20 +110,28 @@ export function MoneyField({
     setText(formatted);
   }
 
+  /** The value this field currently stands for: the last commit it sent, else the prop. */
+  function baselineValue(): FieldValue {
+    return lastSentRef.current !== undefined ? lastSentRef.current : value;
+  }
+
   function commit(): void {
     const parsed = parseEntryText(text, format);
     if (!parsed.ok) {
-      setText(textFromValue(value, scale, unit));
+      setText(textFromValue(baselineValue(), scale, unit));
       return;
     }
-    const committed = typeof value === 'number' ? value : null;
-    if (parsed.minor !== committed) onCommit(parsed.minor);
+    const baseline = baselineValue();
+    if (parsed.minor !== (typeof baseline === 'number' ? baseline : null)) {
+      lastSentRef.current = parsed.minor;
+      onCommit(parsed.minor);
+    }
     setText(parsed.minor === null ? '' : formatEntryText(parsed.minor, { scale, unit }));
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
     if (event.key === 'Enter') commit();
-    if (event.key === 'Escape') setText(textFromValue(value, scale, unit));
+    if (event.key === 'Escape') setText(textFromValue(baselineValue(), scale, unit));
   }
 
   function handleWrapBlur(event: FocusEvent<HTMLSpanElement>): void {
@@ -127,11 +140,13 @@ export function MoneyField({
 
   function chooseZero(): void {
     setMenuOpen(false);
+    lastSentRef.current = 'zero';
     onCommit('zero');
   }
 
   function clearZero(): void {
     setMenuOpen(false);
+    lastSentRef.current = null;
     onCommit(null);
     triggerRef.current?.focus();
   }

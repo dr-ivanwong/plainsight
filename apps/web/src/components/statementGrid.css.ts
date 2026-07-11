@@ -65,6 +65,25 @@ export const scaleNote = style({
   whiteSpace: 'nowrap'
 });
 
+/** The set-once-per-year scale control, dressed as quietly as the note it sits in. */
+export const scaleSelect = style({
+  fontSize: fontSize.caption2,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary,
+  backgroundColor: 'transparent',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer'
+});
+
+export const headerNote = style({
+  display: 'block',
+  fontSize: fontSize.caption2,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary,
+  whiteSpace: 'nowrap'
+});
+
 export const labelCell = style([
   stickyLabel,
   {

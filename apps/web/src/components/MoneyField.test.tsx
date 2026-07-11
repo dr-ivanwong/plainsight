@@ -67,9 +67,19 @@ describe('MoneyField', () => {
     fireEvent.blur(field);
     expect(onCommit).toHaveBeenCalledWith(39_103_600_000_000);
 
-    fireEvent.change(field, { target: { value: '391,035' } });
+    fireEvent.change(field, { target: { value: '391,036' } });
     fireEvent.blur(field);
     expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('commits once when Enter is chased by the focus-move blur', () => {
+    const onCommit = renderField();
+    const field = input();
+    fireEvent.change(field, { target: { value: '42' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onCommit).toHaveBeenCalledWith(4_200_000_000);
   });
 
   it('commits on Enter and reverts on Escape', () => {

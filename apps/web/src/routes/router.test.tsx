@@ -58,17 +58,19 @@ describe('the route skeleton', () => {
     expect(screen.queryByText(/Metric sheet:/)).not.toBeInTheDocument();
   });
 
-  it('parses the pinned entry deep-link params', async () => {
-    await renderAt('/company/apple/entry?stmt=income&fy=FY2024&focus=revenue');
-    expect(await screen.findByRole('heading', { name: 'Data entry' })).toBeVisible();
-    expect(screen.getByText(/Statement: income\. Year: FY2024\. Focus: revenue\./)).toBeVisible();
+  it('serves data entry, with a way home when the company does not exist', async () => {
+    await renderAt('/company/ghost/entry');
+    expect(
+      await screen.findByRole('heading', { name: 'No company at this address' })
+    ).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Back to the library' })).toBeVisible();
   });
 
-  it('drops malformed deep-link params one by one', async () => {
-    await renderAt('/company/apple/entry?stmt=income&fy=2024&focus=ebitda');
-    expect(await screen.findByText(/Statement: income\./)).toBeVisible();
-    expect(screen.queryByText(/Year:/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Focus:/)).not.toBeInTheDocument();
+  it('degrades malformed deep-link params instead of crashing', async () => {
+    await renderAt('/company/ghost/entry?stmt=income&fy=2024&focus=ebitda');
+    expect(
+      await screen.findByRole('heading', { name: 'No company at this address' })
+    ).toBeVisible();
   });
 
   it('serves the settings root and the data screen', async () => {

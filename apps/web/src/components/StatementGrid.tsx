@@ -6,7 +6,7 @@ import type {
   LineItemMeta,
   Scale
 } from '@plainsight/calc-engine';
-import type { KeyboardEvent, ReactElement } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type ReactElement } from 'react';
 
 import { MoneyField, type FieldValue } from './MoneyField';
 import { unitOf } from './moneyEntry';
@@ -18,9 +18,13 @@ export interface GridYear {
   entryScale: Scale;
   currency: CurrencyCode;
   values: Partial<Readonly<Record<LineItemId, EntryValue>>>;
+  /** Caption lines under the year header: completeness, provenance. */
+  headerNotes?: readonly string[];
 }
 
-const SCALE_WORD: Readonly<Record<Scale, string>> = {
+const SCALES: readonly Scale[] = ['ones', 'thousands', 'millions', 'billions'];
+
+export const SCALE_WORD: Readonly<Record<Scale, string>> = {
   ones: 'units',
   thousands: 'thousands',
   millions: 'millions',
@@ -49,7 +53,7 @@ function derivedMinorFor(item: LineItemMeta, year: GridYear): number | undefined
   return revenue - cost;
 }
 
-function focusCell(table: HTMLTableElement, row: number, col: number): boolean {
+function focusCellIn(table: HTMLTableElement, row: number, col: number): boolean {
   const cell = table.querySelector<HTMLElement>(`[data-row="${row}"][data-col="${col}"]`);
   if (cell === null) return false;
   cell.focus();
@@ -68,13 +72,33 @@ export function StatementGrid({
   rows,
   years,
   mode = 'entry',
-  onCommit
+  onCommit,
+  onScaleChange,
+  focusCell
 }: {
   rows: readonly LineItemMeta[];
   years: readonly GridYear[];
   mode?: 'entry' | 'review';
   onCommit: (fy: FyLabel, id: LineItemId, value: FieldValue) => void;
+  /** When present, the year header's scale becomes a quiet select (set once per year, frontend spec §3). */
+  onScaleChange?: (fy: FyLabel, scale: Scale) => void;
+  /** Deep-link and new-year focus target; fires once per distinct target. */
+  focusCell?: { id: LineItemId; fy: FyLabel };
 }): ReactElement {
+  const tableRef = useRef<HTMLTableElement>(null);
+  const lastFocusTarget = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (focusCell === undefined || tableRef.current === null) return;
+    const key = `${focusCell.id}|${focusCell.fy}`;
+    if (lastFocusTarget.current === key) return;
+    const row = rows.findIndex((item) => item.id === focusCell.id);
+    const col = years.findIndex((year) => year.fy === focusCell.fy);
+    if (row >= 0 && col >= 0 && focusCellIn(tableRef.current, row, col)) {
+      lastFocusTarget.current = key;
+    }
+  }, [focusCell, rows, years]);
+
   function handleKeyDown(event: KeyboardEvent<HTMLTableElement>): void {
     const target = event.target as HTMLElement;
     const rowAttr = target.getAttribute('data-row');
@@ -95,12 +119,12 @@ export function StatementGrid({
     else if (event.key === 'ArrowLeft' && caretAtStart) next = [row, col - 1];
     else if (event.key === 'ArrowRight' && caretAtEnd) next = [row, col + 1];
     if (next === null) return;
-    if (focusCell(event.currentTarget, next[0], next[1])) event.preventDefault();
+    if (focusCellIn(event.currentTarget, next[0], next[1])) event.preventDefault();
   }
 
   return (
     <div className={styles.scroller}>
-      <table className={styles.table} data-mode={mode} onKeyDown={handleKeyDown}>
+      <table ref={tableRef} className={styles.table} data-mode={mode} onKeyDown={handleKeyDown}>
         <thead>
           <tr>
             <th scope="col" className={styles.labelHead}>
@@ -109,9 +133,35 @@ export function StatementGrid({
             {years.map((year) => (
               <th scope="col" key={year.fy} className={styles.yearHead}>
                 <span className={styles.fy}>{year.fy}</span>
-                <span className={styles.scaleNote}>
-                  figures in {SCALE_WORD[year.entryScale]}, {year.currency}
-                </span>
+                {onScaleChange === undefined ? (
+                  <span className={styles.scaleNote}>
+                    figures in {SCALE_WORD[year.entryScale]}, {year.currency}
+                  </span>
+                ) : (
+                  <span className={styles.scaleNote}>
+                    figures in{' '}
+                    <select
+                      className={styles.scaleSelect}
+                      aria-label={`${year.fy} entry scale`}
+                      value={year.entryScale}
+                      onChange={(event) =>
+                        onScaleChange(year.fy, event.target.value as Scale)
+                      }
+                    >
+                      {SCALES.map((scale) => (
+                        <option key={scale} value={scale}>
+                          {SCALE_WORD[scale]}
+                        </option>
+                      ))}
+                    </select>
+                    , {year.currency}
+                  </span>
+                )}
+                {(year.headerNotes ?? []).map((note) => (
+                  <span key={note} className={styles.headerNote}>
+                    {note}
+                  </span>
+                ))}
               </th>
             ))}
           </tr>

@@ -1,29 +1,52 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { LINE_ITEMS } from '@plainsight/calc-engine';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
 import { Placeholder } from '../components/Placeholder';
+import * as placeholderStyles from '../components/placeholder.css';
+import { EntryScreen } from '../features/entry/EntryScreen';
+import { useCompany } from '../hooks/useCompany';
+import { useStatements } from '../hooks/useStatements';
 import { entrySearchSchema } from './-search';
 
 // Data entry (frontend spec §3). The search params are the pinned deep-link
 // format (data-model spec §10): insufficient-data cards land on the first
-// missing item via `?stmt=&fy=&focus=`.
+// missing item via `?stmt=&fy=&focus=`, and the segmented control itself
+// lives in `?stmt=` so the exact view survives bookmarks and relaunch.
 export const Route = createFileRoute('/company/$id/entry')({
   validateSearch: entrySearchSchema,
-  component: DataEntry
+  component: EntryRoute
 });
 
-function DataEntry(): ReactElement {
+function EntryRoute(): ReactElement | null {
   const { id } = Route.useParams();
   const { stmt, fy, focus } = Route.useSearch();
-  const target = [
-    stmt === undefined ? '' : ` Statement: ${stmt}.`,
-    fy === undefined ? '' : ` Year: ${fy}.`,
-    focus === undefined ? '' : ` Focus: ${focus}.`
-  ].join('');
+  const navigate = useNavigate({ from: Route.fullPath });
+  const company = useCompany(id);
+  const statements = useStatements(id);
+
+  if (company === undefined || statements === undefined) return null;
+  if (company === null) {
+    return (
+      <Placeholder title="No company at this address" note="It may have been removed.">
+        <Link className={placeholderStyles.link} to="/">
+          Back to the library
+        </Link>
+      </Placeholder>
+    );
+  }
+
+  // A deep link names its item; the item names its statement when `stmt` is absent.
+  const statement = stmt ?? (focus === undefined ? 'income' : LINE_ITEMS[focus].statement);
+  const focusTarget = focus !== undefined && fy !== undefined ? { id: focus, fy } : undefined;
+
   return (
-    <Placeholder
-      title="Data entry"
-      note={`Company ${id}.${target} The entry grid lands later in this phase.`}
+    <EntryScreen
+      company={company}
+      statements={statements}
+      statement={statement}
+      focusTarget={focusTarget}
+      onStatementChange={(next) => void navigate({ search: { stmt: next }, replace: true })}
     />
   );
 }
