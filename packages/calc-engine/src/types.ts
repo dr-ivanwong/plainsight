@@ -10,7 +10,7 @@ export type CurrencyCode = string; // ISO 4217: 'USD', 'AUD'
 
 export type Scale = 'ones' | 'thousands' | 'millions' | 'billions';
 
-export type FyLabel = `FY${number}`; // P-3: 'FY2024'
+export type FyLabel = `FY${number}`; // 'FY2024': the calendar year containing endDate (data-model section 4)
 
 /**
  * All money is integer minor units (cents). Number.isSafeInteger is asserted at
@@ -56,12 +56,12 @@ export interface StatementYear {
   fy: FyLabel;
   endDate: string; // ISO date, e.g. '2025-06-30'
   currency: CurrencyCode;
-  entryScale: Scale; // UI convenience only; storage is minor units (P-1)
+  entryScale: Scale; // UI convenience only; storage is minor units (money policy, data-model section 4)
   values: Partial<Readonly<Record<LineItemId, EntryValue>>>;
   provenance?: Provenance;
 }
 
-/** The manual price record (N3): a sibling record, not a line item. */
+/** The manual price record: a sibling record, not a line item (data-model section 6, price note). */
 export interface PriceRecord {
   amountMinor: number;
   currency: CurrencyCode;
@@ -83,7 +83,11 @@ export type NotMeaningfulReason =
   | 'zero_denominator'
   | 'no_price';
 
-/** P-4 denominator basis, carried in the result and badged in the UI. */
+/**
+ * Which balance the return metrics divided by (data-model section 4): the
+ * average of opening and closing when the prior year's balance sheet is
+ * complete, else the ending balance. Carried in the result and badged in the UI.
+ */
 export type Basis = 'average' | 'ending';
 
 export type MetricValue =
@@ -91,28 +95,33 @@ export type MetricValue =
   | { status: 'not_meaningful'; reason: NotMeaningfulReason }
   | { status: 'insufficient_data'; missing: LineItemId[] };
 
+/**
+ * The 14 pinned dictionary metrics (data-model section 6), identified by what
+ * they mean. The ids double as the `?metric=` search-param slugs.
+ */
 export type MetricId =
-  | 'M1'
-  | 'M2'
-  | 'M3'
-  | 'M4'
-  | 'M5'
-  | 'M6'
-  | 'M7'
-  | 'M8'
-  | 'M9'
-  | 'M10'
-  | 'M11'
-  | 'M12'
-  | 'M13'
-  | 'M14';
+  | 'grossMargin'
+  | 'operatingMargin'
+  | 'netMargin'
+  | 'roe'
+  | 'roic'
+  | 'debtToEquity'
+  | 'currentRatio'
+  | 'interestCoverage'
+  | 'fcf'
+  | 'fcfMargin'
+  | 'fcfConversion'
+  | 'pe'
+  | 'earningsYield'
+  | 'fcfYield';
 
-/** How a metric's ok value renders under P-2 display precision. */
+/** How a metric's ok value renders under the pinned display precision (data-model section 4). */
 export type MetricFormat = 'percent' | 'ratio' | 'coverage' | 'money';
 
 /**
- * P-6: the delta chip compares the latest FY against the FY five labels prior,
- * and exists only when both endpoints compute.
+ * The delta chip compares the latest FY against the FY five labels prior, and
+ * exists only when both endpoints compute (data-sufficiency policy, data-model
+ * section 4).
  */
 export interface MetricDelta {
   fromFy: FyLabel;
@@ -131,7 +140,15 @@ export interface MetricSeries {
   delta: MetricDelta | null;
 }
 
-export type RuleId = 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'R6' | 'R7';
+/** The seven pinned red-flag rules (data-model section 7), identified by what they watch for. */
+export type RuleId =
+  | 'earningsQuality'
+  | 'erodingMoat'
+  | 'leverageFlatteredReturns'
+  | 'fragility'
+  | 'dilution'
+  | 'manufacturedReturns'
+  | 'capitalIntensityCreep';
 
 export type Severity = 'orange' | 'red';
 
@@ -161,8 +178,9 @@ export interface MetricsReport {
   metrics: Record<MetricId, MetricSeries>;
   flags: RuleResult[];
   /**
-   * N3: market cap = price times the latest complete FY's diluted shares,
-   * in minor units; null without a price or a complete year.
+   * Market cap = price times the latest complete FY's diluted shares, in minor
+   * units; null without a price or a complete year (data-model section 6,
+   * price note).
    */
   marketCapMinor: number | null;
 }

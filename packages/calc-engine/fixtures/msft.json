@@ -706,7 +706,7 @@
   ],
   "expected": {
     "metrics": {
-      "M1": {
+      "grossMargin": {
         "FY2020": {
           "status": "ok",
           "display": "67.8%"
@@ -732,7 +732,7 @@
           "display": "68.8%"
         }
       },
-      "M2": {
+      "operatingMargin": {
         "FY2020": {
           "status": "ok",
           "display": "37.0%"
@@ -758,7 +758,7 @@
           "display": "45.6%"
         }
       },
-      "M3": {
+      "netMargin": {
         "FY2020": {
           "status": "ok",
           "display": "31.0%"
@@ -784,7 +784,7 @@
           "display": "36.1%"
         }
       },
-      "M4": {
+      "roe": {
         "FY2020": {
           "status": "ok",
           "display": "37.4%",
@@ -816,7 +816,7 @@
           "basis": "average"
         }
       },
-      "M5": {
+      "roic": {
         "FY2020": {
           "status": "ok",
           "display": "98.0%",
@@ -848,7 +848,7 @@
           "basis": "average"
         }
       },
-      "M6": {
+      "debtToEquity": {
         "FY2020": {
           "status": "ok",
           "display": "0.54"
@@ -874,7 +874,7 @@
           "display": "0.13"
         }
       },
-      "M7": {
+      "currentRatio": {
         "FY2020": {
           "status": "ok",
           "display": "2.52"
@@ -900,7 +900,7 @@
           "display": "1.35"
         }
       },
-      "M8": {
+      "interestCoverage": {
         "FY2020": {
           "status": "ok",
           "display": "20.4×"
@@ -926,7 +926,7 @@
           "display": "53.9×"
         }
       },
-      "M9": {
+      "fcf": {
         "FY2020": {
           "status": "ok",
           "display": "$45.2b"
@@ -952,7 +952,7 @@
           "display": "$71.6b"
         }
       },
-      "M10": {
+      "fcfMargin": {
         "FY2020": {
           "status": "ok",
           "display": "31.6%"
@@ -978,7 +978,7 @@
           "display": "25.4%"
         }
       },
-      "M11": {
+      "fcfConversion": {
         "FY2020": {
           "status": "ok",
           "display": "102.2%"
@@ -1004,7 +1004,7 @@
           "display": "70.3%"
         }
       },
-      "M12": {
+      "pe": {
         "FY2020": {
           "status": "ok",
           "display": "86.75"
@@ -1030,7 +1030,7 @@
           "display": "36.65"
         }
       },
-      "M13": {
+      "earningsYield": {
         "FY2020": {
           "status": "ok",
           "display": "1.2%"
@@ -1056,7 +1056,7 @@
           "display": "2.7%"
         }
       },
-      "M14": {
+      "fcfYield": {
         "FY2020": {
           "status": "ok",
           "display": "1.2%"

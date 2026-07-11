@@ -3,7 +3,8 @@
  *
  * The three-state rule: an absent key is unknown and blocks; an entered 0
  * counts and computes as 0; a user-asserted not-reported-zero counts and
- * computes as 0. Nothing is ever interpolated (P-6).
+ * computes as 0. Nothing is ever interpolated (data-sufficiency policy,
+ * data-model section 4).
  */
 import { coreItemsFor, STATEMENT_KINDS, type LineItemId, type StatementKind } from './lineItems.js';
 import { assertSafeInteger } from './money.js';
@@ -63,15 +64,16 @@ export function missingCoreItems(year: StatementYear): LineItemId[] {
  * deep link into data entry. The price record is not a line item; a missing
  * price is never `insufficient_data` (it renders as the enter-price card).
  *
- * M1 requires revenue plus either grossProfit or costOfRevenue (P-8 derivation).
- * When neither is present the missing list names `costOfRevenue`, the enterable
- * core item, so the deep link lands on a field the user can actually fill.
+ * Gross margin requires revenue plus either grossProfit or costOfRevenue (the
+ * as-reported-precedence derivation, data-model section 4). When neither is
+ * present the missing list names `costOfRevenue`, the enterable core item, so
+ * the deep link lands on a field the user can actually fill.
  */
-const METRIC_REQUIREMENTS: Readonly<Record<Exclude<MetricId, 'M1'>, readonly LineItemId[]>> = {
-  M2: ['revenue', 'operatingIncome'],
-  M3: ['revenue', 'netIncome'],
-  M4: ['netIncome', 'totalEquity'],
-  M5: [
+const METRIC_REQUIREMENTS: Readonly<Record<Exclude<MetricId, 'grossMargin'>, readonly LineItemId[]>> = {
+  operatingMargin: ['revenue', 'operatingIncome'],
+  netMargin: ['revenue', 'netIncome'],
+  roe: ['netIncome', 'totalEquity'],
+  roic: [
     'operatingIncome',
     'taxExpense',
     'pretaxIncome',
@@ -80,19 +82,19 @@ const METRIC_REQUIREMENTS: Readonly<Record<Exclude<MetricId, 'M1'>, readonly Lin
     'totalEquity',
     'cashAndEquivalents'
   ],
-  M6: ['shortTermDebt', 'longTermDebt', 'totalEquity'],
-  M7: ['currentAssets', 'currentLiabilities'],
-  M8: ['operatingIncome', 'interestExpense'],
-  M9: ['operatingCashFlow', 'capex'],
-  M10: ['operatingCashFlow', 'capex', 'revenue'],
-  M11: ['operatingCashFlow', 'capex', 'netIncome'],
-  M12: ['netIncome', 'dilutedShares'],
-  M13: ['netIncome', 'dilutedShares'],
-  M14: ['operatingCashFlow', 'capex', 'dilutedShares']
+  debtToEquity: ['shortTermDebt', 'longTermDebt', 'totalEquity'],
+  currentRatio: ['currentAssets', 'currentLiabilities'],
+  interestCoverage: ['operatingIncome', 'interestExpense'],
+  fcf: ['operatingCashFlow', 'capex'],
+  fcfMargin: ['operatingCashFlow', 'capex', 'revenue'],
+  fcfConversion: ['operatingCashFlow', 'capex', 'netIncome'],
+  pe: ['netIncome', 'dilutedShares'],
+  earningsYield: ['netIncome', 'dilutedShares'],
+  fcfYield: ['operatingCashFlow', 'capex', 'dilutedShares']
 };
 
 export function missingForMetric(metricId: MetricId, year: StatementYear): LineItemId[] {
-  if (metricId === 'M1') {
+  if (metricId === 'grossMargin') {
     const missing: LineItemId[] = [];
     if (!hasValue(year, 'revenue')) missing.push('revenue');
     if (!hasValue(year, 'grossProfit') && !hasValue(year, 'costOfRevenue')) {

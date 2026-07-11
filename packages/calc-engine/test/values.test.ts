@@ -62,7 +62,7 @@ describe('line item dictionary', () => {
     }
   });
 
-  it('pins the P-0 signed exceptions exactly', () => {
+  it('pins the sign-convention exceptions exactly', () => {
     const signed = LINE_ITEM_IDS.filter((id) => LINE_ITEMS[id].signed);
     expect(signed).toEqual([
       'grossProfit',
@@ -125,23 +125,23 @@ describe('completeness (spec section 10)', () => {
 describe('missingForMetric (drives the deep link)', () => {
   it('lists exactly the absent requirements', () => {
     const y = year('FY2024', { revenue: 100 });
-    expect(missingForMetric('M2', y)).toEqual(['operatingIncome']);
-    expect(missingForMetric('M3', y)).toEqual(['netIncome']);
-    expect(missingForMetric('M9', y)).toEqual(['operatingCashFlow', 'capex']);
+    expect(missingForMetric('operatingMargin', y)).toEqual(['operatingIncome']);
+    expect(missingForMetric('netMargin', y)).toEqual(['netIncome']);
+    expect(missingForMetric('fcf', y)).toEqual(['operatingCashFlow', 'capex']);
   });
 
-  it('M1 accepts either grossProfit or costOfRevenue (P-8)', () => {
-    expect(missingForMetric('M1', year('FY2024', { revenue: 1, grossProfit: 1 }))).toEqual([]);
-    expect(missingForMetric('M1', year('FY2024', { revenue: 1, costOfRevenue: 1 }))).toEqual([]);
+  it('gross margin accepts either grossProfit or costOfRevenue (as-reported precedence)', () => {
+    expect(missingForMetric('grossMargin', year('FY2024', { revenue: 1, grossProfit: 1 }))).toEqual([]);
+    expect(missingForMetric('grossMargin', year('FY2024', { revenue: 1, costOfRevenue: 1 }))).toEqual([]);
     // When neither is present the deep link targets the enterable core item.
-    expect(missingForMetric('M1', year('FY2024', { revenue: 1 }))).toEqual(['costOfRevenue']);
-    expect(missingForMetric('M1', year('FY2024', {}))).toEqual(['revenue', 'costOfRevenue']);
+    expect(missingForMetric('grossMargin', year('FY2024', { revenue: 1 }))).toEqual(['costOfRevenue']);
+    expect(missingForMetric('grossMargin', year('FY2024', {}))).toEqual(['revenue', 'costOfRevenue']);
   });
 
   it('the price record is not a line item and never appears in missing lists', () => {
     const y = completeYear('FY2024');
-    expect(missingForMetric('M12', y)).toEqual([]);
-    expect(missingForMetric('M13', y)).toEqual([]);
-    expect(missingForMetric('M14', y)).toEqual([]);
+    expect(missingForMetric('pe', y)).toEqual([]);
+    expect(missingForMetric('earningsYield', y)).toEqual([]);
+    expect(missingForMetric('fcfYield', y)).toEqual([]);
   });
 });

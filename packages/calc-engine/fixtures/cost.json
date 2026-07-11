@@ -78,7 +78,7 @@
       ]
     },
     "notes": [
-      "Costco prints no gross-profit line (membership fees sit inside total revenue); the one-off GrossProfit XBRL tag in the FY2019 filing uses a net-sales basis and is excluded so M1 stays on the derived, consistent basis (P-8)."
+      "Costco prints no gross-profit line (membership fees sit inside total revenue); the one-off GrossProfit XBRL tag in the FY2019 filing uses a net-sales basis and is excluded so gross margin stays on the derived, consistent basis (as-reported precedence)."
     ]
   },
   "price": {
@@ -1076,7 +1076,7 @@
   ],
   "expected": {
     "metrics": {
-      "M1": {
+      "grossMargin": {
         "FY2016": {
           "status": "ok",
           "display": "13.3%"
@@ -1118,7 +1118,7 @@
           "display": "12.8%"
         }
       },
-      "M2": {
+      "operatingMargin": {
         "FY2016": {
           "status": "ok",
           "display": "3.1%"
@@ -1160,7 +1160,7 @@
           "display": "3.8%"
         }
       },
-      "M3": {
+      "netMargin": {
         "FY2016": {
           "status": "ok",
           "display": "2.0%"
@@ -1202,7 +1202,7 @@
           "display": "2.9%"
         }
       },
-      "M4": {
+      "roe": {
         "FY2016": {
           "status": "ok",
           "display": "19.1%",
@@ -1254,7 +1254,7 @@
           "basis": "average"
         }
       },
-      "M5": {
+      "roic": {
         "FY2016": {
           "status": "ok",
           "display": "18.9%",
@@ -1306,7 +1306,7 @@
           "basis": "average"
         }
       },
-      "M6": {
+      "debtToEquity": {
         "FY2016": {
           "status": "ok",
           "display": "0.42"
@@ -1348,7 +1348,7 @@
           "display": "0.20"
         }
       },
-      "M7": {
+      "currentRatio": {
         "FY2016": {
           "status": "ok",
           "display": "0.98"
@@ -1390,7 +1390,7 @@
           "display": "1.03"
         }
       },
-      "M8": {
+      "interestCoverage": {
         "FY2016": {
           "status": "ok",
           "display": "27.6×"
@@ -1432,7 +1432,7 @@
           "display": "67.4×"
         }
       },
-      "M9": {
+      "fcf": {
         "FY2016": {
           "status": "ok",
           "display": "$643m"
@@ -1474,7 +1474,7 @@
           "display": "$7.84b"
         }
       },
-      "M10": {
+      "fcfMargin": {
         "FY2016": {
           "status": "ok",
           "display": "0.5%"
@@ -1516,7 +1516,7 @@
           "display": "2.8%"
         }
       },
-      "M11": {
+      "fcfConversion": {
         "FY2016": {
           "status": "ok",
           "display": "27.4%"
@@ -1558,7 +1558,7 @@
           "display": "96.8%"
         }
       },
-      "M12": {
+      "pe": {
         "FY2016": {
           "status": "ok",
           "display": "187.77"
@@ -1600,7 +1600,7 @@
           "display": "54.92"
         }
       },
-      "M13": {
+      "earningsYield": {
         "FY2016": {
           "status": "ok",
           "display": "0.5%"
@@ -1642,7 +1642,7 @@
           "display": "1.8%"
         }
       },
-      "M14": {
+      "fcfYield": {
         "FY2016": {
           "status": "ok",
           "display": "0.1%"

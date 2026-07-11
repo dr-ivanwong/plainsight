@@ -44,7 +44,7 @@ describe('computeMetricsReport', () => {
     ).toThrow(RangeError);
   });
 
-  it('computes market cap from the latest complete year (N3)', () => {
+  it('computes market cap from the latest complete year', () => {
     const report = computeMetricsReport({
       years: [
         completeYear('FY2023', { dilutedShares: 2_000 }),
@@ -72,7 +72,7 @@ describe('computeMetricsReport', () => {
     const report = computeMetricsReport({
       years: [completeYear('FY2024', { interestExpense: 10_000 })]
     });
-    expect(report.flags.map((flag) => flag.ruleId)).toEqual(['R4']);
+    expect(report.flags.map((flag) => flag.ruleId)).toEqual(['fragility']);
   });
 
   it('covers every metric for every labelled year', () => {

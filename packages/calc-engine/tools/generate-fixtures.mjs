@@ -64,7 +64,7 @@ const COMPANIES = [
     fys: 10,
     priceMinor: 7_000,
     notes: [
-      'Coca-Cola presents no total-liabilities line on its balance sheet (and tags no us-gaap:Liabilities), so totalLiabilities stays absent: the balance gate is not applicable and, under N3, market cap has no complete FY to anchor on. Recorded for owner review.'
+      'Coca-Cola presents no total-liabilities line on its balance sheet (and tags no us-gaap:Liabilities), so totalLiabilities stays absent: the balance gate is not applicable and, market cap being defined off the latest complete FY, it has no year to anchor on. Recorded for owner review.'
     ]
   },
   {
@@ -75,7 +75,7 @@ const COMPANIES = [
     priceMinor: 100_000,
     exclude: ['grossProfit'],
     notes: [
-      'Costco prints no gross-profit line (membership fees sit inside total revenue); the one-off GrossProfit XBRL tag in the FY2019 filing uses a net-sales basis and is excluded so M1 stays on the derived, consistent basis (P-8).'
+      'Costco prints no gross-profit line (membership fees sit inside total revenue); the one-off GrossProfit XBRL tag in the FY2019 filing uses a net-sales basis and is excluded so gross margin stays on the derived, consistent basis (as-reported precedence).'
     ]
   },
   { ticker: 'UNP', name: 'Union Pacific', exchange: 'NYSE', fys: 6, priceMinor: 24_000 }
@@ -170,10 +170,10 @@ const GENERIC_MAPPING = {
   totalEquity: {
     kind: 'first',
     concepts: [
-      // Prefer the including-NCI total: it is the figure that makes the P-2
-      // balance gate hold (assets = liabilities + equity) for filers with
-      // noncontrolling interests (KO, early COST). Recorded as an
-      // interpretation note in the fixture README.
+      // Prefer the including-NCI total: it is the figure that makes the
+      // balance gate hold within tolerance (assets = liabilities + equity)
+      // for filers with noncontrolling interests (KO, early COST). Recorded
+      // as an interpretation note in the fixture README.
       'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
       'StockholdersEquity'
     ]
@@ -406,23 +406,23 @@ const balanceComplete = (year) => BALANCE_CORE.every((id) => has(year, id));
 const fullComplete = (year) => [...INCOME_CORE, ...BALANCE_CORE, ...CASHFLOW_CORE].every((id) => has(year, id));
 
 const REQUIREMENTS = {
-  M2: ['revenue', 'operatingIncome'],
-  M3: ['revenue', 'netIncome'],
-  M4: ['netIncome', 'totalEquity'],
-  M5: ['operatingIncome', 'taxExpense', 'pretaxIncome', 'shortTermDebt', 'longTermDebt', 'totalEquity', 'cashAndEquivalents'],
-  M6: ['shortTermDebt', 'longTermDebt', 'totalEquity'],
-  M7: ['currentAssets', 'currentLiabilities'],
-  M8: ['operatingIncome', 'interestExpense'],
-  M9: ['operatingCashFlow', 'capex'],
-  M10: ['operatingCashFlow', 'capex', 'revenue'],
-  M11: ['operatingCashFlow', 'capex', 'netIncome'],
-  M12: ['netIncome', 'dilutedShares'],
-  M13: ['netIncome', 'dilutedShares'],
-  M14: ['operatingCashFlow', 'capex', 'dilutedShares']
+  operatingMargin: ['revenue', 'operatingIncome'],
+  netMargin: ['revenue', 'netIncome'],
+  roe: ['netIncome', 'totalEquity'],
+  roic: ['operatingIncome', 'taxExpense', 'pretaxIncome', 'shortTermDebt', 'longTermDebt', 'totalEquity', 'cashAndEquivalents'],
+  debtToEquity: ['shortTermDebt', 'longTermDebt', 'totalEquity'],
+  currentRatio: ['currentAssets', 'currentLiabilities'],
+  interestCoverage: ['operatingIncome', 'interestExpense'],
+  fcf: ['operatingCashFlow', 'capex'],
+  fcfMargin: ['operatingCashFlow', 'capex', 'revenue'],
+  fcfConversion: ['operatingCashFlow', 'capex', 'netIncome'],
+  pe: ['netIncome', 'dilutedShares'],
+  earningsYield: ['netIncome', 'dilutedShares'],
+  fcfYield: ['operatingCashFlow', 'capex', 'dilutedShares']
 };
 
 function missingFor(metric, year) {
-  if (metric === 'M1') {
+  if (metric === 'grossMargin') {
     const missing = [];
     if (!has(year, 'revenue')) missing.push('revenue');
     if (!has(year, 'grossProfit') && !has(year, 'costOfRevenue')) missing.push('costOfRevenue');
@@ -437,7 +437,7 @@ function investedCapital(year) {
 
 /** Expected value for one metric in one year; mirrors the pinned dictionary independently. */
 function expectedMetric(metric, year, prior, priceMinor) {
-  if (metric === 'M12' || metric === 'M13' || metric === 'M14') {
+  if (metric === 'pe' || metric === 'earningsYield' || metric === 'fcfYield') {
     if (priceMinor === undefined) return nm('no_price');
   }
   const missing = missingFor(metric, year);
@@ -445,29 +445,29 @@ function expectedMetric(metric, year, prior, priceMinor) {
 
   const priceUsd = priceMinor === undefined ? undefined : priceMinor / 100;
   switch (metric) {
-    case 'M1': {
+    case 'grossMargin': {
       const revenue = V(year, 'revenue');
       if (revenue === 0) return nm('zero_revenue');
       const gp = has(year, 'grossProfit') ? V(year, 'grossProfit') : V(year, 'revenue') - V(year, 'costOfRevenue');
       return okDisplay(pct(gp / revenue));
     }
-    case 'M2': {
+    case 'operatingMargin': {
       const revenue = V(year, 'revenue');
       if (revenue === 0) return nm('zero_revenue');
       return okDisplay(pct(V(year, 'operatingIncome') / revenue));
     }
-    case 'M3': {
+    case 'netMargin': {
       const revenue = V(year, 'revenue');
       if (revenue === 0) return nm('zero_revenue');
       return okDisplay(pct(V(year, 'netIncome') / revenue));
     }
-    case 'M4': {
+    case 'roe': {
       const average = prior !== undefined && balanceComplete(prior);
       const denom = average ? (V(year, 'totalEquity') + V(prior, 'totalEquity')) / 2 : V(year, 'totalEquity');
       if (denom <= 0) return nm('negative_equity');
       return okDisplay(pct(V(year, 'netIncome') / denom), average ? 'average' : 'ending');
     }
-    case 'M5': {
+    case 'roic': {
       const pretax = V(year, 'pretaxIncome');
       const rate = pretax <= 0 ? 0 : Math.min(Math.max(V(year, 'taxExpense') / pretax, 0), 0.45);
       const nopat = V(year, 'operatingIncome') * (1 - rate);
@@ -476,50 +476,50 @@ function expectedMetric(metric, year, prior, priceMinor) {
       if (denom <= 0) return nm('negative_invested_capital');
       return okDisplay(pct(nopat / denom), average ? 'average' : 'ending');
     }
-    case 'M6': {
+    case 'debtToEquity': {
       const equity = V(year, 'totalEquity');
       if (equity <= 0) return nm('negative_equity');
       return okDisplay(ratio((V(year, 'shortTermDebt') + V(year, 'longTermDebt')) / equity));
     }
-    case 'M7': {
+    case 'currentRatio': {
       const cl = V(year, 'currentLiabilities');
       if (cl === 0) return nm('zero_denominator');
       return okDisplay(ratio(V(year, 'currentAssets') / cl));
     }
-    case 'M8': {
+    case 'interestCoverage': {
       const interest = V(year, 'interestExpense');
       if (interest === 0) return nm('no_interest_expense');
       return okDisplay(coverage(V(year, 'operatingIncome') / interest));
     }
-    case 'M9': {
+    case 'fcf': {
       const fcfUsd = V(year, 'operatingCashFlow') - V(year, 'capex');
       return okDisplay(moneyCompact(Math.round(fcfUsd * 100)));
     }
-    case 'M10': {
+    case 'fcfMargin': {
       const revenue = V(year, 'revenue');
       if (revenue === 0) return nm('zero_revenue');
       return okDisplay(pct((V(year, 'operatingCashFlow') - V(year, 'capex')) / revenue));
     }
-    case 'M11': {
+    case 'fcfConversion': {
       const ni = V(year, 'netIncome');
       if (ni <= 0) return nm('negative_earnings');
       return okDisplay(pct((V(year, 'operatingCashFlow') - V(year, 'capex')) / ni));
     }
-    case 'M12': {
+    case 'pe': {
       const shares = V(year, 'dilutedShares') * 100; // V() divides by 100; shares are counts
       if (shares === 0) return nm('zero_denominator');
       const epsUsd = V(year, 'netIncome') / shares; // dollars per share
       if (epsUsd <= 0) return nm('negative_earnings');
       return okDisplay(ratio(priceUsd / epsUsd));
     }
-    case 'M13': {
+    case 'earningsYield': {
       const shares = V(year, 'dilutedShares') * 100;
       if (shares === 0 || priceUsd === 0) return nm('zero_denominator');
       const epsUsd = V(year, 'netIncome') / shares;
       if (epsUsd <= 0) return nm('negative_earnings');
       return okDisplay(pct(epsUsd / priceUsd));
     }
-    case 'M14': {
+    case 'fcfYield': {
       const shares = V(year, 'dilutedShares') * 100;
       const marketCapUsd = priceUsd * shares;
       if (marketCapUsd === 0) return nm('zero_denominator');
@@ -560,7 +560,7 @@ function expectedFlags(years) {
   const labels = (window) => window.map((y) => y.fy);
   const EPS = 1e-9;
 
-  // R1
+  // Earnings quality
   {
     const window = win(3);
     if (window) {
@@ -570,13 +570,13 @@ function expectedFlags(years) {
         const cumOcf = ocf.reduce((a, b) => a + b, 0);
         const cumNi = ni.reduce((a, b) => a + b, 0);
         if (cumNi > 0 && cumOcf / cumNi < 0.9 - EPS) {
-          flags.push({ ruleId: 'R1', severity: 'orange', window: labels(window) });
+          flags.push({ ruleId: 'earningsQuality', severity: 'orange', window: labels(window) });
         }
       }
     }
   }
 
-  // R2: margins from raw values.
+  // Eroding moat: margins from raw values.
   {
     const marginOf = (yr, kind) => {
       const revenue = V(yr, 'revenue');
@@ -622,11 +622,11 @@ function expectedFlags(years) {
       const worst = streaks[0];
       const window = [];
       for (let y = worst.firstLabelYear; y <= latestY; y += 1) window.push(byYear.get(y).fy);
-      flags.push({ ruleId: 'R2', severity: worst.steps >= 5 ? 'red' : 'orange', window });
+      flags.push({ ruleId: 'erodingMoat', severity: worst.steps >= 5 ? 'red' : 'orange', window });
     }
   }
 
-  // Ratio helpers over raw values for R3..R7.
+  // Ratio helpers over raw values for the remaining rules.
   const deOf = (yr) => {
     const equity = V(yr, 'totalEquity');
     const std = V(yr, 'shortTermDebt');
@@ -643,7 +643,7 @@ function expectedFlags(years) {
     return denom <= 0 ? null : ni / denom;
   };
 
-  // R3
+  // Leverage-flattered returns
   {
     const window = win(4);
     if (window) {
@@ -656,25 +656,25 @@ function expectedFlags(years) {
       const roeEnd = roeOf(last, lastPrior);
       if (deStart !== null && deEnd !== null && roeStart !== null && roeEnd !== null) {
         if (deEnd - deStart >= 0.3 - EPS && roeEnd - roeStart <= 0.01 + EPS) {
-          flags.push({ ruleId: 'R3', severity: 'orange', window: labels(window) });
+          flags.push({ ruleId: 'leverageFlatteredReturns', severity: 'orange', window: labels(window) });
         }
       }
     }
   }
 
-  // R4
+  // Fragility
   {
     const interest = V(latest, 'interestExpense');
     const oi = V(latest, 'operatingIncome');
     if (interest !== undefined && interest !== 0 && oi !== undefined) {
       const cov = oi / interest;
       if (cov < 3.0 - EPS) {
-        flags.push({ ruleId: 'R4', severity: cov < 1.5 - EPS ? 'red' : 'orange', window: [latest.fy] });
+        flags.push({ ruleId: 'fragility', severity: cov < 1.5 - EPS ? 'red' : 'orange', window: [latest.fy] });
       }
     }
   }
 
-  // R5
+  // Dilution
   {
     const window = win(4);
     if (window) {
@@ -684,23 +684,23 @@ function expectedFlags(years) {
         const shareCagr = (shares.at(-1) / shares[0]) ** (1 / 3) - 1;
         const revenueCagr = (revenue.at(-1) / revenue[0]) ** (1 / 3) - 1;
         if (shareCagr > 0.02 + EPS && revenueCagr < 2 * shareCagr - EPS) {
-          flags.push({ ruleId: 'R5', severity: 'orange', window: labels(window) });
+          flags.push({ ruleId: 'dilution', severity: 'orange', window: labels(window) });
         }
       }
     }
   }
 
-  // R6
+  // Manufactured returns
   {
     const prior = byYear.get(latestY - 1);
     const roe = roeOf(latest, prior);
     const de = deOf(latest);
     if (roe !== null && de !== null && roe > 0.25 + EPS && de > 2.0 + EPS) {
-      flags.push({ ruleId: 'R6', severity: 'orange', window: [latest.fy] });
+      flags.push({ ruleId: 'manufacturedReturns', severity: 'orange', window: [latest.fy] });
     }
   }
 
-  // R7
+  // Capital-intensity creep
   {
     const window = win(3);
     if (window) {
@@ -713,7 +713,7 @@ function expectedFlags(years) {
         for (let i = 1; i < window.length; i += 1) {
           if (!(revenue[i] > revenue[i - 1] && fcf[i] < fcf[i - 1])) fires = false;
         }
-        if (fires) flags.push({ ruleId: 'R7', severity: 'orange', window: labels(window) });
+        if (fires) flags.push({ ruleId: 'capitalIntensityCreep', severity: 'orange', window: labels(window) });
       }
     }
   }
@@ -725,7 +725,22 @@ function expectedFlags(years) {
 // Main
 // ---------------------------------------------------------------------------
 
-const METRIC_IDS = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12', 'M13', 'M14'];
+const METRIC_IDS = [
+  'grossMargin',
+  'operatingMargin',
+  'netMargin',
+  'roe',
+  'roic',
+  'debtToEquity',
+  'currentRatio',
+  'interestCoverage',
+  'fcf',
+  'fcfMargin',
+  'fcfConversion',
+  'pe',
+  'earningsYield',
+  'fcfYield'
+];
 
 async function main() {
   console.log('Resolving CIKs from the SEC ticker index...');

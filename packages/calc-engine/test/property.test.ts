@@ -170,10 +170,10 @@ describe('margin bounds (main plan section 5)', () => {
               }
             ]
           });
-          const m1 = report.metrics.M1.values.FY2024;
-          expect(m1?.status).toBe('ok');
-          if (m1?.status === 'ok') {
-            expect(m1.value).toBeLessThanOrEqual(1);
+          const grossMargin = report.metrics.grossMargin.values.FY2024;
+          expect(grossMargin?.status).toBe('ok');
+          if (grossMargin?.status === 'ok') {
+            expect(grossMargin.value).toBeLessThanOrEqual(1);
           }
         }
       )
@@ -181,13 +181,13 @@ describe('margin bounds (main plan section 5)', () => {
   });
 });
 
-describe('P-4 basis selection', () => {
+describe('denominator basis selection', () => {
   it('averages exactly when the prior balance sheet is complete', () => {
     fc.assert(
       fc.property(inputArb, (input) => {
         const report = computeMetricsReport(input);
         const byLabel = new Map(input.years.map((year) => [year.fy, year]));
-        for (const [fy, value] of Object.entries(report.metrics.M4.values)) {
+        for (const [fy, value] of Object.entries(report.metrics.roe.values)) {
           if (value === undefined || value.status !== 'ok') continue;
           const priorLabel = `FY${Number(fy.slice(2)) - 1}` as const;
           const prior = byLabel.get(priorLabel);
