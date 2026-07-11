@@ -41,3 +41,23 @@ The product is en-AU (owner, market, and eventual UI copy), so all prose uses Au
 - Verb forms `licensed`/`licensing` are correct in AU/UK English and are not flagged; only the noun `licence`/`licences` is (write `licence`/`licences`). If you genuinely need the bare verb, prefer an inflected form or rewrite.
 
 Why: a single English variant keeps the UI, docs, and thesis-writing surface coherent, and en-AU is the one the product ships in. The tested list targets the words this domain actually uses; extend the checker's map when a new one shows up.
+
+## Rule 3: dates are YYYY-MM-DD
+
+Every date that names a specific day is written ISO 8601, zero-padded: `2026-07-11`. This applies to all documentation (a bug review, refactor review, or audit is headed with the date it was conducted: `**Date:** 2026-07-11`), to ADR and plan metadata, and, once code lands, to every date the app renders: "as of `2026-07-11`", never "as of `11 July 2026`".
+
+The checker flags, in prose:
+
+- Month-name dates that name a day, in either order, abbreviations included: `11 July 2026`, `July 11, 2026`, `3rd of May 2026`, `Jul 11 2026`.
+- Numeric dates in any other arrangement: `11/07/2026`, `7/11/26`, `2026/07/11`, `11-07-2026`, `11.07.2026`.
+- Unpadded ISO: `2026-7-1` (write `2026-07-01`).
+- A `**Date:**` metadata field whose value is not a full ISO date. The literal `YYYY-MM-DD` placeholder, as in the ADR template, is allowed.
+
+**Allowed, by design:**
+
+- **Month-year in prose** where day precision doesn't exist or doesn't matter: "the naming decision of July 2026". Metadata fields are the exception: a `**Date:**` field always carries a full date.
+- **Recurring day-month facts** with no year attached: "the ASX reporting year ends 30 June".
+- **Fiscal-period labels**, which are names, not dates: FY2025, H1 2026, Q3.
+- **Code and official titles.** Fenced blocks and inline code spans are skipped, as for rule 2; an external document's own title keeps its format (`Annual Report 30 June 2025`, cited as such).
+
+Why: `YYYY-MM-DD` sorts lexicographically into chronological order in file listings, tables, and logs; it is the one common format immune to the AU/US day-month swap (`03/07` is a different day in Sydney and New York), which matters in a repo that reads US filings through AU English; and it is what the ADR template and eventual `<time datetime>` markup already use, so a single format serves prose, metadata, and code.

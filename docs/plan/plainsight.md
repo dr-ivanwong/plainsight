@@ -2,7 +2,7 @@
 
 *A financial statement analyser for long-term value investors.*
 
-**Status:** Draft v1.0 · **Date:** July 2026 · **Type:** Design document
+**Status:** Draft v1.0 · **Date:** 2026-07-10 · **Type:** Design document
 **Disciplines applied:** Apple UI/UX design · Meta-calibre frontend engineering · Google-calibre backend engineering · AWS cloud infrastructure
 
 ---
@@ -161,7 +161,7 @@ This is the architectural centerpiece, and it directly answers the product owner
 | Ratio dashboard, charts, red flags, compare, thesis | ✓ | ✓ (identical) |
 | Manual data entry | ✓ | ✓ (identical) |
 | Ticker import (EDGAR-derived) | ✓ | Hidden with hint: "Available when online, or enter manually" |
-| Live price (for P/E) | ✓ auto | User enters price manually; P/E card shows "as of ⟨date⟩" |
+| Live price (for P/E) | ✓ auto | User enters price manually; P/E card shows "as of ⟨YYYY-MM-DD⟩" |
 | Cross-device sync | ✓ | Queued locally, reconciles on reconnect |
 | Filing upload + extraction (Phase 3) | ✓ | Hidden with hint: "Available when online, or enter manually" |
 | AI thesis critique (Phase 4) | ✓ | Feature not shown; thesis editor unaffected |

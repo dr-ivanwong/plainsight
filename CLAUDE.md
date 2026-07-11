@@ -24,7 +24,7 @@ Decisions in the plans (see §12 decision log) are **resolved**; do not relitiga
 
 **Decision layering:** the skills in [.claude/skills/](.claude/skills/) state general engineering standards (project-agnostic by design); [docs/adr/](docs/adr/) records where this project consciously deviates from them. Check the ADR index before proposing a best-practice addition, because it may already be priced and declined. When new work requires a new deviation, propose an ADR (there's a template) rather than deviating silently.
 
-**House style:** [docs/style.md](docs/style.md) governs all prose in this repo (docs now, UI copy later). Headline rules: no em dashes, and AU/UK English spelling (code, US tickers, and company/product names keep theirs). CI enforces both; run `node scripts/check-style.mjs` locally and write to the rules the first time rather than after the check fails.
+**House style:** [docs/style.md](docs/style.md) governs all prose in this repo (docs now, UI copy later). Headline rules: no em dashes; AU/UK English spelling (code, US tickers, and company/product names keep theirs); dates as YYYY-MM-DD wherever a specific day is named, in docs and in the app. CI enforces all three; run `node scripts/check-style.mjs` locally and write to the rules the first time rather than after the check fails.
 
 ## The binding constraint
 

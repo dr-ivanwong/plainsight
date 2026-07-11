@@ -49,6 +49,27 @@ const IZE_ALLOW = new Set([
 
 const WORD_PATTERN = /(?<![A-Za-z'-])[a-z][a-z'-]*(?![A-Za-z'-])/g;
 
+// Rule 3: dates are YYYY-MM-DD. Checked on prose only. Anything naming a
+// specific day must be ISO 8601 and zero-padded; month-year prose ("July
+// 2026"), day-month recurring facts ("ends 30 June"), and fiscal-period
+// labels (FY2025, H1 2026) carry no day+year pair and pass untouched.
+const MONTH = '(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)';
+const NON_ISO_DATES = [
+  new RegExp(`\\b\\d{1,2}(?:st|nd|rd|th)?(?: of)? ${MONTH}[,.]? \\d{4}\\b`, 'g'), // 11 July 2026
+  new RegExp(`\\b${MONTH}\\.? \\d{1,2}(?:st|nd|rd|th)?,? \\d{4}\\b`, 'g'),        // July 11, 2026
+  /(?<![\d/])\d{1,2}\/\d{1,2}\/(?:\d{4}|\d{2})(?![\d/])/g, // 11/07/2026, 7/11/26; lookarounds spare slash chains like the 11/13/15px type scale
+  /(?<![\d/])\d{4}\/\d{1,2}\/\d{1,2}(?![\d/])/g,           // 2026/07/11
+  /(?<![\d-])\d{1,2}-\d{1,2}-\d{4}(?![\d-])/g,             // 11-07-2026
+  /(?<![\d.])\d{1,2}\.\d{1,2}\.\d{4}(?!\.?\d)/g,           // 11.07.2026 (a trailing full stop is fine; a fourth dotted segment is not)
+  /(?<![\d.])\d{4}\.\d{1,2}\.\d{1,2}(?!\.?\d)/g,           // 2026.07.11
+];
+// Matches ISO-shaped dates so unpadded ones (2026-7-1) can be flagged.
+const ISO_SHAPED = /(?<![\d-])\d{4}-\d{1,2}-\d{1,2}(?![\d-])/g;
+const ISO_PADDED = /^\d{4}-\d{2}-\d{2}$/;
+// A **Date:** metadata field must carry a full ISO date (or the template's
+// literal YYYY-MM-DD placeholder).
+const DATE_FIELD = /\*\*Date:\*\*\s+(?!(?:\d{4}-\d{2}-\d{2}|YYYY-MM-DD)\b)/g;
+
 // Blank out inline code spans so their contents are never flagged.
 function stripInlineCode(line) {
   return line.replace(/`[^`]*`/g, (m) => ' '.repeat(m.length));
@@ -86,6 +107,20 @@ for (const file of files) {
       if (IZE_ALLOW.has(match[0])) continue;
       const suggestion = match[0].replace(/(i|y)z/, '$1s');
       findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  "${match[0]}" is US English: use "${suggestion}" (docs/style.md rule 2)`);
+    }
+
+    // Rule 3 runs on prose only.
+    for (const pattern of NON_ISO_DATES) {
+      for (const match of prose.matchAll(pattern)) {
+        findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  "${match[0]}" is a non-ISO date: use YYYY-MM-DD (docs/style.md rule 3)`);
+      }
+    }
+    for (const match of prose.matchAll(ISO_SHAPED)) {
+      if (ISO_PADDED.test(match[0])) continue;
+      findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  "${match[0]}" needs zero padding: use YYYY-MM-DD (docs/style.md rule 3)`);
+    }
+    for (const match of prose.matchAll(DATE_FIELD)) {
+      findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  **Date:** field must carry a full YYYY-MM-DD date (docs/style.md rule 3)`);
     }
   });
 }

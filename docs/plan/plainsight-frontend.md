@@ -1,6 +1,6 @@
 # Frontend Specification: Routes, Screens, States & First-Run
 
-**Companion to:** `plainsight.md` (design language, §4; frontend architecture, §5) and `plainsight-data-model.md` (every value rendered here). **Status:** Draft for owner review · **Date:** July 2026
+**Companion to:** `plainsight.md` (design language, §4; frontend architecture, §5) and `plainsight-data-model.md` (every value rendered here). **Status:** Draft for owner review · **Date:** 2026-07-10
 **Purpose:** the build contract for Phase 1–3 UI work. The main plan pins the design language (type scale, spacing, colour, motion); this document pins *what exists*: every route, every screen, every screen's empty/loading/error states, the first-run flow, and the component and hook inventories. If a state can occur, its rendering is specified here; "we'll figure out the empty state later" is how craft dies.
 
 ---
@@ -66,7 +66,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 | Complete years | Cards: label (13px secondary), value (34px tabular), sparkline, 5-yr delta chip |
 | Partial year(s) | Affected cards render `insufficient_data` as "Add the 2 missing numbers"; tappable, deep-links into S5 at those fields (companion §10) |
 | No price entered | The three valuation cards collapse into one "Enter today's price" card; on entry, they expand in place |
-| Stale price | Valuation cards show "as of ⟨date⟩" badge; amber past 90 days |
+| Stale price | Valuation cards show "as of ⟨YYYY-MM-DD⟩" badge; amber past 90 days |
 | Flags fired | Orange/red cards beneath the grid: what fired (with numbers), why it matters, what to check |
 | Flags dismissed | Collapsed "1 dismissed" link; tap to review/undo |
 | Single year only | Sparklines and delta chips hidden; gentle "Add more years to see trends" hint |
