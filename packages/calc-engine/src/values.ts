@@ -93,6 +93,17 @@ const METRIC_REQUIREMENTS: Readonly<Record<Exclude<MetricId, 'grossMargin'>, rea
   fcfYield: ['operatingCashFlow', 'capex', 'dilutedShares']
 };
 
+/**
+ * The formula's input items, for the detail sheet's this-year listing. Gross
+ * margin lists gross profit itself (derived when the filing omits it, per
+ * as-reported precedence) rather than the enterable cost item the missing
+ * list steers to.
+ */
+export function metricInputs(metricId: MetricId): readonly LineItemId[] {
+  if (metricId === 'grossMargin') return ['grossProfit', 'revenue'];
+  return METRIC_REQUIREMENTS[metricId];
+}
+
 export function missingForMetric(metricId: MetricId, year: StatementYear): LineItemId[] {
   if (metricId === 'grossMargin') {
     const missing: LineItemId[] = [];

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
 import { Placeholder } from '../components/Placeholder';
@@ -8,7 +8,8 @@ import { useMetrics } from '../hooks/useMetrics';
 import { dashboardSearchSchema } from './-search';
 
 // The company dashboard (frontend spec §3); `?metric=` addresses the metric
-// detail sheet, which arrives with its own slice.
+// detail sheet, so the sheet survives bookmarks and the system back gesture
+// closes it instead of leaving the screen.
 export const Route = createFileRoute('/company/$id/')({
   validateSearch: dashboardSearchSchema,
   component: CompanyDashboard
@@ -16,6 +17,8 @@ export const Route = createFileRoute('/company/$id/')({
 
 function CompanyDashboard(): ReactElement | null {
   const { id } = Route.useParams();
+  const { metric } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const metrics = useMetrics(id);
 
   if (metrics === undefined) return null;
@@ -29,5 +32,11 @@ function CompanyDashboard(): ReactElement | null {
     );
   }
 
-  return <Dashboard metrics={metrics} />;
+  return (
+    <Dashboard
+      metrics={metrics}
+      metric={metric}
+      onMetricClose={() => void navigate({ search: {}, replace: true })}
+    />
+  );
 }

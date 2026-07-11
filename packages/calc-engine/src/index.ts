@@ -52,6 +52,7 @@ export { assertSafeInteger, scaleUnitMinor } from './money.js';
 export {
   balanceSheetComplete,
   hasValue,
+  metricInputs,
   missingCoreItems,
   missingForMetric,
   requireValue,

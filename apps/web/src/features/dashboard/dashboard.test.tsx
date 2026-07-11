@@ -275,6 +275,105 @@ describe('the company dashboard', () => {
     expect(within(section).getByRole('button', { name: 'Dismiss' })).toBeVisible();
   });
 
+  it('opens the metric sheet from a card, reproducible by hand, and closes clean', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await putPrice(db, { companyId: company.id, amountMinor: 30, currency: 'USD', asOf: '2026-07-10' });
+
+    renderAt(`/company/${company.id}`);
+    const card = await screen.findByRole('article', { name: 'Gross margin' });
+    fireEvent.click(card);
+
+    const sheet = await screen.findByRole('dialog', { name: 'Gross margin' });
+    expect(within(sheet).getByText('40.0%')).toBeVisible();
+    expect(within(sheet).getByText('gross profit ÷ revenue')).toBeVisible();
+    // This year's actual inputs, substituted and listed with provenance.
+    expect(within(sheet).getByText('$400 ÷ $1.00k = 40.0%')).toBeVisible();
+    expect(within(sheet).getByText('Gross profit (derived)')).toBeVisible();
+    expect(within(sheet).getAllByText('entered by hand').length).toBeGreaterThan(0);
+    expect(within(sheet).getByText(/pricing power/)).toBeVisible();
+    expect(within(sheet).getByRole('heading', { name: "Owner's lens" })).toBeVisible();
+
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('heading', { name: 'Apple Inc.' })).toBeVisible();
+  });
+
+  it('answers the address directly and offers the table fallback', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}?metric=roe`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'ROE' });
+    expect(within(sheet).getByText('37.5%')).toBeVisible();
+    expect(within(sheet).getByText('ending basis')).toBeVisible();
+    // One computed year: no chart, and the trend block stays away entirely.
+    expect(within(sheet).queryByRole('button', { name: /Show/ })).not.toBeInTheDocument();
+  });
+
+  it('shows chart and table views once history exists', async () => {
+    const company = await seedCompany();
+    for (let offset = 0; offset < 3; offset += 1) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${2022 + offset}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}?metric=grossMargin`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'Gross margin' });
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Show table' }));
+    expect(within(sheet).getByRole('row', { name: /FY2022/ })).toHaveTextContent('40.0%');
+    expect(within(sheet).getByRole('row', { name: /FY2024/ })).toHaveTextContent('42.0%');
+    expect(within(sheet).getByRole('button', { name: 'Show chart' })).toBeVisible();
+  });
+
+  it("hides the Owner's lens when the education layer is off", async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await setMeta(db, 'educationLayerOff', true);
+
+    renderAt(`/company/${company.id}?metric=roe`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'ROE' });
+    expect(within(sheet).getByText(/owners' capital worked/)).toBeVisible();
+    expect(within(sheet).queryByRole('heading', { name: "Owner's lens" })).not.toBeInTheDocument();
+  });
+
+  it('carries the companion metric with its own formula disclosure', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await putPrice(db, { companyId: company.id, amountMinor: 30, currency: 'USD', asOf: '2026-07-10' });
+
+    renderAt(`/company/${company.id}?metric=pe`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'P/E' });
+    expect(within(sheet).getByText('Earnings yield')).toBeVisible();
+    expect(within(sheet).getByText('5.0%')).toBeVisible();
+    expect(within(sheet).getByText('Share price')).toBeVisible();
+    expect(within(sheet).getByText(/\$0\.300 as of 2026-07-10/)).toBeVisible();
+  });
+
+  it('explains an n/m year in one sentence on its sheet', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id, -2_000);
+
+    renderAt(`/company/${company.id}?metric=roe`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'ROE' });
+    expect(within(sheet).getByText('n/m: negative equity')).toBeVisible();
+    expect(within(sheet).getByText(/no positive equity base/)).toBeVisible();
+  });
+
   it('marks a stale price on the valuation cards', async () => {
     const company = await seedCompany();
     await seedFullYear(company.id);

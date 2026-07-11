@@ -19,6 +19,7 @@ import type { CompanyMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
+import { MetricSheet } from './MetricSheet';
 
 /** The 12 dashboard cards come straight from the dictionary's card flags (the metric-budget decision). */
 const CARD_IDS: readonly MetricId[] = METRIC_IDS.filter((id) => METRICS[id].card);
@@ -117,7 +118,16 @@ function PriceCard({ company }: { company: CompanyRecord }): ReactElement {
  * first missing number. Sparklines, deltas and the red-flag section join with
  * the dashboard-depth slice.
  */
-export function Dashboard({ metrics }: { metrics: CompanyMetrics }): ReactElement {
+export function Dashboard({
+  metrics,
+  metric,
+  onMetricClose
+}: {
+  metrics: CompanyMetrics;
+  /** The open detail sheet, addressed by the `?metric=` search param. */
+  metric?: MetricId;
+  onMetricClose: () => void;
+}): ReactElement {
   const { company, price, report } = metrics;
   const flags = useRedFlags(company.id, report);
   const [showDismissed, setShowDismissed] = useState(false);
@@ -206,17 +216,24 @@ export function Dashboard({ metrics }: { metrics: CompanyMetrics }): ReactElemen
               }
 
               return (
-                <MetricCard
+                <Link
                   key={id}
-                  label={def.label}
-                  value={latest}
-                  kind={def.format}
-                  currency={company.currency}
-                  spark={spark}
-                  delta={series.delta ?? undefined}
-                  footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
-                  stale={valuation && priceIsStale}
-                />
+                  to="/company/$id"
+                  params={{ id: company.id }}
+                  search={{ metric: id }}
+                  className={styles.cardLink}
+                >
+                  <MetricCard
+                    label={def.label}
+                    value={latest}
+                    kind={def.format}
+                    currency={company.currency}
+                    spark={spark}
+                    delta={series.delta ?? undefined}
+                    footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
+                    stale={valuation && priceIsStale}
+                  />
+                </Link>
               );
             })}
           </section>
@@ -260,6 +277,10 @@ export function Dashboard({ metrics }: { metrics: CompanyMetrics }): ReactElemen
             </section>
           ) : null}
         </>
+      )}
+
+      {metric === undefined ? null : (
+        <MetricSheet metricId={metric} metrics={metrics} onClose={onMetricClose} />
       )}
     </>
   );

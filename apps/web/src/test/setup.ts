@@ -2,6 +2,12 @@
 // expect. Testing Library's automatic cleanup between tests relies on the
 // global afterEach that `test.globals: true` provides (vitest.config.ts).
 import '@testing-library/jest-dom/vitest';
+import { configure } from '@testing-library/dom';
+
+// Integration tests ride live queries through IndexedDB and back; under
+// parallel worker load (and a busy host) the one-second default flakes.
+// Passing tests never wait this long; only genuine failures pay it.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom implements none of the dialog element's methods, but the sheet
 // primitive leans on the real contract (open attribute, close event). A

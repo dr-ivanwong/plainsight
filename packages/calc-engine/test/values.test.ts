@@ -3,6 +3,7 @@ import { coreItemsFor, LINE_ITEMS, LINE_ITEM_IDS } from '../src/lineItems.js';
 import {
   balanceSheetComplete,
   hasValue,
+  metricInputs,
   missingCoreItems,
   missingForMetric,
   requireValue,
@@ -143,5 +144,13 @@ describe('missingForMetric (drives the deep link)', () => {
     expect(missingForMetric('pe', y)).toEqual([]);
     expect(missingForMetric('earningsYield', y)).toEqual([]);
     expect(missingForMetric('fcfYield', y)).toEqual([]);
+  });
+});
+
+describe('metricInputs', () => {
+  it('lists the formula terms, with gross margin naming the derived item itself', () => {
+    expect(metricInputs('grossMargin')).toEqual(['grossProfit', 'revenue']);
+    expect(metricInputs('roe')).toEqual(['netIncome', 'totalEquity']);
+    expect(metricInputs('fcfYield')).toEqual(['operatingCashFlow', 'capex', 'dilutedShares']);
   });
 });

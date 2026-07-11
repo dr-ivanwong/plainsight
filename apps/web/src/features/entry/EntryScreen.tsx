@@ -6,7 +6,6 @@ import {
   LINE_ITEM_IDS,
   type FyLabel,
   type LineItemId,
-  type Provenance,
   type Scale,
   type StatementKind
 } from '@plainsight/calc-engine';
@@ -14,6 +13,7 @@ import { Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 
 import type { FieldValue } from '../../components/MoneyField';
+import { SOURCE_WORD } from '../../components/provenanceWords';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { SCALE_WORD, StatementGrid, type GridYear } from '../../components/StatementGrid';
 import {
@@ -33,14 +33,6 @@ const STATEMENT_OPTIONS = [
 ] as const;
 
 const SCALES: readonly Scale[] = ['ones', 'thousands', 'millions', 'billions'];
-
-const SOURCE_WORD: Readonly<Record<Provenance['source'], string>> = {
-  manual: 'entered by hand',
-  sample: 'sample data',
-  edgar: 'EDGAR filing',
-  asx_map: 'ASX filing',
-  user_upload: 'uploaded document'
-};
 
 /** One fiscal-year column: stored rows by statement, or a not-yet-committed draft. */
 interface YearColumn {
