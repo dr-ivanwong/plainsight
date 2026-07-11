@@ -20,7 +20,7 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 | [docs/plan/plainsight-backend.md](docs/plan/plainsight-backend.md) | API contract and error envelope, DynamoDB key design, sync protocol (§4), ingestion, extraction jobs, BYOK proxy |
 | [docs/plan/plainsight-cdk.md](docs/plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Draft status (2026-07-11):** the data-model and backend specs are drafted but awaiting the owner's review pass. **D1 and D2 are both resolved** (sample set: Apple, Coca-Cola, Costco, with CSL joining at Phase 2.5; metric budget: 12 dashboard cards from the pinned 14-metric dictionary, M10/M13 in detail sheets). Do not freeze calc-engine formulas until the owner review pass lands (ROIC/FCF definitions, P-2 tolerance, R1–R7 thresholds; data-model §12 review list).
+**Spec status:** the data-model spec is **reviewed and pinned** (owner review pass completed 2026-07-11: D1/D2 resolved, formulas, policies, and rule thresholds confirmed; see its §12). Calc-engine formulas are buildable as pinned. The backend spec remains a draft; its short review list (sync conflict semantics, error envelope, extraction quota, proxy sizing) gates Phase 2, not Phase 0.
 
 Decisions in the plans (see §12 decision log) are **resolved**; do not relitigate them in code. If a decision must change, update the plan in the same change.
 

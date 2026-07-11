@@ -408,14 +408,14 @@ Single environment, no staging; no market-data subscription (prices are manual, 
 
 ### Remaining to complete the plan
 
-1. **Data model & metric dictionary**: ✅ `plainsight-data-model.md`. Owner review pass outstanding (policies P-1…P-8, the ROIC/FCF definitions, rule thresholds).
+1. **Data model & metric dictionary**: ✅ `plainsight-data-model.md`; owner review pass completed 2026-07-11 (D1/D2 resolved; policies P-0…P-8, the ROIC/FCF definitions, and the rule thresholds confirmed, with two rules amended: see its §12).
 2. **Screen inventory + first-run design**: ✅ `plainsight-frontend.md`: routes, twelve screens with empty/loading/error states, first-run flow with the sample-data decision pinned, component and hook inventories, responsive and accessibility rules, folder structure.
 3. **Doc hygiene**: ✅ added below: §13 success criteria, §14 browser support & storage durability, §15 legal tripwires.
 4. **Golden-company confirmation**: ✅ confirmed: Apple, Microsoft, Coca-Cola, Costco, Union Pacific (US); CSL, Wesfarmers, Woolworths, JB Hi-Fi, Cochlear (ASX). Locked in the data-model spec §11.
 5. **CDK implementation plan**: ✅ `plainsight-cdk.md`: stack decomposition, account/region wiring (Sydney primary, us-east-1 cert), code conventions, security invariants as tests, pipelines, and the budget kill-switch wiring.
 6. **Backend implementation plan**: ✅ `plainsight-backend.md`: DynamoDB access patterns and key design, Lambda inventory, in-memory ticker search, sync protocol with tombstones, extraction job lifecycle, BYOK proxy target allowlist, EDGAR/MAP client etiquette, and the error contract.
 
-**Planning is complete.** Every decision is made and every build contract exists; the remaining pre-code activity is a read-through review pass of the companion specs, then Phase 0 begins.
+**Planning is complete.** Every decision is made, every build contract exists, and the data-model review pass finished 2026-07-11; the backend spec's short review list (its footer) can wait until Phase 2 approaches. Phase 0 begins.
 
 ## 13. Success criteria (personal-tool definition of "working")
 

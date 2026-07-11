@@ -1,6 +1,6 @@
 # Data Model & Metric Dictionary
 
-**Companion to:** `plainsight.md` (product definition §3, calc-engine rules §5) and `plainsight-frontend.md` (every value defined here is rendered there). **Status:** Draft for owner review · **Date:** 2026-07-11
+**Companion to:** `plainsight.md` (product definition §3, calc-engine rules §5) and `plainsight-frontend.md` (every value defined here is rendered there). **Status:** Reviewed and pinned; owner review pass completed 2026-07-11 · **Date:** 2026-07-11
 **Purpose:** the build contract for `packages/calc-engine` and the client data layer: the canonical statement schema, the policies (P-0…P-8), the pinned formula for every metric (M1–M14), the red-flag rule thresholds (R1–R7), the storage/export schemas, and the golden corpus. Every displayed number must be reproducible by hand from this document; that is the product's credibility, so this is the contract that gets reviewed hardest.
 
 ---
@@ -91,7 +91,7 @@ type NotMeaningfulReason =
 
 Illegal states are unrepresentable end to end: a metric on incomplete inputs is `insufficient_data` by type; a degenerate denominator is `not_meaningful` by type; `StatusValue` (frontend §5) is the single component that renders this union, which is where the no-NaN rule lives.
 
-## 4. Policies P-0…P-8 (pinned)
+## 4. Policies P-0…P-8 (pinned; owner-confirmed 2026-07-11)
 
 | Id | Policy | Rule |
 |---|---|---|
@@ -264,7 +264,7 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 - **Fixture format:** one JSON file per company: canonical line items per FY in minor units, a per-statement source reference (filing id + page), the expected `MetricsReport` computed by hand at display precision, and the expected red-flag results.
 - **Acceptance:** line items equal the filing exactly (integer equality); metric values equal the hand computation at P-2 display precision; every bug ever found adds a regression fixture (main plan §5).
-- **Depth rationale:** 10 FYs for sample-data companies (their fixtures back the S2/S3 ten-year sparklines end to end); 6 FYs minimum elsewhere, which covers the widest windows in the system (the 5-year delta chip needs 6 labels; R2 needs 4). Hand-verifying ten years for all ten companies (~6,000 figures) buys nothing the 6-year floor doesn't. CSL keeps 10 FYs because it joins the sample set with Phase 2.5 (D1).
+- **Depth rationale (owner-confirmed 2026-07-11):** 10 FYs for sample-data companies (their fixtures back the S2/S3 ten-year sparklines end to end); 6 FYs minimum elsewhere, which covers the widest windows in the system (the 5-year delta chip needs 6 labels; R2 needs 4). Hand-verifying ten years for all ten companies (~6,000 figures) buys nothing the 6-year floor doesn't. CSL keeps 10 FYs because it joins the sample set with Phase 2.5 (D1).
 - **Sample subset:** the S2 "See it with sample data" fixtures are generated from this corpus (frontend §4). The sample set is Apple, Coca-Cola, Costco (D1, resolved); CSL joins it when Phase 2.5 lands.
 
 ## 12. Open decisions and the owner review list
@@ -273,8 +273,8 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 **D2: the metric budget number. Resolved (owner, 2026-07-11): option (a).** The dictionary stays pinned at 14; **exactly 12 render as dashboard cards**. M13 (earnings yield: the inverse of M12 with identical inputs) renders inside M12's detail sheet, and M10 (FCF margin) inside M11's (conversion is the stronger earnings-quality signal). Ids stay stable; nothing is deleted; the compare grid mirrors the 12 card metrics; and the 12-card budget is the enforced discipline: adding a card requires removing or demoting one. The declined alternatives, for the record: restating the budget as 14, and deleting two metrics outright. Main plan §2–§4 copy, frontend S3/S4, and CLAUDE.md updated to match.
 
-**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance: **confirmed 2026-07-11**, tightened to `max(3 × scaleUnit, 0.1%)` with display precisions as drafted; the R1–R7 thresholds (§7): **confirmed 2026-07-11**, with two de-noising amendments (R1: cumulative OCF ÷ NI < 0.9; R2: cumulative decline ≥ 2 pp); policies P-1 and P-3…P-8, and the §11 depth decision (10/6 FYs): pending.
+**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance: **confirmed 2026-07-11**, tightened to `max(3 × scaleUnit, 0.1%)` with display precisions as drafted; the R1–R7 thresholds (§7): **confirmed 2026-07-11**, with two de-noising amendments (R1: cumulative OCF ÷ NI < 0.9; R2: cumulative decline ≥ 2 pp); policies P-0…P-8 and the §11 depth decision (10/6 FYs): **confirmed 2026-07-11**. The review pass is **complete**: every pinned item in this document is owner-reviewed.
 
 ---
 
-*Review focus for the owner: the ROIC and FCF definitions (§6, notes N1/N2), the P-2 tolerance, and the R1–R7 thresholds; both §12 decisions are resolved. Everything else here is the mechanical consequence of decisions already recorded in the main plan.*
+*The owner review pass completed 2026-07-11: both §12 decisions resolved and every flagged item confirmed (N1; N2 with its Phase 2.5 revisit trigger; P-2 tightened; R1–R7 with two de-noising amendments; policies P-0…P-8; the §11 depth). This document is now pinned; changes from here follow the §1 contract rule.*

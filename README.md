@@ -10,7 +10,7 @@ The core design constraint: **everything works offline**. All analysis runs in t
 
 ## Status
 
-**Planning.** The engineering plans in [`docs/plan/`](docs/plan/) are complete (the two newest, the data model and the backend spec, are drafts awaiting an owner review pass) and code has not started. Next up is Phase 0: monorepo scaffold, design tokens, and the calculation engine with golden-file tests against hand-verified 10-Ks.
+**Planning.** The engineering plans in [`docs/plan/`](docs/plan/) are complete (the data model is reviewed and pinned; the backend spec's short review list waits for Phase 2) and code has not started. Next up is Phase 0: monorepo scaffold, design tokens, and the calculation engine with golden-file tests against hand-verified 10-Ks.
 
 | Document | Covers |
 |---|---|
