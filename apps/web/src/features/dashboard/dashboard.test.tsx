@@ -374,6 +374,31 @@ describe('the company dashboard', () => {
     expect(within(sheet).getByText(/no positive equity base/)).toBeVisible();
   });
 
+  it('renders the sample corpus end to end, interpretation notes visible', async () => {
+    const { loadSampleData } = await import('../library/loadSamples');
+    await loadSampleData(db);
+
+    // Apple asserts not-reported-zero interest from its FY2023 filing on, so
+    // coverage speaks the pinned healthy phrase rather than a number.
+    renderAt('/company/sample-apple');
+    expect(await screen.findByRole('heading', { name: 'Apple' })).toBeVisible();
+    const coverage = await screen.findByRole('article', { name: 'Interest coverage' });
+    expect(within(coverage).getByText('n/m: no interest burden')).toBeVisible();
+    const gross = screen.getByRole('article', { name: 'Gross margin' });
+    expect(within(gross).getByText(/\d+\.\d%/)).toBeVisible();
+  });
+
+  it('shows the ending basis on the sample with no total liabilities', async () => {
+    const { loadSampleData } = await import('../library/loadSamples');
+    await loadSampleData(db);
+
+    // Coca-Cola files no total-liabilities line, so no year is complete and
+    // the return metrics stay on the ending basis despite ten years of data.
+    renderAt('/company/sample-coca-cola?metric=roe');
+    const sheet = await screen.findByRole('dialog', { name: 'ROE' });
+    expect(within(sheet).getByText('ending basis')).toBeVisible();
+  });
+
   it('marks a stale price on the valuation cards', async () => {
     const company = await seedCompany();
     await seedFullYear(company.id);

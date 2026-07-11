@@ -1,9 +1,11 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactElement } from 'react';
 import { z } from 'zod';
 
-import { db, getMeta } from '../db';
+import { db, getMeta, setMeta } from '../db';
 import { Library } from '../features/library/Library';
+import { loadSampleData } from '../features/library/loadSamples';
 import { useCompanies } from '../hooks/useCompanies';
 
 const librarySearchSchema = z.object({
@@ -29,6 +31,10 @@ function LibraryScreen(): ReactElement | null {
   const companies = useCompanies();
   const { add } = Route.useSearch();
   const navigate = useNavigate();
+  // Read raw: the querier must stay pure, and a malformed row simply means
+  // the banner shows again.
+  const bannerDismissed =
+    useLiveQuery(() => db.meta.get('sampleBannerDismissed'), [])?.value === true;
 
   // First render only, while the live query attaches; milliseconds, so no
   // loading state (frontend spec §3).
@@ -40,6 +46,9 @@ function LibraryScreen(): ReactElement | null {
       addOpen={add === 1}
       onAddOpen={() => void navigate({ to: '/', search: { add: 1 } })}
       onAddClose={() => void navigate({ to: '/', search: {}, replace: true })}
+      onSample={() => void loadSampleData()}
+      showSampleBanner={!bannerDismissed && companies.some((company) => company.sample)}
+      onSampleBannerDismiss={() => void setMeta(db, 'sampleBannerDismissed', true)}
     />
   );
 }

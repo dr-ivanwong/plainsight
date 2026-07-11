@@ -4,7 +4,7 @@
 // add-company flow behind `?add=1`, sample chips, and the progressive filter.
 import 'fake-indexeddb/auto';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCompany, db, setMeta, upsertStatement } from '../../db';
@@ -109,6 +109,27 @@ describe('the library', () => {
     const list = screen.getByRole('list');
     expect(within(list).getAllByRole('link')).toHaveLength(1);
     expect(within(list).getByRole('link', { name: /Woolworths/ })).toBeVisible();
+  });
+
+  it('loads the sample trio with one tap, banners it, and the banner dismisses for good', async () => {
+    renderLibrary();
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'See it with sample data' })
+    );
+
+    expect(await screen.findByRole('link', { name: /Apple, sample data/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /Coca-Cola, sample data/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /Costco, sample data/ })).toBeVisible();
+    expect(screen.getAllByText('Sample')).toHaveLength(3);
+
+    const bannerLink = screen.getByRole('link', { name: 'Data & storage' });
+    expect(bannerLink.getAttribute('href')).toBe('/settings/data');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss the sample note' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name: 'Data & storage' })).not.toBeInTheDocument();
+    });
+    expect((await db.meta.get('sampleBannerDismissed'))?.value).toBe(true);
   });
 
   it('keeps the filter hidden at a screenful or fewer', async () => {

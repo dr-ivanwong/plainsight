@@ -17,12 +17,18 @@ export function Library({
   companies,
   addOpen,
   onAddOpen,
-  onAddClose
+  onAddClose,
+  onSample,
+  showSampleBanner = false,
+  onSampleBannerDismiss
 }: {
   companies: CompanyRecord[];
   addOpen: boolean;
   onAddOpen: () => void;
   onAddClose: () => void;
+  onSample?: () => void;
+  showSampleBanner?: boolean;
+  onSampleBannerDismiss?: () => void;
 }): ReactElement {
   const [filter, setFilter] = useState('');
   const query = filter.trim().toLowerCase();
@@ -52,9 +58,28 @@ export function Library({
       </header>
 
       {companies.length === 0 ? (
-        <LibraryEmpty onAdd={onAddOpen} />
+        <LibraryEmpty onAdd={onAddOpen} onSample={onSample} />
       ) : (
         <>
+          {showSampleBanner ? (
+            <p className={styles.sampleBanner}>
+              <span>
+                Sample data loaded. Remove it anytime in{' '}
+                <Link to="/settings/data" className={styles.sampleBannerLink}>
+                  Data &amp; storage
+                </Link>
+                .
+              </span>
+              <button
+                type="button"
+                className={styles.sampleBannerDismiss}
+                aria-label="Dismiss the sample note"
+                onClick={onSampleBannerDismiss}
+              >
+                ✕
+              </button>
+            </p>
+          ) : null}
           {companies.length > 12 ? (
             <input
               className={styles.filter}

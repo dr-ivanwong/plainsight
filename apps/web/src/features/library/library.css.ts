@@ -90,3 +90,43 @@ export const noMatches = style({
   color: colour.textSecondary,
   padding: `${space[16]} 0`
 });
+
+export const sampleBanner = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: space[12],
+  padding: `${space[4]} ${space[12]}`,
+  marginBottom: space[16],
+  backgroundColor: colour.surface,
+  borderRadius: radius.medium,
+  fontSize: fontSize.caption1,
+  color: colour.textSecondary
+});
+
+export const sampleBannerLink = style({
+  color: colour.accent,
+  textDecoration: 'none',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: focusRing.offset
+  }
+});
+
+export const sampleBannerDismiss = style({
+  minWidth: touchTarget,
+  minHeight: touchTarget,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: 'none',
+  backgroundColor: 'transparent',
+  borderRadius: radius.medium,
+  color: colour.textSecondary,
+  fontSize: fontSize.caption1,
+  cursor: 'pointer',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: 0
+  }
+});

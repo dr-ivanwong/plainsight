@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 
 import { db, setMeta } from '../../db';
+import { loadSampleData } from '../library/loadSamples';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './firstRun.css';
 
@@ -82,8 +83,16 @@ export function FirstRun(): ReactElement {
           >
             Add a company
           </button>
-          {/* Lands on the library for now; the sample loader wires in with its slice. */}
-          <button type="button" className={buttons.secondaryAction} onClick={() => void finish({})}>
+          <button
+            type="button"
+            className={buttons.secondaryAction}
+            onClick={() =>
+              void (async () => {
+                await loadSampleData();
+                await finish({});
+              })()
+            }
+          >
             See it with sample data
           </button>
         </div>
