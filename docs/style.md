@@ -1,6 +1,6 @@
 # House style
 
-Writing rules for everything in this repository: documentation, README, ADRs, skills, and (once code lands) all user-facing copy strings. The same spirit applies to commit messages, though those aren't machine-checked.
+Writing rules for everything in this repository: documentation, README, ADRs, skills, all user-facing copy strings, and (rule 4) the vocabulary allowed in source code. The same spirit applies to commit messages, though those aren't machine-checked.
 
 **Every rule here is enforced by a test.** The checker is [`scripts/check-style.mjs`](../scripts/check-style.mjs), run by CI on every push and pull request ([`.github/workflows/style.yml`](../.github/workflows/style.yml)). Run it locally with:
 
@@ -61,3 +61,19 @@ The checker flags, in prose:
 - **Code and official titles.** Fenced blocks and inline code spans are skipped, as for rule 2; an external document's own title keeps its format (`Annual Report 30 June 2025`, cited as such).
 
 Why: `YYYY-MM-DD` sorts lexicographically into chronological order in file listings, tables, and logs; it is the one common format immune to the AU/US day-month swap (`03/07` is a different day in Sydney and New York), which matters in a repo that reads US filings through AU English; and it is what the ADR template and eventual `<time datetime>` markup already use, so a single format serves prose, metadata, and code.
+
+## Rule 4: plan-item codes stay in the plans
+
+The plan documents label their pinned items with letter-number codes: metrics (M1–M14), policies (P-0…P-8), red-flag rules (R1–R7), dictionary notes (N1–N5), decisions (D1, D2), screens (S1–S12). Those codes are the plans' own cross-reference vocabulary, and only the plans may use it. Source code, in every form it takes (identifiers, string values, comments, test names, golden fixtures, and user-facing copy), writes the intention and the meaning instead: `roe`, not the metric's code; `erodingMoat`, not the rule's; "the averaging denominator basis (data-model section 4)", not the policy's.
+
+When a comment needs the contract's authority, name the concept and then point at the document and section: "the pinned rounding tolerance (data-model section 4)". Section numbers are document coordinates and are fine; item codes are not. The pinned code-to-identifier mappings live beside the dictionaries they belong to (data-model spec §6 for metrics, §7 for rules).
+
+Why: a code is a pointer into a document revision, not a meaning. The numbering can shift as the plans evolve, and a new developer reading a switch case on a metric code learns nothing without the right plan open at the right heading, while `case 'currentRatio':` is its own documentation. Names in code survive plan renumbering; bare codes rot silently.
+
+**Scope and exemptions, by design:**
+
+- The checker scans every tracked source file (everything that is not Markdown), case-sensitively, raw lines included: unlike rules 2 and 3 there is no prose/code distinction to make, because the rule is about code.
+- **`S3` is exempt everywhere:** it is Amazon S3, a proper noun, throughout the infrastructure code (the same heuristic spirit as rule 2's capitalisation exemption). Write "the dashboard screen" when the screen is meant and the exemption never bites.
+- **Hyphenated external identifiers are exempt:** a code reached through a hyphen, as in cdk-nag's `AwsSolutions-S1`, belongs to another system's vocabulary, not the plans'.
+- **SVG path data is stripped before matching:** `d="M12 4v16"` is drawing, not a metric.
+- **Markdown prose outside `docs/plan/` may still cite a code** when pointing into a plan, preferably next to the concept's name ("the metric-budget decision (data-model §12 D2)"). A citation beside its meaning is what these documents are for; code gets no such licence.

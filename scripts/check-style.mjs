@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // House style checker (docs/style.md). A rule without a test is a suggestion.
-// Zero dependencies; runs on any Node >= 18. Scans git-tracked Markdown files.
+// Zero dependencies; runs on any Node >= 18. Rules 1 to 3 scan git-tracked
+// Markdown files; rule 4 scans every other tracked (source) file.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
@@ -70,14 +71,34 @@ const ISO_PADDED = /^\d{4}-\d{2}-\d{2}$/;
 // literal YYYY-MM-DD placeholder).
 const DATE_FIELD = /\*\*Date:\*\*\s+(?!(?:\d{4}-\d{2}-\d{2}|YYYY-MM-DD)\b)/g;
 
+// Rule 4: plan-item codes stay in the plans. Source files write the concept's
+// name (the metric's, rule's, policy's, note's, decision's or screen's) and
+// cite the plan by document and section; the letter-number codes are the plan
+// docs' own vocabulary. Scanned raw (strings, comments, identifiers, fixtures
+// alike), case-sensitively.
+// The lookbehind skips codes embedded in hyphenated external identifiers
+// (cdk-nag's "AwsSolutions-S1"): another system's id, not a plan reference.
+const PLAN_CODE = /\b(?:(?<!-)[MRNDS]\d{1,2}|P-\d{1,2})\b/g;
+// Amazon S3 is a proper noun, not a screen code (the one real collision);
+// exempting it mirrors rule 2's capitalisation heuristic.
+const PLAN_CODE_ALLOW = new Set(['S3']);
+
+// Blank out SVG path data (d="M12 4v16" is drawing, not a metric) the way
+// inline code spans are blanked: lengths preserved so columns stay right.
+function stripSvgPathData(line) {
+  return line.replace(/\bd\s*=\s*(["'])[MmZzLlHhVvCcSsQqTtAa][^"']*\1/g, (m) => ' '.repeat(m.length));
+}
+
 // Blank out inline code spans so their contents are never flagged.
 function stripInlineCode(line) {
   return line.replace(/`[^`]*`/g, (m) => ' '.repeat(m.length));
 }
 
-const files = execSync('git ls-files -z -- "*.md"', { encoding: 'utf8' })
+const allFiles = execSync('git ls-files -z', { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean);
+const files = allFiles.filter((file) => file.endsWith('.md'));
+const sourceFiles = allFiles.filter((file) => !file.endsWith('.md'));
 
 const findings = [];
 for (const file of files) {
@@ -125,9 +146,24 @@ for (const file of files) {
   });
 }
 
+// Rule 4 runs on every non-Markdown tracked file (binary files sniffed out).
+let sourceFilesScanned = 0;
+for (const file of sourceFiles) {
+  const content = readFileSync(file, 'utf8');
+  if (content.includes('\0')) continue; // binary
+  sourceFilesScanned += 1;
+  content.split('\n').forEach((line, lineIdx) => {
+    const scannable = stripSvgPathData(line);
+    for (const match of scannable.matchAll(PLAN_CODE)) {
+      if (PLAN_CODE_ALLOW.has(match[0])) continue;
+      findings.push(`${file}:${lineIdx + 1}:${match.index + 1}  plan-item code "${match[0]}" in source: write the concept's name and cite the plan by section (docs/style.md rule 4)`);
+    }
+  });
+}
+
 if (findings.length > 0) {
   console.error(`Style check failed with ${findings.length} finding(s):\n`);
   for (const finding of findings) console.error(`  ${finding}`);
   process.exit(1);
 }
-console.log(`Style check passed: ${files.length} Markdown files clean.`);
+console.log(`Style check passed: ${files.length} Markdown files and ${sourceFilesScanned} source files clean.`);
