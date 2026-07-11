@@ -10,12 +10,14 @@ The core design constraint: **everything works offline**. All analysis runs in t
 
 ## Status
 
-**Planning.** The engineering plans in [`docs/plan/`](docs/plan/) are complete (product definition, design language, frontend/backend architecture, and AWS CDK infrastructure) and code has not started. Next up is Phase 0: monorepo scaffold, design tokens, and the calculation engine with golden-file tests against hand-verified 10-Ks.
+**Planning.** The engineering plans in [`docs/plan/`](docs/plan/) are complete (the two newest, the data model and the backend spec, are drafts awaiting an owner review pass) and code has not started. Next up is Phase 0: monorepo scaffold, design tokens, and the calculation engine with golden-file tests against hand-verified 10-Ks.
 
 | Document | Covers |
 |---|---|
 | [plainsight.md](docs/plan/plainsight.md) | Main engineering plan: product, design, architecture, roadmap |
 | [plainsight-frontend.md](docs/plan/plainsight-frontend.md) | Every route, screen, and state; component and hook inventories |
+| [plainsight-data-model.md](docs/plan/plainsight-data-model.md) | Canonical schema, policies, pinned metric formulas, red-flag thresholds, golden corpus |
+| [plainsight-backend.md](docs/plan/plainsight-backend.md) | API contract, DynamoDB key design, sync protocol, extraction jobs, BYOK proxy |
 | [plainsight-cdk.md](docs/plan/plainsight-cdk.md) | AWS CDK stacks, security invariants, pipelines, cost guardrails |
 
 ## How it's being built

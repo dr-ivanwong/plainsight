@@ -16,9 +16,11 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 |---|---|
 | [docs/plan/plainsight.md](docs/plan/plainsight.md) | Product scope, design language, frontend/backend/infra architecture, phased roadmap, decision log |
 | [docs/plan/plainsight-frontend.md](docs/plan/plainsight-frontend.md) | Every route and screen (S1–S12) with empty/loading/error states, component & hook inventories, folder structure |
+| [docs/plan/plainsight-data-model.md](docs/plan/plainsight-data-model.md) | Canonical line items, calc-engine types, policies P-0…P-8, metric dictionary M1–M14, red-flag rules R1–R7, Dexie/export schemas, golden corpus |
+| [docs/plan/plainsight-backend.md](docs/plan/plainsight-backend.md) | API contract and error envelope, DynamoDB key design, sync protocol (§4), ingestion, extraction jobs, BYOK proxy |
 | [docs/plan/plainsight-cdk.md](docs/plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Missing from the repo:** the main plan marks `plainsight-data-model.md` (pinned metric formulas, schema, policies P-0…P-8) and `plainsight-backend.md` (DynamoDB keys, sync protocol, extraction jobs) as complete, but they are not committed. Ask the owner for them before building anything they govern, especially the calc engine, whose formulas are pinned there.
+**Draft status (2026-07-11):** the data-model and backend specs are drafted but awaiting the owner's review pass. Two decisions are open in the data-model spec §12: **D1** (which companies form the sample-data set, given CSL's golden file is Phase 2.5 scope) and **D2** (the metric budget: the dictionary pins M1–M14 while the budget says 12). Do not freeze calc-engine formulas or generate sample fixtures until D1/D2 and the review land.
 
 Decisions in the plans (see §12 decision log) are **resolved**; do not relitigate them in code. If a decision must change, update the plan in the same change.
 
