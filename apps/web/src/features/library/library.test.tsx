@@ -7,7 +7,7 @@ import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/rea
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createCompany, db, upsertStatement } from '../../db';
+import { createCompany, db, setMeta, upsertStatement } from '../../db';
 import { routeTree } from '../../routeTree.gen';
 import { company, incomeStatement } from '../../test/builders';
 
@@ -19,6 +19,8 @@ beforeEach(async () => {
   vi.useFakeTimers({ toFake: ['Date'], now: new Date(T1) });
   await db.delete();
   await db.open();
+  // These tests exercise the library, not the first-launch gate.
+  await setMeta(db, 'onboardingDone', true);
 });
 
 afterEach(() => {

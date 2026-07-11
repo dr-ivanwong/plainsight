@@ -3,8 +3,8 @@ import { useState, type FormEvent, type ReactElement } from 'react';
 
 import { SheetShell } from '../../components/SheetShell';
 import { createCompany, db } from '../../db';
+import * as buttons from '../../styles/buttons.css';
 import * as styles from './addCompany.css';
-import * as buttons from './libraryEmpty.css';
 
 const CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'JPY', 'NZD'] as const;
 

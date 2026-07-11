@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 
+import * as buttons from '../../styles/buttons.css';
 import * as styles from './libraryEmpty.css';
 
 /**
@@ -12,10 +13,10 @@ export function LibraryEmpty({ onAdd, onSample }: { onAdd?: () => void; onSample
     <section className={styles.hero}>
       <h2 className={styles.promise}>Read financial statements like an owner</h2>
       <div className={styles.actions}>
-        <button type="button" className={styles.primaryAction} onClick={onAdd}>
+        <button type="button" className={buttons.primaryAction} onClick={onAdd}>
           Add a company
         </button>
-        <button type="button" className={styles.secondaryAction} onClick={onSample}>
+        <button type="button" className={buttons.secondaryAction} onClick={onSample}>
           See it with sample data
         </button>
       </div>

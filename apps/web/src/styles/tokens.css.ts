@@ -113,6 +113,8 @@ export const layout = {
   columnWideMax: '960px',
   /** Width cap for a stacked action group in hero empty states. */
   actionColumnMax: '320px',
+  /** Readable measure for centred prose (welcome panes, explainers). */
+  proseMax: '480px',
 } as const;
 
 export const radius = {
