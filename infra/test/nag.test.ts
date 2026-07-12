@@ -6,7 +6,7 @@
 // cdk-nag 3 is a CDK policy validation plugin (not an aspect); validateScope()
 // is its direct test entry point and reports every violation with its
 // construct path.
-import { testApp } from './util';
+import { featuresOff, testApp } from './util';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { describe, expect, it } from 'vitest';
 import { prod } from '../config/prod';
@@ -30,17 +30,15 @@ function unsuppressedErrors(report: ReturnType<typeof nagReport>): string[] {
 }
 
 describe('cdk-nag AwsSolutions pack', () => {
-  it('reports no unsuppressed errors across the Phase 0 stacks', () => {
+  it('reports no unsuppressed errors across the prod stacks (Phase 2 flags on)', () => {
     const report = nagReport(prod);
     expect(unsuppressedErrors(report)).toEqual([]);
     // The plugin integration is not a silent no-op.
     expect(typeof report.success).toBe('boolean');
   });
 
-  it('reports no unsuppressed errors with the Phase 2 features on', () => {
-    // Prod keeps the flags off until the phase goes live (spec §1.2); the
-    // gate must hold for the stacks the flip will create, before it happens.
-    const report = nagReport({ ...prod, features: { ...prod.features, api: true, ingestion: true } });
+  it('reports no unsuppressed errors with every feature off (the rollback posture)', () => {
+    const report = nagReport(featuresOff(prod));
     expect(unsuppressedErrors(report)).toEqual([]);
   });
 });

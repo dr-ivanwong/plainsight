@@ -1,7 +1,6 @@
-// Assertion tests pinning the spec §6 invariants for the Phase 0 stacks.
-// These must survive any refactor; loosening one is a spec change, not a
-// test fix.
-import { testApp } from './util';
+// Assertion tests pinning the spec §6 invariants. These must survive any
+// refactor; loosening one is a spec change, not a test fix.
+import { featuresOff, testApp } from './util';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { prod, rehearsalFrom } from '../config/prod';
@@ -13,45 +12,41 @@ import { AUD_TO_USD_BUDGET_RATE, FEATURE_FLAGS } from '../lib/stacks/foundation'
 // The tests construct the app directly from the typed prod config (account
 // placeholder included): no credentials, no lookups, no CLI. What CI asserts
 // here is exactly what `cdk synth` produces, because both call buildApp.
+// Prod carries the Phase 2 flags since go-live (2026-07-12), so the real
+// prod build is the six stacks.
 const app = testApp();
 const stacks = buildApp(app, prod);
 if (!stacks.githubOidc) throw new Error('prod must synthesise the GithubOidc stack');
+if (!stacks.data || !stacks.ingestion || !stacks.api) {
+  throw new Error('prod must synthesise the Phase 2 stacks: the flags flipped at go-live');
+}
 const templates: Record<string, Template> = {
   Foundation: Template.fromStack(stacks.foundation),
   GithubOidc: Template.fromStack(stacks.githubOidc),
   StaticSite: Template.fromStack(stacks.staticSite),
+  Data: Template.fromStack(stacks.data),
+  Ingestion: Template.fromStack(stacks.ingestion),
+  Api: Template.fromStack(stacks.api),
 };
 const foundation = templates['Foundation'] as Template;
 const githubOidc = templates['GithubOidc'] as Template;
 const staticSite = templates['StaticSite'] as Template;
+const data = templates['Data'] as Template;
+const ingestion = templates['Ingestion'] as Template;
+const api = templates['Api'] as Template;
 
-// The Phase 2 stacks stay feature-gated off in prod until they go live
-// (spec §1.2), so their invariants run over a features-on copy of the same
-// config: the contract is pinned before the flags ever flip.
-const phase2Config: EnvConfig = {
-  ...prod,
-  features: { ...prod.features, api: true, ingestion: true },
+// The Phase 0/1 posture (every feature off) stays under test: it is the
+// rollback target, and the zero-compute promise belongs to it.
+const featuresOffConfig: EnvConfig = featuresOff(prod);
+const offStacks = buildApp(testApp(), featuresOffConfig);
+if (!offStacks.githubOidc) throw new Error('the features-off build must synthesise GithubOidc');
+const foundationOff = Template.fromStack(offStacks.foundation);
+const staticSiteOff = Template.fromStack(offStacks.staticSite);
+const featuresOffTemplates: Record<string, Template> = {
+  Foundation: foundationOff,
+  GithubOidc: Template.fromStack(offStacks.githubOidc),
+  StaticSite: staticSiteOff,
 };
-const phase2App = testApp();
-const phase2 = buildApp(phase2App, phase2Config);
-if (!phase2.data) throw new Error('a features-on build must synthesise the Data stack');
-if (!phase2.api) throw new Error('a features-on build must synthesise the Api stack');
-if (!phase2.ingestion) throw new Error('a features-on build must synthesise the Ingestion stack');
-const data = Template.fromStack(phase2.data);
-const api = Template.fromStack(phase2.api);
-const ingestion = Template.fromStack(phase2.ingestion);
-
-/** Every template under assertion, the feature-gated Phase 2 stacks included. */
-const allTemplates: Record<string, Template> = {
-  ...templates,
-  FoundationFeaturesOn: Template.fromStack(phase2.foundation),
-  StaticSiteFeaturesOn: Template.fromStack(phase2.staticSite),
-  DataFeaturesOn: data,
-  ApiFeaturesOn: api,
-  IngestionFeaturesOn: ingestion,
-};
-const foundationFeaturesOn = allTemplates['FoundationFeaturesOn'] as Template;
-const staticSiteFeaturesOn = allTemplates['StaticSiteFeaturesOn'] as Template;
 
 /**
  * The one resource of its kind. Throws a plain Error (not an expect) because
@@ -68,7 +63,7 @@ function only<T>(record: Record<string, T>): T {
 describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
   it('every bucket in every stack blocks public access, encrypts, and versions', () => {
     const bucketsPerStack: Record<string, number> = {};
-    for (const [stackName, template] of Object.entries(allTemplates)) {
+    for (const [stackName, template] of Object.entries(templates)) {
       for (const bucket of Object.values(template.findResources('AWS::S3::Bucket'))) {
         bucketsPerStack[stackName] = (bucketsPerStack[stackName] ?? 0) + 1;
         const props = bucket['Properties'];
@@ -82,13 +77,9 @@ describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
         expect(props.VersioningConfiguration).toEqual({ Status: 'Enabled' });
       }
     }
-    // Exactly two buckets exist anywhere: the site bucket (in both StaticSite
-    // builds) and the ingestion artefacts bucket (features on).
-    expect(bucketsPerStack).toEqual({
-      StaticSite: 1,
-      StaticSiteFeaturesOn: 1,
-      IngestionFeaturesOn: 1,
-    });
+    // Exactly two buckets exist anywhere: the site bucket and the ingestion
+    // artefacts bucket.
+    expect(bucketsPerStack).toEqual({ StaticSite: 1, Ingestion: 1 });
   });
 
   it('the site bucket expires noncurrent versions after 30 days and is retained in prod', () => {
@@ -109,21 +100,33 @@ describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
   });
 });
 
-describe('zero compute (the Phase 1 promise, spec §1.2)', () => {
-  it.each(Object.keys(templates))('%s contains no Lambda functions', (name) => {
-    const template = templates[name] as Template;
+describe('zero compute with every feature off (the Phase 0/1 posture, spec §1.2)', () => {
+  it.each(Object.keys(featuresOffTemplates))('%s contains no Lambda functions', (name) => {
+    const template = featuresOffTemplates[name] as Template;
     expect(Object.keys(template.findResources('AWS::Lambda::Function'))).toEqual([]);
   });
 
-  it.each(Object.keys(templates))('%s contains no custom resources', (name) => {
+  it.each(Object.keys(featuresOffTemplates))('%s contains no custom resources', (name) => {
     // A custom resource means a hidden Lambda: BucketDeployment and the L2
     // iam.OpenIdConnectProvider are the classic ways one sneaks in.
-    const template = templates[name] as Template;
+    const template = featuresOffTemplates[name] as Template;
     const resources: Record<string, { Type: string }> = template.toJSON().Resources ?? {};
     const customTypes = Object.values(resources)
       .map((resource) => resource.Type)
       .filter((type) => type.startsWith('Custom::') || type === 'AWS::CloudFormation::CustomResource');
     expect(customTypes).toEqual([]);
+  });
+
+  it('the prod stacks carry no custom resources either, only declared functions', () => {
+    for (const template of Object.values(templates)) {
+      const resources: Record<string, { Type: string }> = template.toJSON().Resources ?? {};
+      const customTypes = Object.values(resources)
+        .map((resource) => resource.Type)
+        .filter(
+          (type) => type.startsWith('Custom::') || type === 'AWS::CloudFormation::CustomResource',
+        );
+      expect(customTypes).toEqual([]);
+    }
   });
 });
 
@@ -176,7 +179,7 @@ describe('IAM wildcards (spec §6: no Action or Resource of literal *)', () => {
 
   it('no policy statement anywhere carries Action: * or Resource: *', () => {
     const violations: string[] = [];
-    for (const [stackName, template] of Object.entries(allTemplates)) {
+    for (const [stackName, template] of Object.entries(templates)) {
       const resources: Record<string, { Type: string; Properties?: any }> =
         template.toJSON().Resources ?? {};
       for (const [logicalId, resource] of Object.entries(resources)) {
@@ -373,17 +376,30 @@ describe('site deploy role (main plan §7: the app pipeline ships assets, nothin
 describe('budget (spec §8: staged alerts on the converted AUD figure)', () => {
   const budget: any = only(foundation.findResources('AWS::Budgets::Budget'));
 
-  it('notifies at 50, 80, and 100 percent of actual spend, to the alert topic', () => {
+  it('notifies at 50, 80, and 100 percent to the alert topic, plus the kill threshold', () => {
     const notifications: any[] = budget.Properties.NotificationsWithSubscribers;
-    expect(notifications.map((entry) => entry.Notification.Threshold)).toEqual([50, 80, 100]);
+    expect(notifications.map((entry) => entry.Notification.Threshold)).toEqual([
+      50,
+      80,
+      100,
+      prod.budgets.killSwitchAt,
+    ]);
     for (const entry of notifications) {
       expect(entry.Notification.NotificationType).toBe('ACTUAL');
       expect(entry.Notification.ThresholdType).toBe('PERCENTAGE');
       expect(entry.Subscribers).toHaveLength(1);
       expect(entry.Subscribers[0].SubscriptionType).toBe('SNS');
-      // The address is the alert topic's ARN (a Ref to the topic).
+      // The address is a topic ARN (a Ref to the topic).
       expect(entry.Subscribers[0].Address).toHaveProperty('Ref');
     }
+    // With every feature off (the Phase 0/1 posture) the kill notification
+    // does not exist: nothing deployed can spend.
+    const offBudget: any = only(foundationOff.findResources('AWS::Budgets::Budget'));
+    expect(
+      offBudget.Properties.NotificationsWithSubscribers.map(
+        (entry: any) => entry.Notification.Threshold,
+      ),
+    ).toEqual([50, 80, 100]);
   });
 
   it('is denominated in USD via the pinned conservative conversion', () => {
@@ -414,17 +430,22 @@ describe('runtime feature flags (spec §3)', () => {
 });
 
 describe('feature gating (spec §1.2: a stack that is off does not exist)', () => {
-  it('prod, with the Phase 2 flags off, synthesises no Data stack', () => {
-    expect(stacks.data).toBeUndefined();
+  it('with every feature off, no Phase 2 stack synthesises', () => {
+    expect(offStacks.data).toBeUndefined();
+    expect(offStacks.ingestion).toBeUndefined();
+    expect(offStacks.api).toBeUndefined();
   });
 
   it('either consumer flag brings the table', () => {
     const ingestionOnly = buildApp(testApp(), {
-      ...prod,
-      features: { ...prod.features, ingestion: true },
+      ...featuresOffConfig,
+      features: { ...featuresOffConfig.features, ingestion: true },
     });
     expect(ingestionOnly.data).toBeDefined();
-    const apiOnly = buildApp(testApp(), { ...prod, features: { ...prod.features, api: true } });
+    const apiOnly = buildApp(testApp(), {
+      ...featuresOffConfig,
+      features: { ...featuresOffConfig.features, api: true },
+    });
     expect(apiOnly.data).toBeDefined();
   });
 });
@@ -502,8 +523,8 @@ describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
   });
 
   it('a rehearsal copy relaxes every protection so teardown stays five minutes', () => {
-    const rehearsal = buildApp(testApp(), rehearsalFrom(phase2Config));
-    if (!rehearsal.data) throw new Error('rehearsal features-on build must synthesise Data');
+    const rehearsal = buildApp(testApp(), rehearsalFrom(prod));
+    if (!rehearsal.data) throw new Error('a rehearsal build must synthesise Data');
     expect(rehearsal.data.stackName).toBe('RehearsalData');
     const rehearsalTable: any = only(
       Template.fromStack(rehearsal.data).findResources('AWS::DynamoDB::Table'),
@@ -714,7 +735,10 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
   });
 
   it('an api-only build serves 202 without the ingest wiring', () => {
-    const apiOnly = buildApp(testApp(), { ...prod, features: { ...prod.features, api: true } });
+    const apiOnly = buildApp(testApp(), {
+      ...featuresOffConfig,
+      features: { ...featuresOffConfig.features, api: true },
+    });
     expect(apiOnly.ingestion).toBeUndefined();
     expect(apiOnly.api).toBeDefined();
     if (!apiOnly.api) return;
@@ -726,14 +750,12 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
 });
 
 describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
-  const prodDistribution: any = only(staticSite.findResources('AWS::CloudFront::Distribution'));
-  const phase2Distribution: any = only(
-    staticSiteFeaturesOn.findResources('AWS::CloudFront::Distribution'),
-  );
+  const distribution: any = only(staticSite.findResources('AWS::CloudFront::Distribution'));
+  const distributionOff: any = only(staticSiteOff.findResources('AWS::CloudFront::Distribution'));
 
   it('SPA routing is a viewer-request rewrite, not distribution-wide error responses', () => {
-    for (const distribution of [prodDistribution, phase2Distribution]) {
-      const distributionConfig = distribution.Properties.DistributionConfig;
+    for (const candidate of [distribution, distributionOff]) {
+      const distributionConfig = candidate.Properties.DistributionConfig;
       // Custom error responses would rewrite API not_found envelopes into
       // the app shell; the rewrite function is scoped to the site behaviour.
       expect(distributionConfig.CustomErrorResponses).toBeUndefined();
@@ -744,14 +766,14 @@ describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
     expect(fn.Properties.FunctionCode).toContain("request.uri = '/index.html'");
   });
 
-  it('prod with the flags off keeps the single-origin distribution', () => {
-    const distributionConfig = prodDistribution.Properties.DistributionConfig;
+  it('every feature off keeps the single-origin distribution', () => {
+    const distributionConfig = distributionOff.Properties.DistributionConfig;
     expect(distributionConfig.CacheBehaviors).toBeUndefined();
     expect(distributionConfig.Origins).toHaveLength(1);
   });
 
-  it('features on: the financials path caches 6 hours, everything else on /v1/* does not', () => {
-    const distributionConfig = phase2Distribution.Properties.DistributionConfig;
+  it('the financials path caches 6 hours, everything else on /v1/* does not', () => {
+    const distributionConfig = distribution.Properties.DistributionConfig;
     expect(distributionConfig.Origins).toHaveLength(2);
     const behaviours: any[] = distributionConfig.CacheBehaviors;
     // Insertion order is precedence: the specific path must outrank the
@@ -769,9 +791,7 @@ describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
     // The catch-all uses the managed CachingDisabled policy.
     expect(behaviours[1].CachePolicyId).toBe('4135ea2d-6df8-44a3-9df3-4b5a84be39ad');
 
-    const cachePolicy: any = only(
-      staticSiteFeaturesOn.findResources('AWS::CloudFront::CachePolicy'),
-    );
+    const cachePolicy: any = only(staticSite.findResources('AWS::CloudFront::CachePolicy'));
     const policyConfig = cachePolicy.Properties.CachePolicyConfig;
     expect(policyConfig.DefaultTTL).toBe(6 * 60 * 60);
     expect(policyConfig.MaxTTL).toBe(6 * 60 * 60);
@@ -782,11 +802,11 @@ describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
     });
   });
 
-  it('publishes the distribution id for the ingest path, features on only', () => {
-    staticSiteFeaturesOn.hasResourceProperties('AWS::SSM::Parameter', {
+  it('publishes the distribution id for the ingest path, and only when the edge fronts the API', () => {
+    staticSite.hasResourceProperties('AWS::SSM::Parameter', {
       Name: '/app/prod/cloudfront/distribution-id',
     });
-    expect(Object.keys(staticSite.findResources('AWS::SSM::Parameter'))).toEqual([]);
+    expect(Object.keys(staticSiteOff.findResources('AWS::SSM::Parameter'))).toEqual([]);
   });
 
   it('the ingest function can read the id and invalidate, nothing else new', () => {
@@ -806,35 +826,29 @@ describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
 });
 
 describe('the budget kill switch (cdk spec §8; backend spec §10)', () => {
-  it('prod with the flags off keeps Foundation compute-free and three-notification', () => {
-    expect(Object.keys(foundation.findResources('AWS::Lambda::Function'))).toEqual([]);
-    const budget: any = only(foundation.findResources('AWS::Budgets::Budget'));
+  it('every feature off keeps Foundation compute-free and three-notification', () => {
+    expect(Object.keys(foundationOff.findResources('AWS::Lambda::Function'))).toEqual([]);
+    const budget: any = only(foundationOff.findResources('AWS::Budgets::Budget'));
     expect(budget.Properties.NotificationsWithSubscribers).toHaveLength(3);
   });
 
-  it('a spend-capable build wires the flipper to its own topic at the kill threshold', () => {
-    const flipper: any = only(foundationFeaturesOn.findResources('AWS::Lambda::Function'));
+  it('the spend-capable prod wires the flipper to its own topic at the kill threshold', () => {
+    const flipper: any = only(foundation.findResources('AWS::Lambda::Function'));
     expect(flipper.Properties.Timeout).toBe(30);
     expect(flipper.Properties.MemorySize).toBe(128);
     expect(flipper.Properties.Environment.Variables.EXTRACTION_FLAG_PARAMETER).toBe(
       '/app/prod/features/extraction',
     );
 
-    const budget: any = only(foundationFeaturesOn.findResources('AWS::Budgets::Budget'));
+    const budget: any = only(foundation.findResources('AWS::Budgets::Budget'));
     const notifications: any[] = budget.Properties.NotificationsWithSubscribers;
     expect(notifications).toHaveLength(4);
-    expect(notifications.map((entry) => entry.Notification.Threshold)).toEqual([
-      50,
-      80,
-      100,
-      prod.budgets.killSwitchAt,
-    ]);
     // The kill notification publishes to a different topic than the alerts.
     const alertAddress = JSON.stringify(notifications[0].Subscribers[0].Address);
     const killAddress = JSON.stringify(notifications[3].Subscribers[0].Address);
     expect(killAddress).not.toBe(alertAddress);
 
-    const policies = Object.values(foundationFeaturesOn.findResources('AWS::IAM::Policy')) as any[];
+    const policies = Object.values(foundation.findResources('AWS::IAM::Policy')) as any[];
     const flip = policies
       .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
       .find((statement) => statement.Sid === 'FlipExtractionFlag');

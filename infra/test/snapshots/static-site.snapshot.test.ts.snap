@@ -45,6 +45,40 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
     "Distribution830FAC52": {
       "Properties": {
         "DistributionConfig": {
+          "CacheBehaviors": [
+            {
+              "AllowedMethods": [
+                "GET",
+                "HEAD",
+              ],
+              "CachePolicyId": {
+                "Ref": "FinancialsCache51179944",
+              },
+              "Compress": true,
+              "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+              "PathPattern": "/v1/companies/*/financials",
+              "ResponseHeadersPolicyId": {
+                "Ref": "SecurityHeadersE66B69D3",
+              },
+              "TargetOriginId": "StaticSiteDistributionOrigin21EE6109A",
+              "ViewerProtocolPolicy": "redirect-to-https",
+            },
+            {
+              "AllowedMethods": [
+                "GET",
+                "HEAD",
+              ],
+              "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+              "Compress": true,
+              "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+              "PathPattern": "/v1/*",
+              "ResponseHeadersPolicyId": {
+                "Ref": "SecurityHeadersE66B69D3",
+              },
+              "TargetOriginId": "StaticSiteDistributionOrigin21EE6109A",
+              "ViewerProtocolPolicy": "redirect-to-https",
+            },
+          ],
           "Comment": "Plainsight static site (prod)",
           "DefaultCacheBehavior": {
             "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
@@ -89,6 +123,29 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
                 "OriginAccessIdentity": "",
               },
             },
+            {
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "https-only",
+                "OriginSSLProtocols": [
+                  "TLSv1.2",
+                ],
+              },
+              "DomainName": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::ImportValue": "Api:ExportsOutputRefHttpApiF5A9A8A7F70B5BDD",
+                    },
+                    ".execute-api.ap-southeast-2.",
+                    {
+                      "Ref": "AWS::URLSuffix",
+                    },
+                  ],
+                ],
+              },
+              "Id": "StaticSiteDistributionOrigin21EE6109A",
+            },
           ],
           "PriceClass": "PriceClass_100",
         },
@@ -109,6 +166,22 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
       },
       "Type": "AWS::CloudFront::Distribution",
     },
+    "DistributionIdParameter014107B7": {
+      "Properties": {
+        "Description": "Distribution fronting /v1/*; the ingest path invalidates financials through it.",
+        "Name": "/app/prod/cloudfront/distribution-id",
+        "Tags": {
+          "env": "prod",
+          "owner": "ivan",
+          "project": "plainsight",
+        },
+        "Type": "String",
+        "Value": {
+          "Ref": "Distribution830FAC52",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "DistributionOrigin1S3OriginAccessControlEB606076": {
       "Properties": {
         "OriginAccessControlConfig": {
@@ -119,6 +192,35 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
         },
       },
       "Type": "AWS::CloudFront::OriginAccessControl",
+    },
+    "FinancialsCache51179944": {
+      "Properties": {
+        "CachePolicyConfig": {
+          "Comment": "Financials change at most weekly per ticker; 6 hours at the edge, invalidated on write.",
+          "DefaultTTL": 21600,
+          "MaxTTL": 21600,
+          "MinTTL": 0,
+          "Name": "plainsight-prod-financials-cache",
+          "ParametersInCacheKeyAndForwardedToOrigin": {
+            "CookiesConfig": {
+              "CookieBehavior": "none",
+            },
+            "EnableAcceptEncodingBrotli": true,
+            "EnableAcceptEncodingGzip": true,
+            "HeadersConfig": {
+              "HeaderBehavior": "none",
+            },
+            "QueryStringsConfig": {
+              "QueryStringBehavior": "whitelist",
+              "QueryStrings": [
+                "years",
+                "statements",
+              ],
+            },
+          },
+        },
+      },
+      "Type": "AWS::CloudFront::CachePolicy",
     },
     "SecurityHeadersE66B69D3": {
       "Properties": {

@@ -18,6 +18,8 @@ Synth and tests need no AWS credentials and perform no account lookups; structur
 
 **Before the first ingest runs:** create the plain SSM parameter carrying the EDGAR contact address (SEC fair-access; configuration that never lives in the repo, same pattern as the provider keys): `aws ssm put-parameter --name /app/prod/edgar/contact --type String --value you@example.com`.
 
+Phase 2 go-live and the operational procedures (the rebuild drill, DLQ drain, quarantine review, kill-switch reset) live in [docs/runbook.md](../docs/runbook.md).
+
 ## Owner runbook: Phase 0 (spec §10)
 
 1. Set the real account id in [`config/prod.ts`](config/prod.ts) (the `000000000000` placeholder deploys nowhere). An account id is not a secret; commit it.
