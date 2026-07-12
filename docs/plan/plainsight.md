@@ -416,7 +416,7 @@ Single environment, no staging; no market-data subscription (prices are manual, 
 5. **CDK implementation plan**: ✅ `plainsight-cdk.md`: stack decomposition, account/region wiring (Sydney primary, us-east-1 cert), code conventions, security invariants as tests, pipelines, and the budget kill-switch wiring.
 6. **Backend implementation plan**: ✅ `plainsight-backend.md`: DynamoDB access patterns and key design, Lambda inventory, in-memory ticker search, sync protocol with tombstones, extraction job lifecycle, BYOK proxy target allowlist, EDGAR/MAP client etiquette, and the error contract.
 
-**Planning is complete.** Every decision is made, every build contract exists, and the data-model review pass finished 2026-07-11; the backend spec's short review list (its footer) can wait until Phase 2 approaches. Phase 0 begins.
+**Planning is complete.** Every decision is made, every build contract exists, and the data-model review pass finished 2026-07-11; the backend spec's review pass followed 2026-07-12 as Phase 2 opened (all four footer items confirmed as drafted). Phase 0 begins.
 
 ## 13. Success criteria (personal-tool definition of "working")
 

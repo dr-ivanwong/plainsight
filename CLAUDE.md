@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Plainsight**, a value-investing financial statement analyser: a **single-user, local-first PWA** that computes 12 dashboard metrics from a pinned 14-metric dictionary (margins, ROE/ROIC, leverage, FCF, valuation) from entered or imported financial statements, with deterministic red-flag rules and a structured thesis editor. (Recorded decision, plan §12.7: the name, all repo copy, and the in-app education layer avoid naming any living investor; keep it that way in code, copy, and docs. The educational layer is called the **"Owner's lens."**)
 
-**Current state: Phase 0 (foundations) landed 2026-07-11.** The workspace: `packages/calc-engine` (complete per the data-model spec: M1 to M14, R1 to R7, P-0 to P-8, 100% branch coverage enforced, golden corpus green), `apps/web` (Vite + React 19 + TanStack Router + Vanilla Extract tokens with a CI contrast gate; placeholder Library route only), `infra/` (Foundation, GithubOidc, StaticSite; invariant and cdk-nag suites). Phase 1 (offline PWA core: Dexie layer, screens S1 to S12, PWA shell) is the next work.
+**Current state: Phase 1 (offline PWA core) landed 2026-07-12; Phase 2 (import) is the current work.** The workspace: `packages/calc-engine` (complete per the data-model spec: M1 to M14, R1 to R7, P-0 to P-8, 100% branch coverage enforced, golden corpus green), `apps/web` (Vite + React 19 + TanStack Router + Vanilla Extract tokens with a CI contrast gate; the offline core is live: Dexie layer, PWA shell, onboarding, library, dashboard with metric detail sheets, data entry, settings with export/import; Journey A green in airplane mode), `infra/` (Foundation, GithubOidc, StaticSite; invariant and cdk-nag suites; nothing is deployed yet: the account id in `infra/config/prod.ts` is a placeholder and the pipelines' deploy jobs stay dormant until the AWS role variables are set). Phase 2 builds the EDGAR pipeline, read API, ticker search, and edge caching per the backend spec.
 
 ### Build and test commands
 
@@ -29,7 +29,7 @@ Read the relevant plan before building; each is a contract, not a suggestion:
 | [docs/plan/plainsight-backend.md](docs/plan/plainsight-backend.md) | API contract and error envelope, DynamoDB key design, sync protocol (§4), ingestion, extraction jobs, BYOK proxy |
 | [docs/plan/plainsight-cdk.md](docs/plan/plainsight-cdk.md) | CDK stack decomposition, config shape, security invariants as tests, pipelines, cost guardrails |
 
-**Spec status:** the data-model spec is **reviewed and pinned** (owner review pass completed 2026-07-11: D1/D2 resolved, formulas, policies, and rule thresholds confirmed; see its §12). Calc-engine formulas are buildable as pinned. The backend spec remains a draft; its short review list (sync conflict semantics, error envelope, extraction quota, proxy sizing) gates Phase 2, not Phase 0.
+**Spec status:** the data-model spec is **reviewed and pinned** (owner review pass completed 2026-07-11: D1/D2 resolved, formulas, policies, and rule thresholds confirmed; see its §12). The backend spec is **reviewed and pinned** (owner review pass completed 2026-07-12: sync conflict semantics, error envelope, extraction quota, and proxy sizing confirmed as drafted; see its footer). Calc-engine formulas are buildable as pinned.
 
 Decisions in the plans (see §12 decision log) are **resolved**; do not relitigate them in code. If a decision must change, update the plan in the same change.
 

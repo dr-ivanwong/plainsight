@@ -1,6 +1,6 @@
 # Backend Implementation Plan: v1 Specification
 
-**Companion to:** `plainsight.md` §6 (backend architecture, API surface, ingestion strategy) and `plainsight-cdk.md` (the stacks this runs in). **Status:** Draft for owner review · **Date:** 2026-07-11
+**Companion to:** `plainsight.md` §6 (backend architecture, API surface, ingestion strategy) and `plainsight-cdk.md` (the stacks this runs in). **Status:** Reviewed and pinned; owner review pass completed 2026-07-12 · **Date:** 2026-07-12
 **Purpose:** the build contract for everything server-side: the API contract and error envelope, DynamoDB key design and access patterns, the sync protocol, the ingestion pipeline, the extraction job lifecycle, the BYOK proxy, ticker search, external-client etiquette, and the Lambda inventory. Nothing here is load-bearing for the client: the app is fully functional with all of it switched off (main plan, binding constraint).
 
 ---
@@ -150,4 +150,4 @@ X-Ray on the ingestion path only (main plan §6).
 
 ---
 
-*Review focus for the owner: the §4 conflict semantics (LWW per record; the full-resync rule after 90-day tombstone purge), the §2 error envelope as a frozen contract, the §6 quota number, and the §7 proxy sizing note (statement-level chunking to fit API Gateway's 30 s ceiling). The key design in §3 is the mechanical consequence of access patterns already fixed in the main plan.*
+*The owner review pass completed 2026-07-12, confirming all four footer items as drafted: the §4 conflict semantics (LWW per record; the full-resync rule after 90-day tombstone purge), the §2 error envelope as a frozen contract, the §6 quota at 10 extractions/month on server-key jobs, and the §7 proxy sizing (statement-level chunking to fit API Gateway's 30 s ceiling). The §3 key design stands as the mechanical consequence of access patterns already fixed in the main plan. This document is now pinned; changing a pinned item means updating this document in the same change, with the regression discipline the data-model spec §1 sets.*
