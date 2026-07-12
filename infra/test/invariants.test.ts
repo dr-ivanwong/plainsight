@@ -5,7 +5,9 @@ import { App } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { prod, rehearsalFrom } from '../config/prod';
+import type { EnvConfig } from '../config/types';
 import { buildApp } from '../lib/app';
+import { WATCHED_TICKERS_INDEX } from '../lib/stacks/data';
 import { AUD_TO_USD_BUDGET_RATE, FEATURE_FLAGS } from '../lib/stacks/foundation';
 
 // The tests construct the app directly from the typed prod config (account
@@ -22,6 +24,18 @@ const templates: Record<string, Template> = {
 const foundation = templates['Foundation'] as Template;
 const githubOidc = templates['GithubOidc'] as Template;
 const staticSite = templates['StaticSite'] as Template;
+
+// The Phase 2 stacks stay feature-gated off in prod until they go live
+// (spec §1.2), so their invariants run over a features-on copy of the same
+// config: the contract is pinned before the flags ever flip.
+const phase2Config: EnvConfig = {
+  ...prod,
+  features: { ...prod.features, api: true, ingestion: true },
+};
+const phase2App = new App();
+const phase2 = buildApp(phase2App, phase2Config);
+if (!phase2.data) throw new Error('a features-on build must synthesise the Data stack');
+const data = Template.fromStack(phase2.data);
 
 /**
  * The one resource of its kind. Throws a plain Error (not an expect) because
@@ -327,6 +341,109 @@ describe('runtime feature flags (spec §3)', () => {
     expect(Object.keys(foundation.findResources('AWS::SSM::Parameter'))).toHaveLength(
       FEATURE_FLAGS.length,
     );
+  });
+});
+
+describe('feature gating (spec §1.2: a stack that is off does not exist)', () => {
+  it('prod, with the Phase 2 flags off, synthesises no Data stack', () => {
+    expect(stacks.data).toBeUndefined();
+  });
+
+  it('either consumer flag brings the table', () => {
+    const ingestionOnly = buildApp(new App(), {
+      ...prod,
+      features: { ...prod.features, ingestion: true },
+    });
+    expect(ingestionOnly.data).toBeDefined();
+    const apiOnly = buildApp(new App(), { ...prod, features: { ...prod.features, api: true } });
+    expect(apiOnly.data).toBeDefined();
+  });
+});
+
+describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
+  const table: any = only(data.findResources('AWS::DynamoDB::Table'));
+
+  it('prod: point-in-time recovery, deletion protection, retained on delete', () => {
+    expect(table.Properties.PointInTimeRecoverySpecification).toEqual({
+      PointInTimeRecoveryEnabled: true,
+    });
+    expect(table.Properties.DeletionProtectionEnabled).toBe(true);
+    expect(table.DeletionPolicy).toBe('Retain');
+    expect(table.UpdateReplacePolicy).toBe('Retain');
+  });
+
+  it('provisioned capacity across table and indexes sums inside the 25/25 free tier', () => {
+    // The free tier counts provisioned capacity account-wide, indexes
+    // included (spec §8): the sum, not the table figure, is the guardrail.
+    const throughput = table.Properties.ProvisionedThroughput;
+    expect(throughput).toBeDefined();
+    const indexes: any[] = table.Properties.GlobalSecondaryIndexes ?? [];
+    const totalRead =
+      throughput.ReadCapacityUnits +
+      indexes.reduce((sum, index) => sum + index.ProvisionedThroughput.ReadCapacityUnits, 0);
+    const totalWrite =
+      throughput.WriteCapacityUnits +
+      indexes.reduce((sum, index) => sum + index.ProvisionedThroughput.WriteCapacityUnits, 0);
+    expect(totalRead).toBeLessThanOrEqual(25);
+    expect(totalWrite).toBeLessThanOrEqual(25);
+  });
+
+  it('carries the pinned key design and the shared TTL attribute (backend spec §3)', () => {
+    expect(table.Properties.KeySchema).toEqual([
+      { AttributeName: 'PK', KeyType: 'HASH' },
+      { AttributeName: 'SK', KeyType: 'RANGE' },
+    ]);
+    expect(table.Properties.TimeToLiveSpecification).toEqual({
+      AttributeName: 'expiresAt',
+      Enabled: true,
+    });
+  });
+
+  it('carries exactly the sparse watched-tickers index', () => {
+    const indexes: any[] = table.Properties.GlobalSecondaryIndexes;
+    expect(indexes).toHaveLength(1);
+    expect(indexes[0].IndexName).toBe(WATCHED_TICKERS_INDEX);
+    expect(indexes[0].KeySchema).toEqual([
+      { AttributeName: 'watchPartition', KeyType: 'HASH' },
+      { AttributeName: 'ticker', KeyType: 'RANGE' },
+    ]);
+    expect(indexes[0].Projection).toEqual({ ProjectionType: 'ALL' });
+  });
+
+  it('adds no compute and no custom resources (storage, not behaviour)', () => {
+    expect(Object.keys(data.findResources('AWS::Lambda::Function'))).toEqual([]);
+    const resources: Record<string, { Type: string }> = data.toJSON().Resources ?? {};
+    const customTypes = Object.values(resources)
+      .map((resource) => resource.Type)
+      .filter((type) => type.startsWith('Custom::') || type === 'AWS::CloudFormation::CustomResource');
+    expect(customTypes).toEqual([]);
+  });
+
+  it('is tagged like everything else (spec §4)', () => {
+    data.hasResourceProperties(
+      'AWS::DynamoDB::Table',
+      Match.objectLike({
+        Tags: Match.arrayWith([
+          { Key: 'env', Value: 'prod' },
+          { Key: 'owner', Value: 'ivan' },
+          { Key: 'project', Value: 'plainsight' },
+        ]),
+      }),
+    );
+  });
+
+  it('a rehearsal copy relaxes every protection so teardown stays five minutes', () => {
+    const rehearsal = buildApp(new App(), rehearsalFrom(phase2Config));
+    if (!rehearsal.data) throw new Error('rehearsal features-on build must synthesise Data');
+    expect(rehearsal.data.stackName).toBe('RehearsalData');
+    const rehearsalTable: any = only(
+      Template.fromStack(rehearsal.data).findResources('AWS::DynamoDB::Table'),
+    );
+    expect(rehearsalTable.DeletionPolicy).toBe('Delete');
+    expect(rehearsalTable.Properties.DeletionProtectionEnabled).toBe(false);
+    expect(rehearsalTable.Properties.PointInTimeRecoverySpecification).toEqual({
+      PointInTimeRecoveryEnabled: false,
+    });
   });
 });
 

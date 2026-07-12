@@ -10,25 +10,37 @@ import { App } from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { describe, expect, it } from 'vitest';
 import { prod } from '../config/prod';
+import type { EnvConfig } from '../config/types';
 import { buildApp } from '../lib/app';
 
-describe('cdk-nag AwsSolutions pack', () => {
+function nagReport(config: EnvConfig) {
   const app = new App();
-  buildApp(app, prod);
-  const report = new AwsSolutionsChecks(app, { verbose: true }).validateScope(app);
+  buildApp(app, config);
+  return new AwsSolutionsChecks(app, { verbose: true }).validateScope(app);
+}
 
+function unsuppressedErrors(report: ReturnType<typeof nagReport>): string[] {
+  return report.violations
+    .filter((violation) => violation.severity === 'error')
+    .flatMap((violation) =>
+      violation.violatingResources.map(
+        (resource) => `${violation.ruleName} at ${resource.constructPath}: ${violation.description}`
+      )
+    );
+}
+
+describe('cdk-nag AwsSolutions pack', () => {
   it('reports no unsuppressed errors across the Phase 0 stacks', () => {
-    const errors = report.violations
-      .filter((violation) => violation.severity === 'error')
-      .flatMap((violation) =>
-        violation.violatingResources.map(
-          (resource) => `${violation.ruleName} at ${resource.constructPath}: ${violation.description}`
-        )
-      );
-    expect(errors).toEqual([]);
+    const report = nagReport(prod);
+    expect(unsuppressedErrors(report)).toEqual([]);
+    // The plugin integration is not a silent no-op.
+    expect(typeof report.success).toBe('boolean');
   });
 
-  it('produced a real report (the plugin integration is not a silent no-op)', () => {
-    expect(typeof report.success).toBe('boolean');
+  it('reports no unsuppressed errors with the Phase 2 features on', () => {
+    // Prod keeps the flags off until the phase goes live (spec §1.2); the
+    // gate must hold for the stacks the flip will create, before it happens.
+    const report = nagReport({ ...prod, features: { ...prod.features, api: true, ingestion: true } });
+    expect(unsuppressedErrors(report)).toEqual([]);
   });
 });

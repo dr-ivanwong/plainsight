@@ -1,5 +1,6 @@
 import { Tags, type App } from 'aws-cdk-lib';
 import type { EnvConfig } from '../config/types';
+import { DataStack } from './stacks/data';
 import { FoundationStack } from './stacks/foundation';
 import { GithubOidcStack } from './stacks/github-oidc';
 import { StaticSiteStack } from './stacks/static-site';
@@ -9,6 +10,8 @@ export interface PlainsightStacks {
   /** Absent on rehearsal copies: one-time scaffolding is never rehearsed (spec §3). */
   githubOidc: GithubOidcStack | undefined;
   staticSite: StaticSiteStack;
+  /** Absent until a consumer of the table is switched on (spec §1.2 feature gating). */
+  data: DataStack | undefined;
 }
 
 /**
@@ -41,5 +44,13 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
     ...(githubOidc === undefined ? {} : { deployOidcProviderArn: githubOidc.providerArn }),
   });
 
-  return { foundation, githubOidc, staticSite };
+  // Phase 2 (spec §3): the table is the shared dependency of Api and
+  // Ingestion, so it exists exactly when a consumer of it does. A stack that
+  // is off does not exist (spec §1.2).
+  const data =
+    config.features.api || config.features.ingestion
+      ? new DataStack(app, `${prefix}Data`, { env, config })
+      : undefined;
+
+  return { foundation, githubOidc, staticSite, data };
 }

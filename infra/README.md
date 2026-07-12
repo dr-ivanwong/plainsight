@@ -10,7 +10,7 @@ Phase 0 synthesises exactly three stacks, with zero compute anywhere (no Lambda,
 | `GithubOidc` | GitHub OIDC provider + deploy role (assume the CDK bootstrap roles only, permissions boundary attached) |
 | `StaticSite` | Private versioned S3 bucket, CloudFront distribution with origin access control and the security headers (CSP pinned by test), plus the app pipeline's deploy role (sync the bucket, invalidate the cache, nothing else) |
 
-`Data`, `Api`, `Ingestion`, and `Auth` do not exist yet; `config.features` carries their flags (all `false`) and `bin/app.ts` documents where they attach. Synth and tests need no AWS credentials and perform no account lookups.
+Phase 2 stacks attach behind `config.features` (spec §1.2: a stack that is off does not exist). `Data` is built and pinned by test (single provisioned table, 20/20 plus a 5/5 watched-tickers index to stay inside the 25/25 free tier; PITR, deletion protection, and RETAIN in prod) and synthesises once `features.api` or `features.ingestion` flips; `Api`, `Ingestion`, and `Auth` are still to come. Synth and tests need no AWS credentials and perform no account lookups.
 
 ## Owner runbook: Phase 0 (spec §10)
 
@@ -56,7 +56,7 @@ Rehearsal copies skip `GithubOidc` (one-time scaffolding) and relax data protect
 | Command | Does |
 |---|---|
 | `pnpm typecheck` | `tsc --noEmit` against the strict base config |
-| `pnpm test` | invariant suite, cdk-nag gate, StaticSite snapshot |
+| `pnpm test` | invariant suite, cdk-nag gate, StaticSite and Data snapshots |
 | `pnpm synth` | synthesises all stacks (credential-free) |
 | `pnpm diff` | diff against the deployed account |
 
