@@ -13,6 +13,12 @@ importers:
       '@aws-sdk/client-dynamodb':
         specifier: ^3.899.0
         version: 3.1085.0
+      '@aws-sdk/client-lambda':
+        specifier: ^3.899.0
+        version: 3.1085.0
+      '@aws-sdk/client-ssm':
+        specifier: ^3.899.0
+        version: 3.1085.0
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.899.0
         version: 3.1085.0(@aws-sdk/client-dynamodb@3.1085.0)
@@ -236,6 +242,14 @@ packages:
 
   '@aws-sdk/client-dynamodb@3.1085.0':
     resolution: {integrity: sha512-EpEFvJm+YjrCeDeXTQcbvk2zviLhKxM7exEiuAXXs4QT6h8HemeMY3gxF0S4gScjzhu3VdDXjLLnlJczIj/49w==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/client-lambda@3.1085.0':
+    resolution: {integrity: sha512-Ms41fQmgYK/iF89KLoLVxSwPGtCwIYGyH+1Ovm6l7jiubxDmUfzU7keLzZHOymfxfDz5bBcqfwID65fuMKEnYQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/client-ssm@3.1085.0':
+    resolution: {integrity: sha512-vFYFncOReqEtOj110hdTQK/4JzNEHdVR90Ob6FjdEeb8cNer+HShI64Nuw9J4gTUQAWJ0eErHZqqxQPTViplew==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.975.1':
@@ -3511,6 +3525,28 @@ snapshots:
       '@aws-sdk/credential-provider-node': 3.972.66
       '@aws-sdk/dynamodb-codec': 3.973.31
       '@aws-sdk/middleware-endpoint-discovery': 3.972.23
+      '@aws-sdk/types': 3.974.0
+      '@smithy/core': 3.29.3
+      '@smithy/fetch-http-handler': 5.6.5
+      '@smithy/node-http-handler': 4.9.5
+      '@smithy/types': 4.16.1
+      tslib: 2.8.1
+
+  '@aws-sdk/client-lambda@3.1085.0':
+    dependencies:
+      '@aws-sdk/core': 3.975.1
+      '@aws-sdk/credential-provider-node': 3.972.66
+      '@aws-sdk/types': 3.974.0
+      '@smithy/core': 3.29.3
+      '@smithy/fetch-http-handler': 5.6.5
+      '@smithy/node-http-handler': 4.9.5
+      '@smithy/types': 4.16.1
+      tslib: 2.8.1
+
+  '@aws-sdk/client-ssm@3.1085.0':
+    dependencies:
+      '@aws-sdk/core': 3.975.1
+      '@aws-sdk/credential-provider-node': 3.972.66
       '@aws-sdk/types': 3.974.0
       '@smithy/core': 3.29.3
       '@smithy/fetch-http-handler': 5.6.5

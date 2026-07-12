@@ -35,6 +35,8 @@ export interface AppFunctionProps {
   /** 256 MB default for API functions (spec §5 sizing floor). */
   memorySize?: number;
   environment?: Record<string, string>;
+  /** X-Ray, on for the ingestion path only (main plan §6). */
+  tracing?: lambda.Tracing;
 }
 
 /**
@@ -72,6 +74,7 @@ export class AppFunction extends Construct {
       role,
       logGroup: this.logGroup,
       ...(props.environment === undefined ? {} : { environment: props.environment }),
+      ...(props.tracing === undefined ? {} : { tracing: props.tracing }),
       depsLockFilePath: path.join(REPO_ROOT, 'pnpm-lock.yaml'),
       bundling: {
         // The runtime provides the AWS SDK; everything else (zod, the

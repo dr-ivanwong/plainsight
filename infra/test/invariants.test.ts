@@ -36,14 +36,17 @@ const phase2App = new App();
 const phase2 = buildApp(phase2App, phase2Config);
 if (!phase2.data) throw new Error('a features-on build must synthesise the Data stack');
 if (!phase2.api) throw new Error('a features-on build must synthesise the Api stack');
+if (!phase2.ingestion) throw new Error('a features-on build must synthesise the Ingestion stack');
 const data = Template.fromStack(phase2.data);
 const api = Template.fromStack(phase2.api);
+const ingestion = Template.fromStack(phase2.ingestion);
 
 /** Every template under assertion, the feature-gated Phase 2 stacks included. */
 const allTemplates: Record<string, Template> = {
   ...templates,
   DataFeaturesOn: data,
   ApiFeaturesOn: api,
+  IngestionFeaturesOn: ingestion,
 };
 
 /**
@@ -121,6 +124,21 @@ describe('IAM wildcards (spec §6: no Action or Resource of literal *)', () => {
   // these stacks.
   const WILDCARD_ALLOWLIST: ReadonlySet<string> = new Set([]);
 
+  /**
+   * The one documented CDK-managed exception (spec §6): active tracing adds
+   * the X-Ray daemon-write statement on Resource '*', because those two
+   * actions support no resource-level scoping. Recognised by exact action
+   * pair so nothing else can shelter under it.
+   */
+  const XRAY_WRITE_ACTIONS = ['xray:PutTraceSegments', 'xray:PutTelemetryRecords'];
+  const isXrayDaemonStatement = (statement: { Action?: unknown }): boolean => {
+    const actions = [statement.Action].flat();
+    return (
+      actions.length === XRAY_WRITE_ACTIONS.length &&
+      XRAY_WRITE_ACTIONS.every((action) => actions.includes(action))
+    );
+  };
+
   it('no policy statement anywhere carries Action: * or Resource: *', () => {
     const violations: string[] = [];
     for (const [stackName, template] of Object.entries(allTemplates)) {
@@ -146,7 +164,9 @@ describe('IAM wildcards (spec §6: no Action or Resource of literal *)', () => {
           for (const statement of statements) {
             for (const field of ['Action', 'Resource'] as const) {
               const values: unknown[] = [statement[field]].flat();
-              if (values.includes('*') && !WILDCARD_ALLOWLIST.has(`${stackName}/${logicalId}`)) {
+              if (!values.includes('*')) continue;
+              if (field === 'Resource' && isXrayDaemonStatement(statement)) continue;
+              if (!WILDCARD_ALLOWLIST.has(`${stackName}/${logicalId}`)) {
                 violations.push(`${stackName}/${logicalId}: ${field} contains '*'`);
               }
             }
@@ -522,6 +542,65 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
           expect(writeActions, `${action} must not appear on the read path`).not.toContain(action);
         }
       }
+    }
+  });
+});
+
+describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)', () => {
+  const fn: any = only(ingestion.findResources('AWS::Lambda::Function'));
+
+  it('the ingest function carries the pinned sizing and X-Ray tracing', () => {
+    expect(fn.Properties.Timeout).toBe(120);
+    expect(fn.Properties.MemorySize).toBe(512);
+    expect(fn.Properties.Architectures).toEqual(['arm64']);
+    expect(fn.Properties.Runtime).toBe('nodejs22.x');
+    expect(fn.Properties.TracingConfig).toEqual({ Mode: 'Active' });
+    expect(fn.Properties.Environment.Variables.TABLE_NAME).toBeDefined();
+    expect(fn.Properties.Environment.Variables.EDGAR_CONTACT_PARAMETER).toBe(
+      '/app/prod/edgar/contact',
+    );
+  });
+
+  it('writes only ticker partitions, never deletes, and reads one SSM parameter', () => {
+    const policy: any = only(ingestion.findResources('AWS::IAM::Policy'));
+    const statements: any[] = policy.Properties.PolicyDocument.Statement;
+    const writes = statements.find((statement) => statement.Sid === 'WriteTickerPartitions');
+    expect(writes.Action).toEqual([
+      'dynamodb:PutItem',
+      'dynamodb:UpdateItem',
+      'dynamodb:BatchWriteItem',
+    ]);
+    expect(writes.Condition).toEqual({
+      'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },
+    });
+    const allActions = statements.flatMap((statement) => [statement.Action].flat());
+    expect(allActions).not.toContain('dynamodb:DeleteItem');
+    expect(allActions).not.toContain('dynamodb:Scan');
+    const ssmRead = statements.find((statement) => statement.Sid === 'ReadEdgarContactParameter');
+    expect(ssmRead.Action).toBe('ssm:GetParameter');
+    expect(JSON.stringify(ssmRead.Resource)).toContain('parameter/app/prod/edgar/contact');
+  });
+
+  it('the financials route can fire it, and only it', () => {
+    const financials: any = Object.values(api.findResources('AWS::Lambda::Function')).find(
+      (candidate: any) => candidate.Properties.Environment.Variables.INGEST_FUNCTION_NAME,
+    );
+    expect(financials).toBeDefined();
+    const policies = Object.values(api.findResources('AWS::IAM::Policy')) as any[];
+    const invokeStatements = policies
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
+      .filter((statement) => [statement.Action].flat().includes('lambda:InvokeFunction'));
+    expect(invokeStatements).toHaveLength(1);
+  });
+
+  it('an api-only build serves 202 without the ingest wiring', () => {
+    const apiOnly = buildApp(new App(), { ...prod, features: { ...prod.features, api: true } });
+    expect(apiOnly.ingestion).toBeUndefined();
+    expect(apiOnly.api).toBeDefined();
+    if (!apiOnly.api) return;
+    const template = Template.fromStack(apiOnly.api);
+    for (const fnResource of Object.values(template.findResources('AWS::Lambda::Function')) as any[]) {
+      expect(fnResource.Properties.Environment.Variables.INGEST_FUNCTION_NAME).toBeUndefined();
     }
   });
 });

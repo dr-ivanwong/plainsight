@@ -106,6 +106,28 @@ describe('the financials route', () => {
     expect(body.error.details[0].retryAfterSeconds).toBe(5);
   });
 
+  it('fires the ingest exactly on the cold path, and never on the warm one', async () => {
+    const fired: string[] = [];
+    const trigger = async (ticker: string): Promise<void> => {
+      fired.push(ticker);
+    };
+    const cold = await createFinancialsHandler(fakeStore(undefined, []), trigger)(event('aapl'));
+    expect(cold.statusCode).toBe(202);
+    expect(fired).toEqual(['AAPL']);
+    const warm = await createFinancialsHandler(fakeStore(PROFILE, []), trigger)(event('AAPL'));
+    expect(warm.statusCode).toBe(200);
+    expect(fired).toEqual(['AAPL']);
+  });
+
+  it('still answers 202 when firing the ingest fails', async () => {
+    const trigger = async (): Promise<void> => {
+      throw new Error('invoke refused');
+    };
+    const response = await createFinancialsHandler(fakeStore(undefined, []), trigger)(event('AAPL'));
+    expect(response.statusCode).toBe(202);
+    expect(ingestingBodySchema.safeParse(bodyOf(response)).success).toBe(true);
+  });
+
   it('serves the windowed years with gaps named, contract-valid', async () => {
     const rows = [
       row('FY2020', 'income'),

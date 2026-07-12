@@ -4,6 +4,7 @@ import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import type * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
@@ -17,6 +18,8 @@ export const ROUTE_BURST_LIMIT = 20;
 export interface ApiStackProps extends StackProps {
   config: EnvConfig;
   table: dynamodb.ITable;
+  /** Wired when the ingestion feature is on; without it, cold tickers answer 202 and never warm. */
+  ingestFunction?: lambda.IFunction;
 }
 
 /**
@@ -31,7 +34,7 @@ export class ApiStack extends Stack {
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
-    const { config, table } = props;
+    const { config, table, ingestFunction } = props;
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `plainsight-${config.envName}-api`,
@@ -78,8 +81,27 @@ export class ApiStack extends Stack {
       description:
         'GET /v1/companies/{ticker}/financials: standardised annual statements plus gaps; 202 ingesting on cold tickers (backend spec §2, §5).',
       timeout: Duration.seconds(10),
-      environment,
+      environment: {
+        ...environment,
+        ...(ingestFunction === undefined
+          ? {}
+          : { INGEST_FUNCTION_NAME: ingestFunction.functionName }),
+      },
     });
+    // The cold-ticker path fires the ingest asynchronously (backend spec §5);
+    // the invoke grant is the financials function's only permission beyond
+    // its ticker-partition reads. Granted by explicit statement on the one
+    // unqualified function ARN (grantInvoke would add a version wildcard the
+    // async invoke never uses).
+    if (ingestFunction !== undefined) {
+      financials.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'FireIngest',
+          actions: ['lambda:InvokeFunction'],
+          resources: [ingestFunction.functionArn],
+        }),
+      );
+    }
 
     // The read path reads; the ingestion path owns every write. Scoped by
     // hand rather than grantReadData: these handlers only ever GetItem and

@@ -4,6 +4,7 @@ import { ApiStack } from './stacks/api';
 import { DataStack } from './stacks/data';
 import { FoundationStack } from './stacks/foundation';
 import { GithubOidcStack } from './stacks/github-oidc';
+import { IngestionStack } from './stacks/ingestion';
 import { StaticSiteStack } from './stacks/static-site';
 
 export interface PlainsightStacks {
@@ -13,6 +14,8 @@ export interface PlainsightStacks {
   staticSite: StaticSiteStack;
   /** Absent until a consumer of the table is switched on (spec §1.2 feature gating). */
   data: DataStack | undefined;
+  /** Absent until features.ingestion flips (spec §1.2). */
+  ingestion: IngestionStack | undefined;
   /** Absent until features.api flips (spec §1.2). */
   api: ApiStack | undefined;
 }
@@ -55,10 +58,23 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
       ? new DataStack(app, `${prefix}Data`, { env, config })
       : undefined;
 
-  const api =
-    config.features.api && data !== undefined
-      ? new ApiStack(app, `${prefix}Api`, { env, config, table: data.table })
+  const ingestion =
+    config.features.ingestion && data !== undefined
+      ? new IngestionStack(app, `${prefix}Ingestion`, { env, config, table: data.table })
       : undefined;
 
-  return { foundation, githubOidc, staticSite, data, api };
+  const api =
+    config.features.api && data !== undefined
+      ? new ApiStack(app, `${prefix}Api`, {
+          env,
+          config,
+          table: data.table,
+          // The cold-ticker fire needs the ingest function; without the
+          // ingestion feature the route still answers 202, it just never
+          // warms (a coherent, deliberately reachable degraded state).
+          ...(ingestion === undefined ? {} : { ingestFunction: ingestion.ingestFunction }),
+        })
+      : undefined;
+
+  return { foundation, githubOidc, staticSite, data, ingestion, api };
 }

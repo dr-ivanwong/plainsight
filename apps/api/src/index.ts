@@ -20,9 +20,18 @@ export {
 } from './edgar/mapping.js';
 export {
   PROFILE_SORT_KEY,
+  quarantineSortKey,
   STATEMENT_SORT_PREFIX,
   statementSortKey,
   TableReadStore,
+  TableStore,
   tickerPartition,
-  type FinancialsReadStore
+  WATCH_PARTITION_VALUE,
+  type FinancialsReadStore,
+  type IngestStore,
+  type ProfileWrite,
+  type QuarantineEntry
 } from './db/table.js';
+export { EdgarClient, companyfactsUrl, type TickerListing } from './edgar/client.js';
+export { runGates, type GateOutcome, type GateVerdict } from './ingest/gates.js';
+export { INGEST_LOCK_LEASE_MS, runIngest, type IngestDeps, type IngestOutcome } from './ingest/core.js';

@@ -1,11 +1,12 @@
 /**
  * GET /v1/companies/{ticker}/financials (backend spec §2): the standardised
  * annual statements plus gaps. A cold ticker (no profile yet) answers 202
- * with the ingesting envelope (spec §5); firing the ingest itself is the
- * ingestion path's job, and this handler only ever reports the cold state.
- * Partial data degrades, never 500s: whatever years exist are served, with
- * the missing labels named in gaps.
+ * with the ingesting envelope and fires the ingest asynchronously (spec §5);
+ * the ingest's own lock makes repeated fires cheap no-ops. Partial data
+ * degrades, never 500s: whatever years exist are served, with the missing
+ * labels named in gaps.
  */
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import {
   errorEnvelope,
   financialsResponseSchema,
@@ -17,6 +18,9 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from '
 import { TableReadStore, type FinancialsReadStore } from '../db/table.js';
 import { parseFinancialsQuery, parseTicker } from '../http/params.js';
 import { jsonResponse, logOutcome, requestIdOf } from '../http/respond.js';
+
+/** Fires the async ingest for a cold ticker; a failure to fire must never break the 202. */
+export type IngestTrigger = (ticker: string) => Promise<void>;
 
 export const INGESTING_RETRY_AFTER_SECONDS = 5;
 
@@ -50,7 +54,7 @@ export function serveWindow(
   return { statements, gaps };
 }
 
-export function createFinancialsHandler(store: FinancialsReadStore) {
+export function createFinancialsHandler(store: FinancialsReadStore, triggerIngest?: IngestTrigger) {
   return async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> => {
     const requestId = requestIdOf(event);
     try {
@@ -65,6 +69,20 @@ export function createFinancialsHandler(store: FinancialsReadStore) {
 
       const profile = await store.getProfile(ticker.value);
       if (profile === undefined) {
+        if (triggerIngest !== undefined) {
+          try {
+            await triggerIngest(ticker.value);
+          } catch (error) {
+            // The 202 stands either way: the client retries, and the next
+            // request fires again.
+            logOutcome({
+              requestId,
+              route: 'getFinancials',
+              outcome: 'ingest_fire_failed',
+              detail: error instanceof Error ? error.message : String(error)
+            });
+          }
+        }
         logOutcome({ requestId, route: 'getFinancials', outcome: 'ingesting' });
         return jsonResponse(202, ingestingBody(INGESTING_RETRY_AFTER_SECONDS, requestId));
       }
@@ -96,9 +114,31 @@ export function createFinancialsHandler(store: FinancialsReadStore) {
 }
 
 let store: FinancialsReadStore | undefined;
+let trigger: IngestTrigger | undefined;
+
+/**
+ * The real trigger: an async (Event) invoke of the ingest function named in
+ * the environment. Absent the wiring (api on, ingestion off), cold tickers
+ * still answer 202 and simply never warm, a coherent degraded state.
+ */
+function buildTrigger(): IngestTrigger | undefined {
+  const functionName = process.env['INGEST_FUNCTION_NAME'];
+  if (!functionName) return undefined;
+  const lambda = new LambdaClient({});
+  return async (ticker) => {
+    await lambda.send(
+      new InvokeCommand({
+        FunctionName: functionName,
+        InvocationType: 'Event',
+        Payload: JSON.stringify({ ticker })
+      })
+    );
+  };
+}
 
 /** Lambda entry point; the store is built lazily so tests can import this module without a table. */
 export const handler = (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> => {
   store ??= TableReadStore.fromEnv();
-  return createFinancialsHandler(store)(event);
+  trigger ??= buildTrigger();
+  return createFinancialsHandler(store, trigger)(event);
 };
