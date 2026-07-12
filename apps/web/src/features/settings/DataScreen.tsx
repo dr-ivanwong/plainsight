@@ -15,6 +15,7 @@ import {
   type DryRunCounts,
   type ExportFile
 } from '../../db';
+import { needsInstallExplainer } from '../library/iosInstall';
 import { useCompanies } from '../../hooks/useCompanies';
 import { useStorageStatus } from '../../hooks/useStorageStatus';
 import * as buttons from '../../styles/buttons.css';
@@ -192,6 +193,20 @@ export function DataScreen(): ReactElement {
                 {formatBytes(status.usage)} used of {formatBytes(status.quota)}
               </span>
             </div>
+            {needsInstallExplainer() ? (
+              <div className={styles.row}>
+                <span className={styles.rowLabel}>
+                  On iOS, the data survives only while the app is on your Home Screen.
+                </span>
+                <button
+                  type="button"
+                  className={styles.quietAction}
+                  onClick={() => void setMeta(db, 'iosInstallDismissed', false)}
+                >
+                  Show the note again
+                </button>
+              </div>
+            ) : null}
             {status.quota > 0 ? (
               <div
                 className={styles.meter}

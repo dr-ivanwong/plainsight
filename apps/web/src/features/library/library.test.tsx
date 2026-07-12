@@ -176,6 +176,26 @@ describe('the library', () => {
     ).toBeVisible();
   });
 
+  it('offers the Home Screen note on iOS, once, and remembers the dismissal', async () => {
+    const original = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15'
+    });
+    try {
+      renderLibrary();
+      expect(await screen.findByText(/added to your Home Screen/)).toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Dismiss the Home Screen note' }));
+      await waitFor(() => {
+        expect(screen.queryByText(/added to your Home Screen/)).not.toBeInTheDocument();
+      });
+      expect((await db.meta.get('iosInstallDismissed'))?.value).toBe(true);
+    } finally {
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, value: original });
+    }
+  });
+
   it('keeps the filter hidden at a screenful or fewer', async () => {
     await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
     renderLibrary();

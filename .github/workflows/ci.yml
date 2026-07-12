@@ -29,11 +29,30 @@ jobs:
       - name: Build
         run: pnpm -r build
 
+  # The Phase 1 exit criterion: Journey A completes in airplane mode, on
+  # Chromium and WebKit, against the built app with its service worker.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm -C apps/web exec playwright install --with-deps chromium webkit
+      - name: Journey A in airplane mode
+        run: pnpm -C apps/web e2e
+
   # Ships apps/web/dist to the site bucket and invalidates the edge cache.
   # Cache policy per the cdk spec section 3: hashed assets are immutable for a
-  # year; index.html is never cached (and later, neither is the service
-  # worker script). Requires the repository variables AWS_SITE_DEPLOY_ROLE_ARN,
-  # SITE_BUCKET, and DISTRIBUTION_ID from the StaticSite stack outputs.
+  # year; index.html, the service worker script, and the manifest are never
+  # cached, so updates land on the next visit. Requires the repository
+  # variables AWS_SITE_DEPLOY_ROLE_ARN, SITE_BUCKET, and DISTRIBUTION_ID from
+  # the StaticSite stack outputs.
   deploy-web:
     needs: ci
     if: github.event_name == 'push' && vars.AWS_SITE_DEPLOY_ROLE_ARN != ''
@@ -63,17 +82,25 @@ jobs:
           aws s3 sync apps/web/dist "s3://${{ vars.SITE_BUCKET }}" \
             --delete \
             --exclude index.html \
+            --exclude sw.js \
+            --exclude manifest.webmanifest \
             --cache-control 'public,max-age=31536000,immutable'
-      - name: Upload index.html (never cached)
+      - name: Upload the never-cached shell files
         run: |
           aws s3 cp apps/web/dist/index.html "s3://${{ vars.SITE_BUCKET }}/index.html" \
             --cache-control 'no-cache' \
             --content-type 'text/html; charset=utf-8'
+          aws s3 cp apps/web/dist/sw.js "s3://${{ vars.SITE_BUCKET }}/sw.js" \
+            --cache-control 'no-cache' \
+            --content-type 'text/javascript; charset=utf-8'
+          aws s3 cp apps/web/dist/manifest.webmanifest "s3://${{ vars.SITE_BUCKET }}/manifest.webmanifest" \
+            --cache-control 'no-cache' \
+            --content-type 'application/manifest+json'
       - name: Invalidate the shell
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ vars.DISTRIBUTION_ID }}" \
-            --paths '/index.html' '/'
+            --paths '/index.html' '/' '/sw.js' '/manifest.webmanifest'
       - name: Smoke check
         if: vars.SITE_ORIGIN != ''
         run: curl --silent --fail --show-error "${{ vars.SITE_ORIGIN }}" | grep -q Plainsight

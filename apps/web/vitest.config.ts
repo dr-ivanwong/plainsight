@@ -19,6 +19,8 @@ export default defineConfig({
   plugins: [react(), vanillaExtractPlugin()],
   test: {
     environment: 'node',
+    // Unit and integration tests live in src; e2e specs belong to Playwright.
+    include: ['src/**/*.test.{ts,tsx}'],
     // Tests import describe/expect/it explicitly; globals stay on so Testing
     // Library can register its automatic afterEach cleanup.
     globals: true,

@@ -12,6 +12,7 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "e2e": "vite build && playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tanstack/router-plugin": "^1.168.19",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -39,6 +41,8 @@
     "jsdom": "^29.1.1",
     "typescript": "~5.9.0",
     "vite": "^8.1.4",
-    "vitest": "^4.1.10"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.10",
+    "workbox-window": "^7.4.1"
   }
 }

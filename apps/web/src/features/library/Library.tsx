@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 
+import { InstallExplainer } from '../../components/InstallExplainer';
 import { okPoints } from '../../components/Sparkline';
 import type { CompanyRecord } from '../../db';
 import { useMetrics } from '../../hooks/useMetrics';
@@ -42,7 +43,9 @@ export function Library({
   onAddClose,
   onSample,
   showSampleBanner = false,
-  onSampleBannerDismiss
+  onSampleBannerDismiss,
+  showInstallExplainer = false,
+  onInstallExplainerDismiss
 }: {
   companies: CompanyRecord[];
   addOpen: boolean;
@@ -51,6 +54,8 @@ export function Library({
   onSample?: () => void;
   showSampleBanner?: boolean;
   onSampleBannerDismiss?: () => void;
+  showInstallExplainer?: boolean;
+  onInstallExplainerDismiss?: () => void;
 }): ReactElement {
   const [filter, setFilter] = useState('');
   const query = filter.trim().toLowerCase();
@@ -65,6 +70,9 @@ export function Library({
 
   return (
     <>
+      {showInstallExplainer && onInstallExplainerDismiss !== undefined ? (
+        <InstallExplainer onDismiss={onInstallExplainerDismiss} />
+      ) : null}
       <header className={styles.toolbar}>
         <h1 className={styles.title}>Library</h1>
         <div className={styles.toolbarActions}>

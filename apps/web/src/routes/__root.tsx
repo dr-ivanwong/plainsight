@@ -16,6 +16,20 @@ export const Route = createRootRoute({
 const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/'];
 
 /**
+ * Ask the browser to keep this origin's data, once per launch. Browsers
+ * decide by their own heuristics and may silently decline; the data screen
+ * shows the answer either way.
+ */
+function useRequestPersistence(): void {
+  useEffect(() => {
+    const storage = navigator.storage as StorageManager | undefined;
+    if (storage !== undefined && typeof storage.persist === 'function') {
+      void storage.persist();
+    }
+  }, []);
+}
+
+/**
  * The stored theme choice, applied to the document (tokens.css.ts): light or
  * dark outranks the system preference in either direction, and auto (or an
  * unreadable row) removes the attribute to hand control back to the system.
@@ -33,6 +47,7 @@ function useAppliedTheme(): void {
 }
 
 function RootShell(): ReactElement {
+  useRequestPersistence();
   useAppliedTheme();
   const wide = useRouterState({
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),

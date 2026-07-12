@@ -100,9 +100,14 @@ function stripInlineCode(line) {
   return line.replace(/`[^`]*`/g, (m) => ' '.repeat(m.length));
 }
 
+// Machine-generated files carry hashes and encoded blobs, not prose; a code
+// pattern inside an integrity hash is noise, never a finding.
+const GENERATED = new Set(['pnpm-lock.yaml']);
+
 const allFiles = execSync('git ls-files -z', { encoding: 'utf8' })
   .split('\0')
-  .filter(Boolean);
+  .filter(Boolean)
+  .filter((file) => !GENERATED.has(file) && !file.endsWith('.png'));
 const files = allFiles.filter((file) => file.endsWith('.md'));
 const sourceFiles = allFiles.filter((file) => !file.endsWith('.md'));
 
