@@ -1,13 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import type { ReactElement } from 'react';
 
-import { Placeholder } from '../components/Placeholder';
+import { SettingsScreen } from '../features/settings/SettingsScreen';
 
 // Settings root (frontend spec §3): appearance, data and storage, about.
+// The providers group joins with its own phase.
 export const Route = createFileRoute('/settings/')({
-  component: SettingsRoot
+  component: SettingsScreen
 });
-
-function SettingsRoot(): ReactElement {
-  return <Placeholder title="Settings" note="Settings land later in this phase." />;
-}
