@@ -1,4 +1,4 @@
-import type { FyLabel } from '@plainsight/calc-engine';
+import type { FyLabel, MetricSeries } from '@plainsight/calc-engine';
 import type { ReactElement } from 'react';
 
 import * as styles from './sparkline.css';
@@ -7,6 +7,16 @@ export interface SparkPoint {
   fy: FyLabel;
   value: number;
 }
+
+/** The labelled years that computed, in order: what sparklines and trend charts draw. */
+export const okPoints = (
+  series: MetricSeries,
+  fyLabels: readonly FyLabel[]
+): SparkPoint[] =>
+  fyLabels.flatMap((fy) => {
+    const value = series.values[fy];
+    return value !== undefined && value.status === 'ok' ? [{ fy, value: value.value }] : [];
+  });
 
 const WIDTH = 100;
 const HEIGHT = 28;

@@ -68,3 +68,29 @@ export const updated = style({
   color: colour.textSecondary,
   whiteSpace: 'nowrap'
 });
+
+/** The red-flag dot count: one of the few places health colour speaks (main plan §4). */
+export const flagCount = style({
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.investigate,
+  fontVariantNumeric: 'tabular-nums',
+  whiteSpace: 'nowrap'
+});
+
+export const trailing = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: space[16],
+  flexShrink: 0
+});
+
+/** The ten-year ROE microsparkline; narrow screens keep the row to its words. */
+export const spark = style({
+  width: '64px',
+  '@media': {
+    'screen and (max-width: 599px)': {
+      display: 'none'
+    }
+  }
+});

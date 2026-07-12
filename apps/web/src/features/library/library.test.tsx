@@ -132,6 +132,50 @@ describe('the library', () => {
     expect((await db.meta.get('sampleBannerDismissed'))?.value).toBe(true);
   });
 
+  it('rows wear the ROE sparkline once history supports it', async () => {
+    const { loadSampleData } = await import('./loadSamples');
+    await loadSampleData(db);
+
+    renderLibrary();
+    const row = await screen.findByRole('link', { name: 'Apple, sample data, updated today' });
+    await waitFor(() => {
+      expect(row.querySelector('svg')).not.toBeNull();
+    });
+  });
+
+  it('counts active flags in the row, and a dismissal quietens it', async () => {
+    const flagged = await createCompany(db, { name: 'Levered Co', currency: 'AUD' });
+    await upsertStatement(
+      db,
+      (({ updatedAt: _x, ...write }) => write)(
+        incomeStatement({
+          companyId: flagged.id,
+          values: {
+            revenue: { kind: 'entered', amountMinor: 100_000 },
+            operatingIncome: { kind: 'entered', amountMinor: 2_000 },
+            interestExpense: { kind: 'entered', amountMinor: 1_000 }
+          }
+        })
+      )
+    );
+
+    renderLibrary();
+    expect(
+      await screen.findByRole('link', { name: 'Levered Co, 1 flag, updated today' })
+    ).toBeVisible();
+    expect(screen.getByText('● 1')).toBeVisible();
+
+    await db.flagDismissals.put({
+      companyId: flagged.id,
+      ruleId: 'fragility',
+      dismissedAtFy: 'FY2024',
+      dismissedAt: T1
+    });
+    expect(
+      await screen.findByRole('link', { name: 'Levered Co, updated today' })
+    ).toBeVisible();
+  });
+
   it('keeps the filter hidden at a screenful or fewer', async () => {
     await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
     renderLibrary();

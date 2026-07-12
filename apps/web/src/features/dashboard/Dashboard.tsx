@@ -13,7 +13,7 @@ import { useState, type FormEvent, type ReactElement } from 'react';
 import { MetricCard } from '../../components/MetricCard';
 import { parseEntryText } from '../../components/moneyEntry';
 import { RedFlagBanner } from '../../components/RedFlagBanner';
-import type { SparkPoint } from '../../components/Sparkline';
+import { okPoints, type SparkPoint } from '../../components/Sparkline';
 import { db, putPrice, type CompanyRecord } from '../../db';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
@@ -139,11 +139,7 @@ export function Dashboard({
 
   // Sparklines draw the labelled years that computed; they need at least two
   // (data-sufficiency policy), which Sparkline itself enforces.
-  const sparkFor = (series: MetricSeries): SparkPoint[] =>
-    report.fyLabels.flatMap((fy) => {
-      const value = series.values[fy];
-      return value !== undefined && value.status === 'ok' ? [{ fy, value: value.value }] : [];
-    });
+  const sparkFor = (series: MetricSeries): SparkPoint[] => okPoints(series, report.fyLabels);
 
   return (
     <>

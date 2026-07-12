@@ -23,11 +23,12 @@ export interface RedFlags {
  * The report's fired rules, split by the company's live dismissals (frontend
  * spec §6). Only a dismissal made against the report's latest year counts: a
  * new fiscal year invalidates it and the rule speaks again (data-model spec
- * §7, dismissible-but-persistent).
+ * §7, dismissible-but-persistent). Accepts an absent report (a caller whose
+ * metrics are still attaching) and stays undefined until both sides exist.
  */
 export function useRedFlags(
   companyId: string,
-  report: MetricsReport,
+  report: MetricsReport | undefined,
   db: PlainsightDb = appDb
 ): RedFlags | undefined {
   const raws = useLiveQuery(
@@ -47,7 +48,7 @@ export function useRedFlags(
   }, [db, partitioned]);
 
   return useMemo(() => {
-    if (partitioned === undefined) return undefined;
+    if (partitioned === undefined || report === undefined) return undefined;
     const current = new Set(
       partitioned.valid
         .filter((dismissal) => dismissal.dismissedAtFy === report.latestFy)

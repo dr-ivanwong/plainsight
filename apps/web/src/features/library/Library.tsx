@@ -1,11 +1,33 @@
 import { Link } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 
+import { okPoints } from '../../components/Sparkline';
 import type { CompanyRecord } from '../../db';
+import { useMetrics } from '../../hooks/useMetrics';
+import { useRedFlags } from '../../hooks/useRedFlags';
 import { AddCompanySheet } from './AddCompanySheet';
 import { CompanyRow } from './CompanyRow';
 import * as styles from './library.css';
 import { LibraryEmpty } from './LibraryEmpty';
+
+/**
+ * One row's live depth: the report feeds the ROE microsparkline and the
+ * red-flag count (active flags only, so a dismissal quietens the library dot
+ * exactly as it quietens the dashboard). Hooks per row are fine at a personal
+ * library's scale; the engine recomputes only when the store changes.
+ */
+function LibraryRow({ company }: { company: CompanyRecord }): ReactElement {
+  const metrics = useMetrics(company.id);
+  const report = metrics === null || metrics === undefined ? undefined : metrics.report;
+  const flags = useRedFlags(company.id, report);
+  return (
+    <CompanyRow
+      company={company}
+      flagsCount={flags?.active.length}
+      roeSpark={report === undefined ? undefined : okPoints(report.metrics.roe, report.fyLabels)}
+    />
+  );
+}
 
 /**
  * The library screen (frontend spec §3): the calm home. One row per company,
@@ -95,7 +117,7 @@ export function Library({
           ) : (
             <ul className={styles.rows}>
               {visible.map((company) => (
-                <CompanyRow key={company.id} company={company} />
+                <LibraryRow key={company.id} company={company} />
               ))}
             </ul>
           )}

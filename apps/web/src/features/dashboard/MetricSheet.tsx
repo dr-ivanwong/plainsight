@@ -7,8 +7,7 @@ import {
   metricInputs,
   NOT_MEANINGFUL_PHRASES,
   type LineItemId,
-  type MetricId,
-  type MetricSeries
+  type MetricId
 } from '@plainsight/calc-engine';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { lazy, Suspense, useState, type ReactElement } from 'react';
@@ -17,7 +16,7 @@ import { DeltaChip } from '../../components/DeltaChip';
 import { formatEntryText, unitOf } from '../../components/moneyEntry';
 import { SOURCE_WORD } from '../../components/provenanceWords';
 import { SheetShell } from '../../components/SheetShell';
-import type { SparkPoint } from '../../components/Sparkline';
+import { okPoints } from '../../components/Sparkline';
 import { StatusValue } from '../../components/StatusValue';
 
 // The chart library loads only when a sheet first opens; nothing else in the
@@ -32,14 +31,6 @@ import { METRIC_COPY, REASON_EXPLAINERS } from './metricCopy';
 import * as styles from './metricSheet.css';
 
 const USES_PRICE: ReadonlySet<MetricId> = new Set(['pe', 'earningsYield', 'fcfYield']);
-
-const okPoints = (series: MetricSeries, fyLabels: readonly string[]): SparkPoint[] =>
-  fyLabels.flatMap((fy) => {
-    const value = series.values[fy as SparkPoint['fy']];
-    return value !== undefined && value.status === 'ok'
-      ? [{ fy: fy as SparkPoint['fy'], value: value.value }]
-      : [];
-  });
 
 /** Replace each line-item token in a pinned formula through the given mapping. */
 function replaceTokens(formula: string, replacer: (id: LineItemId) => string | null): string {
