@@ -88,7 +88,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-17-000070"
@@ -137,7 +137,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-17-000070"
@@ -174,7 +174,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-17-000070"
@@ -227,7 +227,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-17-000070"
@@ -276,7 +276,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-17-000070"
@@ -313,7 +313,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-17-000070"
@@ -366,7 +366,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-18-000145"
@@ -415,7 +415,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-18-000145"
@@ -452,7 +452,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-18-000145"
@@ -505,7 +505,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-19-000119"
@@ -554,7 +554,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-19-000119"
@@ -591,7 +591,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-19-000119"
@@ -644,7 +644,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-20-000096"
@@ -693,7 +693,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-20-000096"
@@ -730,7 +730,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-20-000096"
@@ -783,7 +783,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-21-000105"
@@ -832,7 +832,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-21-000105"
@@ -869,7 +869,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-21-000105"
@@ -922,7 +922,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-22-000108"
@@ -971,7 +971,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-22-000108"
@@ -1008,7 +1008,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-22-000108"
@@ -1039,7 +1039,8 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
         "amountMinor": 11430100000000
       },
       "interestExpense": {
-        "kind": "not_reported_zero"
+        "kind": "entered",
+        "amountMinor": 393300000000
       },
       "pretaxIncome": {
         "kind": "entered",
@@ -1060,7 +1061,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-23-000106"
@@ -1109,7 +1110,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-23-000106"
@@ -1146,7 +1147,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-23-000106"
@@ -1198,7 +1199,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-24-000123"
@@ -1247,7 +1248,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-24-000123"
@@ -1284,7 +1285,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-24-000123"
@@ -1336,7 +1337,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-25-000079"
@@ -1385,7 +1386,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-25-000079"
@@ -1422,7 +1423,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:05.723Z",
+      "recordedAt": "2026-07-12T03:16:41.486Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000320193-25-000079"
@@ -1475,7 +1476,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-17-000009"
@@ -1520,7 +1521,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-17-000009"
@@ -1557,7 +1558,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-17-000009"
@@ -1610,7 +1611,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-18-000008"
@@ -1655,7 +1656,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-18-000008"
@@ -1692,7 +1693,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-18-000008"
@@ -1745,7 +1746,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-19-000014"
@@ -1790,7 +1791,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-19-000014"
@@ -1827,7 +1828,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-19-000014"
@@ -1880,7 +1881,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-20-000006"
@@ -1925,7 +1926,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-20-000006"
@@ -1962,7 +1963,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-20-000006"
@@ -2015,7 +2016,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-21-000008"
@@ -2060,7 +2061,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-21-000008"
@@ -2097,7 +2098,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-21-000008"
@@ -2150,7 +2151,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-22-000009"
@@ -2195,7 +2196,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-22-000009"
@@ -2232,7 +2233,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-22-000009"
@@ -2285,7 +2286,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-23-000011"
@@ -2330,7 +2331,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-23-000011"
@@ -2367,7 +2368,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-23-000011"
@@ -2420,7 +2421,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-24-000009"
@@ -2465,7 +2466,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-24-000009"
@@ -2502,7 +2503,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-24-000009"
@@ -2555,7 +2556,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-25-000011"
@@ -2600,7 +2601,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-25-000011"
@@ -2637,7 +2638,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000021344-25-000011"
@@ -2690,7 +2691,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0001628280-26-010047"
@@ -2735,7 +2736,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0001628280-26-010047"
@@ -2772,7 +2773,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:08.758Z",
+      "recordedAt": "2026-07-12T03:16:44.310Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0001628280-26-010047"
@@ -2821,7 +2822,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-16-000032"
@@ -2870,7 +2871,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-16-000032"
@@ -2907,7 +2908,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-16-000032"
@@ -2956,7 +2957,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-17-000014"
@@ -3005,7 +3006,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-17-000014"
@@ -3042,7 +3043,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-17-000014"
@@ -3091,7 +3092,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-18-000013"
@@ -3140,7 +3141,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-18-000013"
@@ -3177,7 +3178,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-18-000013"
@@ -3226,7 +3227,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-19-000019"
@@ -3275,7 +3276,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-19-000019"
@@ -3312,7 +3313,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-19-000019"
@@ -3361,7 +3362,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-20-000017"
@@ -3410,7 +3411,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-20-000017"
@@ -3447,7 +3448,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-20-000017"
@@ -3496,7 +3497,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-21-000014"
@@ -3545,7 +3546,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-21-000014"
@@ -3582,7 +3583,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-21-000014"
@@ -3631,7 +3632,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-22-000021"
@@ -3680,7 +3681,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-22-000021"
@@ -3717,7 +3718,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-22-000021"
@@ -3766,7 +3767,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-23-000042"
@@ -3815,7 +3816,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-23-000042"
@@ -3852,7 +3853,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-23-000042"
@@ -3901,7 +3902,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-24-000049"
@@ -3950,7 +3951,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-24-000049"
@@ -3987,7 +3988,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-24-000049"
@@ -4036,7 +4037,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-25-000101"
@@ -4085,7 +4086,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-25-000101"
@@ -4122,7 +4123,7 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
     },
     "provenance": {
       "source": "sample",
-      "recordedAt": "2026-07-11T05:02:09.869Z",
+      "recordedAt": "2026-07-12T03:16:45.314Z",
       "filing": {
         "system": "EDGAR",
         "documentId": "0000909832-25-000101"

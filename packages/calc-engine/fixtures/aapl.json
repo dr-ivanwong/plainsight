@@ -8,7 +8,7 @@
     "currency": "USD",
     "source": "SEC EDGAR companyfacts (XBRL)",
     "selectionPolicy": "Annual periods from 10-K filings, as-originally-reported: each period takes its value from the earliest 10-K reporting it; 10-K/A only where no original exists.",
-    "generatedAt": "2026-07-11T05:02:05.723Z",
+    "generatedAt": "2026-07-12T03:16:41.486Z",
     "mapping": {
       "revenue": [
         "RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -80,7 +80,7 @@
       ]
     },
     "notes": [
-      "Apple stopped disclosing interest expense from FY2023; asserted not-reported-zero as the entry flow would."
+      "Apple stopped disclosing interest expense from FY2024 (the FY2023 10-K still tags it in the notes); asserted not-reported-zero from FY2024 as the entry flow would."
     ]
   },
   "price": {
@@ -831,7 +831,8 @@
           "amountMinor": 11430100000000
         },
         "interestExpense": {
-          "kind": "not_reported_zero"
+          "kind": "entered",
+          "amountMinor": 393300000000
         },
         "pretaxIncome": {
           "kind": "entered",
@@ -1458,8 +1459,8 @@
           "display": "40.7×"
         },
         "FY2023": {
-          "status": "not_meaningful",
-          "reason": "no_interest_expense"
+          "status": "ok",
+          "display": "29.1×"
         },
         "FY2024": {
           "status": "not_meaningful",

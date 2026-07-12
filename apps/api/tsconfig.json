@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    // Same rigour as the engine: the mapping is where a wrong optionality
+    // becomes a wrong served figure.
+    "exactOptionalPropertyTypes": true,
+    // The fixture recorder is plain Node (tools/), imported by a test that
+    // pins its pruning list to the mapping's candidates.
+    "allowJs": true,
+    "noEmit": true
+  },
+  "include": ["src", "test", "tools", "vitest.config.ts"]
+}

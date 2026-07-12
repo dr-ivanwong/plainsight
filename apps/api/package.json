@@ -1,0 +1,26 @@
+{
+  "name": "@plainsight/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Server-side code for the optional backend: the EDGAR standardisation mapping, the Lambda handlers, and their tests. Build contract: docs/plan/plainsight-backend.md",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fixtures:record": "node tools/record-companyfacts.mjs"
+  },
+  "dependencies": {
+    "@plainsight/api-contract": "workspace:*",
+    "@plainsight/calc-engine": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "~5.9.0",
+    "vitest": "^4.1.10"
+  }
+}

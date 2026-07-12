@@ -8,7 +8,7 @@
     "currency": "USD",
     "source": "SEC EDGAR companyfacts (XBRL)",
     "selectionPolicy": "Annual periods from 10-K filings, as-originally-reported: each period takes its value from the earliest 10-K reporting it; 10-K/A only where no original exists.",
-    "generatedAt": "2026-07-11T05:02:07.454Z",
+    "generatedAt": "2026-07-12T03:16:43.165Z",
     "mapping": {
       "revenue": [
         "RevenueFromContractWithCustomerExcludingAssessedTax"

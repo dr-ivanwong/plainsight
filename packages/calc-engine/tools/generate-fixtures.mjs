@@ -219,11 +219,15 @@ const DURATION_ITEMS = new Set([
 /**
  * Items the fixtures assert as "not reported -> 0" for specific companies and
  * years, with the rationale recorded in the fixture notes. Apple stopped
- * disclosing interest expense from FY2023 (folded into other income/expense as
+ * disclosing interest expense from FY2024 (folded into other income/expense as
  * immaterial); the user-facing entry flow would assert the known-zero state.
+ * (Originally asserted from FY2023; the Phase 2 mapping golden cross-check
+ * found the FY2023 10-K still tags us-gaap:InterestExpense, 3,933 USD million,
+ * despite the changed income-statement presentation, so FY2023 is entered as
+ * filed. Corrected 2026-07-12.)
  */
 const ZERO_ASSERTIONS = {
-  AAPL: { interestExpense: { fromFyYear: 2023, note: 'Apple stopped disclosing interest expense from FY2023; asserted not-reported-zero as the entry flow would.' } }
+  AAPL: { interestExpense: { fromFyYear: 2024, note: 'Apple stopped disclosing interest expense from FY2024 (the FY2023 10-K still tags it in the notes); asserted not-reported-zero from FY2024 as the entry flow would.' } }
 };
 
 // ---------------------------------------------------------------------------

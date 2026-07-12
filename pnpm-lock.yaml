@@ -8,6 +8,28 @@ importers:
 
   .: {}
 
+  apps/api:
+    dependencies:
+      '@plainsight/api-contract':
+        specifier: workspace:*
+        version: link:../../packages/api-contract
+      '@plainsight/calc-engine':
+        specifier: workspace:*
+        version: link:../../packages/calc-engine
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
+      typescript:
+        specifier: ~5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(vite@8.1.4(@types/node@22.20.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.0))
+
   apps/web:
     dependencies:
       '@plainsight/calc-engine':
