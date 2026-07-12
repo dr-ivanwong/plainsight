@@ -29,6 +29,23 @@ export interface TickerListing {
   exchange?: string | undefined;
 }
 
+/**
+ * Parses the SEC index document into listings, first listing per ticker
+ * winning (the file lists primary listings first). Shared by the client's
+ * own fetch and by the search loader, which reads the same document verbatim
+ * from S3 (backend spec §8).
+ */
+export function parseTickerListings(document: unknown): TickerListing[] {
+  const parsed = tickerIndexSchema.parse(document);
+  const byTicker = new Map<string, TickerListing>();
+  for (const [cik, name, symbol, exchange] of parsed.data) {
+    if (!byTicker.has(symbol)) {
+      byTicker.set(symbol, { cik, name, ticker: symbol, exchange: exchange ?? undefined });
+    }
+  }
+  return [...byTicker.values()];
+}
+
 export interface EdgarClientDeps {
   contact: string;
   fetchImpl?: typeof fetch;
@@ -79,8 +96,7 @@ export class EdgarClient {
     return response.json();
   }
 
-  /** Ticker to listing (CIK, name, exchange), from the daily-revalidated index. */
-  async lookupTicker(ticker: string): Promise<TickerListing | undefined> {
+  private async ensureIndex(): Promise<Map<string, TickerListing>> {
     if (this.indexCache === undefined || this.now() - this.indexCache.fetchedAt > TICKER_INDEX_TTL_MS) {
       const headers: Record<string, string> = {};
       if (this.indexCache?.etag !== undefined) headers['If-None-Match'] = this.indexCache.etag;
@@ -88,16 +104,9 @@ export class EdgarClient {
       if (response.status === 304 && this.indexCache !== undefined) {
         this.indexCache = { ...this.indexCache, fetchedAt: this.now() };
       } else {
-        const parsed = tickerIndexSchema.parse(await response.json());
-        const byTicker = new Map<string, TickerListing>();
-        for (const [cik, name, symbol, exchange] of parsed.data) {
-          // First listing wins: the file lists primary listings first.
-          if (!byTicker.has(symbol)) {
-            byTicker.set(symbol, { cik, name, ticker: symbol, exchange: exchange ?? undefined });
-          }
-        }
+        const listings = parseTickerListings(await response.json());
         this.indexCache = {
-          byTicker,
+          byTicker: new Map(listings.map((listing) => [listing.ticker, listing])),
           etag: response.headers.get('etag') ?? undefined,
           fetchedAt: this.now()
         };
@@ -105,6 +114,16 @@ export class EdgarClient {
       // Pace before any follow-up request (companyfacts comes next).
       await this.sleep(PACE_MS);
     }
-    return this.indexCache.byTicker.get(ticker);
+    return this.indexCache.byTicker;
+  }
+
+  /** Ticker to listing (CIK, name, exchange), from the daily-revalidated index. */
+  async lookupTicker(ticker: string): Promise<TickerListing | undefined> {
+    return (await this.ensureIndex()).get(ticker);
+  }
+
+  /** Every listing, for the search index's SEC fallback (backend spec §8). */
+  async fetchTickerListings(): Promise<TickerListing[]> {
+    return [...(await this.ensureIndex()).values()];
   }
 }

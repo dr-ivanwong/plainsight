@@ -1,20 +1,13 @@
-import { CfnOutput, Duration, Stack, type StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
+import { edgarContactParameterName } from '../constants';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
 import { acknowledgeNagFinding } from '../nag';
-
-/**
- * The EDGAR contact address (SEC fair-access requirement) is configuration
- * that must never be hardcoded in the repository (backend spec §9), so it
- * lives in a plain SSM parameter created out-of-band and read at runtime by
- * name, the same pattern as the pipeline's provider keys (cdk spec §1.4).
- */
-export const edgarContactParameterName = (envName: string): string =>
-  `/app/${envName}/edgar/contact`;
 
 export interface IngestionStackProps extends StackProps {
   config: EnvConfig;
@@ -29,12 +22,32 @@ export interface IngestionStackProps extends StackProps {
  */
 export class IngestionStack extends Stack {
   readonly ingestFunction: lambda.IFunction;
+  /** The pipeline's derived artefacts (the search index copy); rebuildable, never precious. */
+  readonly indexBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props: IngestionStackProps) {
     super(scope, id, props);
     const { config, table } = props;
 
     const contactParameter = edgarContactParameterName(config.envName);
+
+    this.indexBucket = new s3.Bucket(this, 'IndexBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      versioned: true,
+      // A weekly-replaced copy of a public file: keep a week of history, and
+      // never RETAIN (rebuildable from the SEC in one request; retention
+      // would only preserve a stale copy).
+      lifecycleRules: [{ noncurrentVersionExpiration: Duration.days(7) }],
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+    acknowledgeNagFinding(
+      this.indexBucket,
+      'AwsSolutions-S1',
+      'No server access logging: spec §8 not-list (ADR 0004). The bucket holds a weekly copy ' +
+        'of a public SEC index file; an access-log bucket would only grow and watch nothing.',
+    );
 
     const ingest = new AppFunction(this, 'IngestTicker', {
       entry: handlerEntry('ingestTicker'),

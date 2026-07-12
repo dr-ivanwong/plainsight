@@ -1,7 +1,7 @@
 // Assertion tests pinning the spec §6 invariants for the Phase 0 stacks.
 // These must survive any refactor; loosening one is a spec change, not a
 // test fix.
-import { App } from 'aws-cdk-lib';
+import { testApp } from './util';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { prod, rehearsalFrom } from '../config/prod';
@@ -13,7 +13,7 @@ import { AUD_TO_USD_BUDGET_RATE, FEATURE_FLAGS } from '../lib/stacks/foundation'
 // The tests construct the app directly from the typed prod config (account
 // placeholder included): no credentials, no lookups, no CLI. What CI asserts
 // here is exactly what `cdk synth` produces, because both call buildApp.
-const app = new App();
+const app = testApp();
 const stacks = buildApp(app, prod);
 if (!stacks.githubOidc) throw new Error('prod must synthesise the GithubOidc stack');
 const templates: Record<string, Template> = {
@@ -32,7 +32,7 @@ const phase2Config: EnvConfig = {
   ...prod,
   features: { ...prod.features, api: true, ingestion: true },
 };
-const phase2App = new App();
+const phase2App = testApp();
 const phase2 = buildApp(phase2App, phase2Config);
 if (!phase2.data) throw new Error('a features-on build must synthesise the Data stack');
 if (!phase2.api) throw new Error('a features-on build must synthesise the Api stack');
@@ -63,10 +63,10 @@ function only<T>(record: Record<string, T>): T {
 
 describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
   it('every bucket in every stack blocks public access, encrypts, and versions', () => {
-    let bucketCount = 0;
-    for (const template of Object.values(templates)) {
+    const bucketsPerStack: Record<string, number> = {};
+    for (const [stackName, template] of Object.entries(allTemplates)) {
       for (const bucket of Object.values(template.findResources('AWS::S3::Bucket'))) {
-        bucketCount += 1;
+        bucketsPerStack[stackName] = (bucketsPerStack[stackName] ?? 0) + 1;
         const props = bucket['Properties'];
         expect(props.PublicAccessBlockConfiguration).toEqual({
           BlockPublicAcls: true,
@@ -78,8 +78,9 @@ describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
         expect(props.VersioningConfiguration).toEqual({ Status: 'Enabled' });
       }
     }
-    // Phase 0 has exactly one bucket: the site bucket.
-    expect(bucketCount).toBe(1);
+    // Exactly two buckets exist anywhere: the site bucket (Phase 0) and the
+    // ingestion artefacts bucket (Phase 2, features on).
+    expect(bucketsPerStack).toEqual({ StaticSite: 1, IngestionFeaturesOn: 1 });
   });
 
   it('the site bucket expires noncurrent versions after 30 days and is retained in prod', () => {
@@ -322,7 +323,7 @@ describe('site deploy role (main plan §7: the app pipeline ships assets, nothin
   });
 
   it('does not exist on a rehearsal copy', () => {
-    const rehearsalApp = new App();
+    const rehearsalApp = testApp();
     const rehearsal = buildApp(rehearsalApp, rehearsalFrom(prod));
     expect(
       Object.keys(Template.fromStack(rehearsal.staticSite).findResources('AWS::IAM::Role')),
@@ -379,12 +380,12 @@ describe('feature gating (spec §1.2: a stack that is off does not exist)', () =
   });
 
   it('either consumer flag brings the table', () => {
-    const ingestionOnly = buildApp(new App(), {
+    const ingestionOnly = buildApp(testApp(), {
       ...prod,
       features: { ...prod.features, ingestion: true },
     });
     expect(ingestionOnly.data).toBeDefined();
-    const apiOnly = buildApp(new App(), { ...prod, features: { ...prod.features, api: true } });
+    const apiOnly = buildApp(testApp(), { ...prod, features: { ...prod.features, api: true } });
     expect(apiOnly.data).toBeDefined();
   });
 });
@@ -462,7 +463,7 @@ describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
   });
 
   it('a rehearsal copy relaxes every protection so teardown stays five minutes', () => {
-    const rehearsal = buildApp(new App(), rehearsalFrom(phase2Config));
+    const rehearsal = buildApp(testApp(), rehearsalFrom(phase2Config));
     if (!rehearsal.data) throw new Error('rehearsal features-on build must synthesise Data');
     expect(rehearsal.data.stackName).toBe('RehearsalData');
     const rehearsalTable: any = only(
@@ -479,22 +480,34 @@ describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
 describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () => {
   const functions = api.findResources('AWS::Lambda::Function');
 
-  it('every Lambda: ARM64, Node 22, explicit timeout and memory, table wired by env', () => {
+  it('every Lambda: ARM64, Node 22, explicit timeout and memory', () => {
     const entries = Object.values(functions);
-    expect(entries).toHaveLength(2);
+    expect(entries).toHaveLength(3);
     for (const fn of entries as any[]) {
       expect(fn.Properties.Architectures).toEqual(['arm64']);
       expect(fn.Properties.Runtime).toBe('nodejs22.x');
       expect(fn.Properties.Timeout).toBe(10);
       expect(fn.Properties.MemorySize).toBe(256);
-      expect(fn.Properties.Environment.Variables.TABLE_NAME).toBeDefined();
     }
+    // The two company routes read the table; search deliberately does not.
+    const withTable = entries.filter(
+      (fn: any) => fn.Properties.Environment.Variables.TABLE_NAME !== undefined,
+    );
+    expect(withTable).toHaveLength(2);
+    const search: any = entries.find(
+      (fn: any) => fn.Properties.Environment.Variables.INDEX_BUCKET !== undefined,
+    );
+    expect(search).toBeDefined();
+    expect(search.Properties.Environment.Variables.TABLE_NAME).toBeUndefined();
+    expect(search.Properties.Environment.Variables.INDEX_KEY).toBe(
+      'edgar/company_tickers_exchange.json',
+    );
   });
 
   it('log retention is explicit log groups, not the custom-resource shortcut', () => {
     // One group per function plus the access-log group; every group 30 days.
     const groups = Object.values(api.findResources('AWS::Logs::LogGroup')) as any[];
-    expect(groups).toHaveLength(3);
+    expect(groups).toHaveLength(4);
     for (const group of groups) {
       expect(group.Properties.RetentionInDays).toBe(30);
     }
@@ -508,15 +521,32 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
     expect(customTypes).toEqual([]);
   });
 
-  it('exposes exactly the two read routes, unauthenticated as the route table flags them', () => {
+  it('exposes exactly the three read routes, unauthenticated as the route table flags them', () => {
     const routes = Object.values(api.findResources('AWS::ApiGatewayV2::Route')) as any[];
     expect(routes.map((route) => route.Properties.RouteKey).sort()).toEqual([
       'GET /v1/companies/{ticker}',
       'GET /v1/companies/{ticker}/financials',
+      'GET /v1/search',
     ]);
     for (const route of routes) {
       expect(route.Properties.AuthorizationType ?? 'NONE').toBe('NONE');
     }
+  });
+
+  it('the search role touches one S3 object and no table', () => {
+    const policies = Object.values(api.findResources('AWS::IAM::Policy')) as any[];
+    const searchPolicy = policies.find((policy) =>
+      policy.Properties.PolicyDocument.Statement.some(
+        (statement: any) => statement.Sid === 'ReadWriteTickerIndexObject',
+      ),
+    );
+    expect(searchPolicy).toBeDefined();
+    const statements: any[] = searchPolicy.Properties.PolicyDocument.Statement;
+    const s3Statement = statements.find((entry) => entry.Sid === 'ReadWriteTickerIndexObject');
+    expect(s3Statement.Action).toEqual(['s3:GetObject', 's3:PutObject']);
+    expect(JSON.stringify(s3Statement.Resource)).toContain('edgar/company_tickers_exchange.json');
+    const actions = statements.flatMap((entry) => [entry.Action].flat());
+    expect(actions.filter((action: string) => action.startsWith('dynamodb:'))).toEqual([]);
   });
 
   it('throttles every route at the pinned rate and logs access with the request id', () => {
@@ -594,7 +624,7 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
   });
 
   it('an api-only build serves 202 without the ingest wiring', () => {
-    const apiOnly = buildApp(new App(), { ...prod, features: { ...prod.features, api: true } });
+    const apiOnly = buildApp(testApp(), { ...prod, features: { ...prod.features, api: true } });
     expect(apiOnly.ingestion).toBeUndefined();
     expect(apiOnly.api).toBeDefined();
     if (!apiOnly.api) return;
@@ -620,7 +650,7 @@ describe('tagging (spec §4: project/env/owner at the root)', () => {
 });
 
 describe('rehearsal overlay (spec §2: same code, prefixed names, disposable data)', () => {
-  const rehearsalApp = new App();
+  const rehearsalApp = testApp();
   const rehearsal = buildApp(rehearsalApp, rehearsalFrom(prod));
 
   it('prefixes stack names and skips the one-time GithubOidc scaffolding', () => {

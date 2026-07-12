@@ -6,8 +6,10 @@ import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import type * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import type * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
+import { edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
 
@@ -20,6 +22,8 @@ export interface ApiStackProps extends StackProps {
   table: dynamodb.ITable;
   /** Wired when the ingestion feature is on; without it, cold tickers answer 202 and never warm. */
   ingestFunction?: lambda.IFunction;
+  /** The artefacts bucket holding the search index copy; without it, search runs SEC-only. */
+  indexBucket?: s3.IBucket;
 }
 
 /**
@@ -34,7 +38,7 @@ export class ApiStack extends Stack {
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
-    const { config, table, ingestFunction } = props;
+    const { config, table, ingestFunction, indexBucket } = props;
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `plainsight-${config.envName}-api`,
@@ -46,7 +50,7 @@ export class ApiStack extends Stack {
     // format: request id, route, status, latency; never payloads, tokens, or
     // headers (backend spec §11).
     const accessLogs = new logs.LogGroup(this, 'AccessLogs', {
-      retention: logs.RetentionDays.ONE_MONTH,
+      retention: LOG_RETENTION,
       removalPolicy: RemovalPolicy.DESTROY,
     });
     new apigwv2.HttpStage(this, 'DefaultStage', {
@@ -120,6 +124,40 @@ export class ApiStack extends Stack {
     profile.fn.addToRolePolicy(readTickerPartitions);
     financials.fn.addToRolePolicy(readTickerPartitions);
 
+    // Ticker search (backend spec §8): no table access at all; the index
+    // copy in the artefacts bucket, with a direct SEC fetch as bootstrap and
+    // fallback (which is why it carries the contact parameter too).
+    const contactParameter = edgarContactParameterName(config.envName);
+    const search = new AppFunction(this, 'SearchTickers', {
+      entry: handlerEntry('searchTickers'),
+      description:
+        'GET /v1/search: in-memory ticker search over the EDGAR index (backend spec §8).',
+      timeout: Duration.seconds(10),
+      environment: {
+        EDGAR_CONTACT_PARAMETER: contactParameter,
+        ...(indexBucket === undefined
+          ? {}
+          : { INDEX_BUCKET: indexBucket.bucketName, INDEX_KEY: TICKER_INDEX_OBJECT_KEY }),
+      },
+    });
+    if (indexBucket !== undefined) {
+      // Exactly the one object, read and (bootstrap) write; no wildcard.
+      search.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadWriteTickerIndexObject',
+          actions: ['s3:GetObject', 's3:PutObject'],
+          resources: [indexBucket.arnForObjects(TICKER_INDEX_OBJECT_KEY)],
+        }),
+      );
+    }
+    search.fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'ReadEdgarContactParameter',
+        actions: ['ssm:GetParameter'],
+        resources: [this.formatArn({ service: 'ssm', resource: `parameter${contactParameter}` })],
+      }),
+    );
+
     this.httpApi.addRoutes({
       path: '/v1/companies/{ticker}',
       methods: [apigwv2.HttpMethod.GET],
@@ -129,6 +167,11 @@ export class ApiStack extends Stack {
       path: '/v1/companies/{ticker}/financials',
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration('FinancialsIntegration', financials.fn),
+    });
+    this.httpApi.addRoutes({
+      path: '/v1/search',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration('SearchIntegration', search.fn),
     });
 
     // The Phase 2 read routes are deliberately unauthenticated: they serve

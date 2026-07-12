@@ -6,6 +6,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LOG_RETENTION } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 
 /** Handler entries live in the api workspace; infra points at source and esbuild bundles at synth. */
@@ -54,7 +55,7 @@ export class AppFunction extends Construct {
     super(scope, id);
 
     this.logGroup = new logs.LogGroup(this, 'Logs', {
-      retention: logs.RetentionDays.ONE_MONTH,
+      retention: LOG_RETENTION,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 

@@ -3,14 +3,14 @@
 // diff; never regenerate it blindly. Prod keeps the Phase 2 feature flags off
 // until the phase goes live, so the snapshot builds from a features-on copy
 // of the prod config: the template pinned here is the one the flip deploys.
-import { App } from 'aws-cdk-lib';
+import { testApp } from './util';
 import { Template } from 'aws-cdk-lib/assertions';
 import { expect, it } from 'vitest';
 import { prod } from '../config/prod';
 import { buildApp } from '../lib/app';
 
 it('Data template matches the reviewed snapshot', () => {
-  const app = new App();
+  const app = testApp();
   const stacks = buildApp(app, {
     ...prod,
     features: { ...prod.features, api: true, ingestion: true },

@@ -6,7 +6,7 @@
 // cdk-nag 3 is a CDK policy validation plugin (not an aspect); validateScope()
 // is its direct test entry point and reports every violation with its
 // construct path.
-import { App } from 'aws-cdk-lib';
+import { testApp } from './util';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { describe, expect, it } from 'vitest';
 import { prod } from '../config/prod';
@@ -14,7 +14,7 @@ import type { EnvConfig } from '../config/types';
 import { buildApp } from '../lib/app';
 
 function nagReport(config: EnvConfig) {
-  const app = new App();
+  const app = testApp();
   buildApp(app, config);
   return new AwsSolutionsChecks(app, { verbose: true }).validateScope(app);
 }

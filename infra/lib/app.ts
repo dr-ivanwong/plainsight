@@ -71,8 +71,11 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
           table: data.table,
           // The cold-ticker fire needs the ingest function; without the
           // ingestion feature the route still answers 202, it just never
-          // warms (a coherent, deliberately reachable degraded state).
-          ...(ingestion === undefined ? {} : { ingestFunction: ingestion.ingestFunction }),
+          // warms (a coherent, deliberately reachable degraded state), and
+          // search runs SEC-only without the index bucket.
+          ...(ingestion === undefined
+            ? {}
+            : { ingestFunction: ingestion.ingestFunction, indexBucket: ingestion.indexBucket }),
         })
       : undefined;
 

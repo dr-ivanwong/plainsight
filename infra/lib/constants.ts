@@ -8,3 +8,22 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
  * is intentionally unused until the first Lambda lands.
  */
 export const LOG_RETENTION = RetentionDays.ONE_MONTH;
+
+/**
+ * The EDGAR contact address (SEC fair-access requirement) is configuration
+ * that must never be hardcoded in the repository (backend spec §9), so it
+ * lives in a plain SSM parameter created out-of-band and read at runtime by
+ * name, the same pattern as the pipeline's provider keys (cdk spec §1.4).
+ * Read by the ingest function and by ticker search's SEC fallback.
+ */
+export const edgarContactParameterName = (envName: string): string =>
+  `/app/${envName}/edgar/contact`;
+
+/**
+ * Where the search index copy lives in the artefacts bucket (backend spec
+ * §8): the SEC's company_tickers_exchange.json, verbatim. The weekly sweep
+ * refreshes it; the search Lambda reads it (and bootstraps it on first miss).
+ * The handlers receive it by environment variable so this constant is the
+ * single source.
+ */
+export const TICKER_INDEX_OBJECT_KEY = 'edgar/company_tickers_exchange.json';
