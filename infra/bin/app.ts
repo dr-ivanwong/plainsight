@@ -16,7 +16,18 @@ const requested: unknown = app.node.tryGetContext('env') ?? 'prod';
 if (requested !== 'prod' && requested !== 'rehearsal') {
   throw new Error(`Unknown --context env=${String(requested)}; expected 'prod' or 'rehearsal'.`);
 }
-const config = requested === 'rehearsal' ? rehearsalFrom(prod) : prod;
+let config = requested === 'rehearsal' ? rehearsalFrom(prod) : prod;
+
+// Verification overlay: `--context features=all` synthesises every
+// feature-gated stack, so CI bundles every handler from source before any
+// flag flips in prod (the structural tests skip bundling deliberately).
+// Never deployed: it exists for `cdk synth` in the verify job.
+if (app.node.tryGetContext('features') === 'all') {
+  config = {
+    ...config,
+    features: { api: true, ingestion: true, extraction: true, sync: true, auth: true },
+  };
+}
 
 // Phase 0 synthesises exactly three stacks and zero compute (spec §1.2, §3).
 // Later phases attach in lib/app.ts, gated by config.features, in this order:

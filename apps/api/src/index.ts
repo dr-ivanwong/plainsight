@@ -38,7 +38,17 @@ export {
   parseTickerListings,
   type TickerListing
 } from './edgar/client.js';
-export { IndexLoader, TICKER_INDEX_KEY, type IndexObjectStore } from './search/load.js';
+export {
+  IndexLoader,
+  serialiseTickerIndex,
+  TICKER_INDEX_KEY,
+  type IndexObjectStore
+} from './search/load.js';
+export {
+  runSweepDispatch,
+  type SweepDispatcherDeps,
+  type SweepDispatchOutcome
+} from './handlers/sweepDispatcher.js';
 export {
   decodePageToken,
   encodePageToken,

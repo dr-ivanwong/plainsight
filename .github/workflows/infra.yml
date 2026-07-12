@@ -55,6 +55,8 @@ jobs:
         run: pnpm -C infra exec cdk synth --quiet
       - name: Synth (rehearsal overlay)
         run: pnpm -C infra exec cdk synth --quiet --context env=rehearsal
+      - name: Synth (features-on overlay, bundles every handler)
+        run: pnpm -C infra exec cdk synth --quiet --context features=all
 
   # The diff is the review artefact (cdk spec section 7). Needs credentials to
   # compare against the deployed state, so it activates with the OIDC role.

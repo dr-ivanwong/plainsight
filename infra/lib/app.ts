@@ -60,7 +60,12 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
 
   const ingestion =
     config.features.ingestion && data !== undefined
-      ? new IngestionStack(app, `${prefix}Ingestion`, { env, config, table: data.table })
+      ? new IngestionStack(app, `${prefix}Ingestion`, {
+          env,
+          config,
+          table: data.table,
+          alertTopic: foundation.alertTopic,
+        })
       : undefined;
 
   const api =

@@ -1,11 +1,13 @@
-import { CfnOutput, Stack, Validations, type StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack, Validations, type StackProps } from 'aws-cdk-lib';
 import * as budgets from 'aws-cdk-lib/aws-budgets';
 import * as ce from 'aws-cdk-lib/aws-ce';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
+import { AppFunction, handlerEntry } from '../constructs/app-function';
 
 /**
  * AWS Budgets are denominated in USD; the owner's budget is set in AUD
@@ -86,10 +88,91 @@ export class FoundationStack extends Stack {
         'not sensitive data.',
     });
 
+    // --- The budget kill switch (spec §8; backend spec §10) ----------------
+    // Gated with the first phase that can spend meaningfully: prod keeps the
+    // Phase 0/1 zero-compute promise until a feature flips. The flipper
+    // subscribes to a dedicated topic that only the kill-threshold budget
+    // notification publishes to, so delivery IS the signal and the handler
+    // parses nothing.
+    const spendCapable =
+      config.features.api || config.features.ingestion || config.features.extraction;
+    let killSwitchTopicPolicy: sns.TopicPolicy | undefined;
+    let killSwitchTopic: sns.Topic | undefined;
+    if (spendCapable) {
+      killSwitchTopic = new sns.Topic(this, 'KillSwitchTopic', {
+        topicName: `plainsight-${config.envName}-kill-switch`,
+        displayName: `Plainsight ${config.envName} budget kill switch`,
+      });
+      killSwitchTopicPolicy = new sns.TopicPolicy(this, 'KillSwitchTopicPolicy', {
+        topics: [killSwitchTopic],
+        enforceSSL: true,
+      });
+      killSwitchTopicPolicy.document.addStatements(
+        new iam.PolicyStatement({
+          sid: 'AllowBudgetsPublish',
+          effect: iam.Effect.ALLOW,
+          principals: [new iam.ServicePrincipal('budgets.amazonaws.com')],
+          actions: ['sns:Publish'],
+          resources: [killSwitchTopic.topicArn],
+          conditions: { StringEquals: { 'aws:SourceAccount': config.account } },
+        }),
+      );
+      Validations.of(killSwitchTopic).acknowledge({
+        id: 'AwsSolutions-SNS2',
+        reason:
+          'No server-side encryption: Budgets cannot use the AWS-managed SNS key (delivery ' +
+          'would silently fail), a customer-managed key is on the spec §8 not-list (ADR 0004), ' +
+          'and the payload is a budget threshold notification.',
+      });
+
+      const extractionFlagParameter = `/app/${config.envName}/features/extraction`;
+      const flipper = new AppFunction(this, 'KillSwitchFlipper', {
+        entry: handlerEntry('killSwitchFlipper'),
+        description:
+          'Flips the runtime extraction flag to false at the budget kill threshold (cdk spec §8).',
+        timeout: Duration.seconds(30),
+        memorySize: 128,
+        environment: { EXTRACTION_FLAG_PARAMETER: extractionFlagParameter },
+      });
+      flipper.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'FlipExtractionFlag',
+          actions: ['ssm:PutParameter'],
+          resources: [
+            this.formatArn({ service: 'ssm', resource: `parameter${extractionFlagParameter}` }),
+          ],
+        }),
+      );
+      killSwitchTopic.addSubscription(new snsSubscriptions.LambdaSubscription(flipper.fn));
+    }
+
     // --- Monthly cost budget (spec §8) ------------------------------------
     // L1 CfnBudget: aws-cdk-lib ships no L2 for AWS Budgets (spec §5 rule:
     // L1 only where no L2 exists).
     const monthlyUsd = Math.round(config.budgets.monthlyAud * AUD_TO_USD_BUDGET_RATE * 100) / 100;
+    // Staged notifications at 50/80/100% of actual spend to the alert topic
+    // (spec §8), plus the kill-switch notification at killSwitchAt percent to
+    // its own topic once anything can spend.
+    const notificationsWithSubscribers = [50, 80, 100].map((threshold) => ({
+      notification: {
+        notificationType: 'ACTUAL',
+        comparisonOperator: 'GREATER_THAN',
+        threshold,
+        thresholdType: 'PERCENTAGE',
+      },
+      subscribers: [{ subscriptionType: 'SNS', address: this.alertTopic.topicArn }],
+    }));
+    if (killSwitchTopic !== undefined) {
+      notificationsWithSubscribers.push({
+        notification: {
+          notificationType: 'ACTUAL',
+          comparisonOperator: 'GREATER_THAN',
+          threshold: config.budgets.killSwitchAt,
+          thresholdType: 'PERCENTAGE',
+        },
+        subscribers: [{ subscriptionType: 'SNS', address: killSwitchTopic.topicArn }],
+      });
+    }
     const monthlyBudget = new budgets.CfnBudget(this, 'MonthlyCostBudget', {
       budget: {
         budgetName: `plainsight-${config.envName}-monthly`,
@@ -99,22 +182,11 @@ export class FoundationStack extends Stack {
         // early, never late.
         budgetLimit: { amount: monthlyUsd, unit: 'USD' },
       },
-      // Staged notifications at 50/80/100% of actual spend (spec §8). In
-      // Phase 2 the killSwitchFlipper Lambda subscribes to the topic and acts
-      // at config.budgets.killSwitchAt percent; the notifications themselves
-      // do not change.
-      notificationsWithSubscribers: [50, 80, 100].map((threshold) => ({
-        notification: {
-          notificationType: 'ACTUAL',
-          comparisonOperator: 'GREATER_THAN',
-          threshold,
-          thresholdType: 'PERCENTAGE',
-        },
-        subscribers: [{ subscriptionType: 'SNS', address: this.alertTopic.topicArn }],
-      })),
+      notificationsWithSubscribers,
     });
-    // Budgets validates it can publish at create time; the grant must land first.
+    // Budgets validates it can publish at create time; the grants must land first.
     monthlyBudget.node.addDependency(alertTopicPolicy);
+    if (killSwitchTopicPolicy !== undefined) monthlyBudget.node.addDependency(killSwitchTopicPolicy);
 
     // --- Cost anomaly detection (spec §8) ----------------------------------
     // L1s: aws-cdk-lib ships no L2 for Cost Explorer anomaly detection.

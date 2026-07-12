@@ -16,6 +16,19 @@ const TICKER_INDEX_TTL_MS = 24 * 60 * 60 * 1000;
 export const companyfactsUrl = (cik: number): string =>
   `https://data.sec.gov/api/xbrl/companyfacts/CIK${String(cik).padStart(10, '0')}.json`;
 
+export const submissionsUrl = (cik: number): string =>
+  `https://data.sec.gov/submissions/CIK${String(cik).padStart(10, '0')}.json`;
+
+/** The slice of the submissions feed the sweep's change detector reads. */
+const submissionsSchema = z.object({
+  filings: z.object({
+    recent: z.object({
+      accessionNumber: z.array(z.string()),
+      form: z.array(z.string())
+    })
+  })
+});
+
 /** company_tickers_exchange.json: columnar rows of [cik, name, ticker, exchange]. */
 const tickerIndexSchema = z.object({
   fields: z.tuple([z.literal('cik'), z.literal('name'), z.literal('ticker'), z.literal('exchange')]),
@@ -125,5 +138,22 @@ export class EdgarClient {
   /** Every listing, for the search index's SEC fallback (backend spec §8). */
   async fetchTickerListings(): Promise<TickerListing[]> {
     return [...(await this.ensureIndex()).values()];
+  }
+
+  /**
+   * The newest annual-report accession (10-K or 10-K/A) in the company's
+   * submissions feed: the weekly sweep's change detector (backend spec §5).
+   * The feed is a fraction of companyfacts' size, so an unchanged ticker
+   * costs one small request and no ingest work.
+   */
+  async latestAnnualAccession(cik: number): Promise<string | undefined> {
+    const response = await this.request(submissionsUrl(cik));
+    const submissions = submissionsSchema.parse(await response.json());
+    const { accessionNumber, form } = submissions.filings.recent;
+    // Recent filings arrive newest first.
+    for (let index = 0; index < form.length; index += 1) {
+      if (form[index] === '10-K' || form[index] === '10-K/A') return accessionNumber[index];
+    }
+    return undefined;
   }
 }

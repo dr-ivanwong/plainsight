@@ -11,7 +11,11 @@ import { TableStore } from '../db/table.js';
 import { EdgarClient } from '../edgar/client.js';
 import { runIngest, type IngestDeps, type IngestOutcome } from '../ingest/core.js';
 
-const eventSchema = z.object({ ticker: tickerSchema });
+const eventSchema = z.object({
+  ticker: tickerSchema,
+  /** 'sweep' turns on the submissions change detector (backend spec §5). */
+  mode: z.enum(['on_demand', 'sweep']).optional()
+});
 
 let deps: IngestDeps | undefined;
 
@@ -27,9 +31,9 @@ async function buildDeps(): Promise<IngestDeps> {
 }
 
 export const handler = async (event: unknown): Promise<IngestOutcome> => {
-  const { ticker } = eventSchema.parse(event);
+  const { ticker, mode } = eventSchema.parse(event);
   deps ??= await buildDeps();
-  const outcome = await runIngest(deps, ticker);
+  const outcome = await runIngest(deps, ticker, mode ?? 'on_demand');
   console.log(JSON.stringify({ route: 'ingestTicker', ...outcome }));
   return outcome;
 };

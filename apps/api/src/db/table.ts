@@ -118,8 +118,19 @@ export interface ProfileWrite {
   latestFyEndDate: string;
 }
 
+/** What the sweep dispatcher needs from storage. */
+export interface SweepStore {
+  /** Every watched ticker, from the sparse watch index (backend spec §3). */
+  listWatchedTickers(): Promise<string[]>;
+}
+
 /** What the ingest path needs from storage; the core takes this, tests fake it. */
 export interface IngestStore {
+  /**
+   * The profile item's operational fields, for the sweep's change detector.
+   * Undefined when no completed profile exists (lock stubs included).
+   */
+  getProfileMeta(ticker: string): Promise<{ lastFilingSeen?: string | undefined } | undefined>;
   /**
    * The per-ticker ingest lock (backend spec §5): a conditional attribute on
    * the profile item with a lease. Returns false when another ingest holds an
@@ -133,7 +144,7 @@ export interface IngestStore {
   completeProfile(profile: ProfileWrite, nowIso: string): Promise<void>;
 }
 
-export class TableStore extends TableReadStore implements IngestStore {
+export class TableStore extends TableReadStore implements IngestStore, SweepStore {
   constructor(
     private readonly writeClient: DynamoDBDocumentClient,
     private readonly writeTableName: string
@@ -150,6 +161,43 @@ export class TableStore extends TableReadStore implements IngestStore {
       }),
       tableName
     );
+  }
+
+  async getProfileMeta(
+    ticker: string
+  ): Promise<{ lastFilingSeen?: string | undefined } | undefined> {
+    const result = await this.writeClient.send(
+      new GetCommand({
+        TableName: this.writeTableName,
+        Key: { PK: tickerPartition(ticker), SK: PROFILE_SORT_KEY }
+      })
+    );
+    const item = result.Item;
+    // A lock stub (no name yet) is not a profile; the sweep treats it as cold.
+    if (item === undefined || typeof item['name'] !== 'string') return undefined;
+    const lastFilingSeen = item['lastFilingSeen'];
+    return { lastFilingSeen: typeof lastFilingSeen === 'string' ? lastFilingSeen : undefined };
+  }
+
+  async listWatchedTickers(): Promise<string[]> {
+    const tickers: string[] = [];
+    let startKey: Record<string, unknown> | undefined;
+    do {
+      const result = await this.writeClient.send(
+        new QueryCommand({
+          TableName: this.writeTableName,
+          IndexName: process.env['WATCH_INDEX_NAME'] ?? 'watchedTickers',
+          KeyConditionExpression: 'watchPartition = :watch',
+          ExpressionAttributeValues: { ':watch': WATCH_PARTITION_VALUE },
+          ...(startKey === undefined ? {} : { ExclusiveStartKey: startKey })
+        })
+      );
+      for (const item of result.Items ?? []) {
+        if (typeof item['ticker'] === 'string') tickers.push(item['ticker']);
+      }
+      startKey = result.LastEvaluatedKey;
+    } while (startKey !== undefined);
+    return tickers;
   }
 
   async acquireIngestLock(ticker: string, nowIso: string, untilIso: string): Promise<boolean> {

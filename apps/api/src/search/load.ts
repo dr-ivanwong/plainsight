@@ -11,6 +11,22 @@ import { parseTickerListings } from '../edgar/client.js';
 export const TICKER_INDEX_KEY = 'edgar/company_tickers_exchange.json';
 const RELOAD_AFTER_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * The SEC index shape, verbatim, so the weekly sweep's refresh and the
+ * loader's bootstrap write produce byte-compatible objects.
+ */
+export function serialiseTickerIndex(listings: readonly TickerListing[]): string {
+  return JSON.stringify({
+    fields: ['cik', 'name', 'ticker', 'exchange'],
+    data: listings.map((listing) => [
+      listing.cik,
+      listing.name,
+      listing.ticker,
+      listing.exchange ?? null
+    ])
+  });
+}
+
 /** The S3 seam, narrow so tests fake it: verbatim document bytes in and out. */
 export interface IndexObjectStore {
   get(): Promise<string | undefined>;
@@ -55,19 +71,7 @@ export class IndexLoader {
     this.cache = { listings, loadedAt: this.deps.now() };
     if (this.deps.objectStore !== undefined) {
       try {
-        // Verbatim SEC shape, so the sweep's weekly refresh and this
-        // bootstrap write produce byte-compatible objects.
-        await this.deps.objectStore.put(
-          JSON.stringify({
-            fields: ['cik', 'name', 'ticker', 'exchange'],
-            data: listings.map((listing) => [
-              listing.cik,
-              listing.name,
-              listing.ticker,
-              listing.exchange ?? null
-            ])
-          })
-        );
+        await this.deps.objectStore.put(serialiseTickerIndex(listings));
       } catch (error) {
         this.deps.log({
           route: 'searchTickers',

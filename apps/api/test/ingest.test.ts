@@ -204,6 +204,7 @@ function syntheticCompanyfacts(): unknown {
 
 interface FakeStoreState {
   lockHeld?: boolean;
+  meta?: { lastFilingSeen?: string };
   rows: unknown[];
   quarantine: QuarantineEntry[];
   profile: ProfileWrite | undefined;
@@ -213,6 +214,7 @@ interface FakeStoreState {
 
 function fakeIngestStore(state: FakeStoreState): IngestStore {
   return {
+    getProfileMeta: async () => state.meta,
     acquireIngestLock: async () => {
       if (state.lockHeld) return false;
       state.lockAcquired += 1;
@@ -233,11 +235,23 @@ function fakeIngestStore(state: FakeStoreState): IngestStore {
   };
 }
 
-function fakeClient(document: unknown): EdgarClient {
-  const fetchImpl = async (input: string | URL) =>
-    String(input).includes('companyfacts')
-      ? jsonResponse(document)
-      : jsonResponse(TICKER_INDEX_BODY);
+const SUBMISSIONS_BODY = {
+  filings: {
+    recent: {
+      accessionNumber: ['acc-q3', 'acc-new-annual', 'acc-old-annual'],
+      form: ['10-Q', '10-K', '10-K']
+    }
+  }
+};
+
+function fakeClient(document: unknown, requestLog?: string[]): EdgarClient {
+  const fetchImpl = async (input: string | URL) => {
+    const url = String(input);
+    requestLog?.push(url);
+    if (url.includes('companyfacts')) return jsonResponse(document);
+    if (url.includes('submissions')) return jsonResponse(SUBMISSIONS_BODY);
+    return jsonResponse(TICKER_INDEX_BODY);
+  };
   return new EdgarClient({
     contact: 'owner@example.com',
     fetchImpl: fetchImpl as unknown as typeof fetch,
@@ -245,8 +259,8 @@ function fakeClient(document: unknown): EdgarClient {
   });
 }
 
-const depsWith = (state: FakeStoreState, document: unknown): IngestDeps => ({
-  client: fakeClient(document),
+const depsWith = (state: FakeStoreState, document: unknown, requestLog?: string[]): IngestDeps => ({
+  client: fakeClient(document, requestLog),
   store: fakeIngestStore(state),
   now: () => new Date('2026-07-12T10:00:00Z')
 });
@@ -329,6 +343,62 @@ describe('the ingest core', () => {
     expect(state.rows).toEqual([]);
     expect(state.profile).toBeUndefined();
     expect(state.lockReleased).toBe(1);
+  });
+
+  it('sweep mode: an unchanged ticker does no ingest work at all', async () => {
+    const state: FakeStoreState = {
+      meta: { lastFilingSeen: 'acc-new-annual' },
+      rows: [],
+      quarantine: [],
+      profile: undefined,
+      lockAcquired: 0,
+      lockReleased: 0
+    };
+    const requestLog: string[] = [];
+    const outcome = await runIngest(
+      depsWith(state, syntheticCompanyfacts(), requestLog),
+      'AAPL',
+      'sweep'
+    );
+    expect(outcome).toEqual({ outcome: 'unchanged', ticker: 'AAPL' });
+    expect(requestLog.some((url) => url.includes('companyfacts'))).toBe(false);
+    expect(state.rows).toEqual([]);
+    expect(state.lockReleased).toBe(1);
+  });
+
+  it('sweep mode: a new annual filing triggers the full ingest and settles the marker', async () => {
+    const state: FakeStoreState = {
+      meta: { lastFilingSeen: 'acc-old-annual' },
+      rows: [],
+      quarantine: [],
+      profile: undefined,
+      lockAcquired: 0,
+      lockReleased: 0
+    };
+    const outcome = await runIngest(depsWith(state, syntheticCompanyfacts()), 'AAPL', 'sweep');
+    expect(outcome).toMatchObject({ outcome: 'ingested', servedYears: 1 });
+    // The stored marker becomes what next week's detector will compare
+    // against: the submissions feed's newest annual accession.
+    expect(state.profile?.lastFilingSeen).toBe('acc-new-annual');
+  });
+
+  it('sweep mode: a watched ticker without a completed profile ingests without a submissions check', async () => {
+    const state: FakeStoreState = {
+      rows: [],
+      quarantine: [],
+      profile: undefined,
+      lockAcquired: 0,
+      lockReleased: 0
+    };
+    const requestLog: string[] = [];
+    const outcome = await runIngest(
+      depsWith(state, syntheticCompanyfacts(), requestLog),
+      'AAPL',
+      'sweep'
+    );
+    expect(outcome).toMatchObject({ outcome: 'ingested' });
+    expect(requestLog.some((url) => url.includes('submissions'))).toBe(false);
+    expect(state.profile?.lastFilingSeen).toBe('acc-1');
   });
 
   it('releases the lock when the fetch fails, and lets the error surface', async () => {

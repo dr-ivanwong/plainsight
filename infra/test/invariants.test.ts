@@ -44,10 +44,12 @@ const ingestion = Template.fromStack(phase2.ingestion);
 /** Every template under assertion, the feature-gated Phase 2 stacks included. */
 const allTemplates: Record<string, Template> = {
   ...templates,
+  FoundationFeaturesOn: Template.fromStack(phase2.foundation),
   DataFeaturesOn: data,
   ApiFeaturesOn: api,
   IngestionFeaturesOn: ingestion,
 };
+const foundationFeaturesOn = allTemplates['FoundationFeaturesOn'] as Template;
 
 /**
  * The one resource of its kind. Throws a plain Error (not an expect) because
@@ -127,16 +129,42 @@ describe('IAM wildcards (spec §6: no Action or Resource of literal *)', () => {
 
   /**
    * The one documented CDK-managed exception (spec §6): active tracing adds
-   * the X-Ray daemon-write statement on Resource '*', because those two
-   * actions support no resource-level scoping. Recognised by exact action
-   * pair so nothing else can shelter under it.
+   * X-Ray daemon statements on Resource '*', because those actions support
+   * no resource-level scoping. Recognised as a non-empty subset of the
+   * closed X-Ray action set (Lambda tracing grants the two writes; Step
+   * Functions tracing adds the two sampling reads), so nothing else can
+   * shelter under it.
    */
-  const XRAY_WRITE_ACTIONS = ['xray:PutTraceSegments', 'xray:PutTelemetryRecords'];
+  const XRAY_ACTIONS = new Set([
+    'xray:PutTraceSegments',
+    'xray:PutTelemetryRecords',
+    'xray:GetSamplingRules',
+    'xray:GetSamplingTargets',
+  ]);
   const isXrayDaemonStatement = (statement: { Action?: unknown }): boolean => {
     const actions = [statement.Action].flat();
+    return actions.length > 0 && actions.every((action) => XRAY_ACTIONS.has(action as string));
+  };
+
+  /**
+   * The other documented exception: Step Functions logging works through the
+   * CloudWatch Logs log-delivery APIs, which support no resource scoping
+   * (the log group is chosen by the delivery configuration, not the policy).
+   */
+  const LOG_DELIVERY_ACTIONS = new Set([
+    'logs:CreateLogDelivery',
+    'logs:GetLogDelivery',
+    'logs:UpdateLogDelivery',
+    'logs:DeleteLogDelivery',
+    'logs:ListLogDeliveries',
+    'logs:PutResourcePolicy',
+    'logs:DescribeResourcePolicies',
+    'logs:DescribeLogGroups',
+  ]);
+  const isLogDeliveryStatement = (statement: { Action?: unknown }): boolean => {
+    const actions = [statement.Action].flat();
     return (
-      actions.length === XRAY_WRITE_ACTIONS.length &&
-      XRAY_WRITE_ACTIONS.every((action) => actions.includes(action))
+      actions.length > 0 && actions.every((action) => LOG_DELIVERY_ACTIONS.has(action as string))
     );
   };
 
@@ -166,7 +194,12 @@ describe('IAM wildcards (spec §6: no Action or Resource of literal *)', () => {
             for (const field of ['Action', 'Resource'] as const) {
               const values: unknown[] = [statement[field]].flat();
               if (!values.includes('*')) continue;
-              if (field === 'Resource' && isXrayDaemonStatement(statement)) continue;
+              if (
+                field === 'Resource' &&
+                (isXrayDaemonStatement(statement) || isLogDeliveryStatement(statement))
+              ) {
+                continue;
+              }
               if (!WILDCARD_ALLOWLIST.has(`${stackName}/${logicalId}`)) {
                 violations.push(`${stackName}/${logicalId}: ${field} contains '*'`);
               }
@@ -577,24 +610,30 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
 });
 
 describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)', () => {
-  const fn: any = only(ingestion.findResources('AWS::Lambda::Function'));
+  const functions = Object.values(ingestion.findResources('AWS::Lambda::Function')) as any[];
+  const ingestFn: any = functions.find((fn) => fn.Properties.Timeout === 120);
+  const dispatcherFn: any = functions.find((fn) => fn.Properties.Timeout === 60);
+  const policies = Object.values(ingestion.findResources('AWS::IAM::Policy')) as any[];
+  const statementsWithSid = (sid: string): any =>
+    policies
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
+      .find((statement) => statement.Sid === sid);
 
   it('the ingest function carries the pinned sizing and X-Ray tracing', () => {
-    expect(fn.Properties.Timeout).toBe(120);
-    expect(fn.Properties.MemorySize).toBe(512);
-    expect(fn.Properties.Architectures).toEqual(['arm64']);
-    expect(fn.Properties.Runtime).toBe('nodejs22.x');
-    expect(fn.Properties.TracingConfig).toEqual({ Mode: 'Active' });
-    expect(fn.Properties.Environment.Variables.TABLE_NAME).toBeDefined();
-    expect(fn.Properties.Environment.Variables.EDGAR_CONTACT_PARAMETER).toBe(
+    expect(functions).toHaveLength(2);
+    expect(ingestFn).toBeDefined();
+    expect(ingestFn.Properties.MemorySize).toBe(512);
+    expect(ingestFn.Properties.Architectures).toEqual(['arm64']);
+    expect(ingestFn.Properties.Runtime).toBe('nodejs22.x');
+    expect(ingestFn.Properties.TracingConfig).toEqual({ Mode: 'Active' });
+    expect(ingestFn.Properties.Environment.Variables.TABLE_NAME).toBeDefined();
+    expect(ingestFn.Properties.Environment.Variables.EDGAR_CONTACT_PARAMETER).toBe(
       '/app/prod/edgar/contact',
     );
   });
 
   it('writes only ticker partitions, never deletes, and reads one SSM parameter', () => {
-    const policy: any = only(ingestion.findResources('AWS::IAM::Policy'));
-    const statements: any[] = policy.Properties.PolicyDocument.Statement;
-    const writes = statements.find((statement) => statement.Sid === 'WriteTickerPartitions');
+    const writes = statementsWithSid('WriteTickerPartitions');
     expect(writes.Action).toEqual([
       'dynamodb:PutItem',
       'dynamodb:UpdateItem',
@@ -603,12 +642,57 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     expect(writes.Condition).toEqual({
       'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },
     });
-    const allActions = statements.flatMap((statement) => [statement.Action].flat());
+    const allActions = policies
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
+      .flatMap((statement) => [statement.Action].flat());
     expect(allActions).not.toContain('dynamodb:DeleteItem');
     expect(allActions).not.toContain('dynamodb:Scan');
-    const ssmRead = statements.find((statement) => statement.Sid === 'ReadEdgarContactParameter');
+    const ssmRead = statementsWithSid('ReadEdgarContactParameter');
     expect(ssmRead.Action).toBe('ssm:GetParameter');
     expect(JSON.stringify(ssmRead.Resource)).toContain('parameter/app/prod/edgar/contact');
+  });
+
+  it('the dispatcher lists watched tickers, refreshes one object, and starts one state machine', () => {
+    expect(dispatcherFn).toBeDefined();
+    expect(dispatcherFn.Properties.Environment.Variables.STATE_MACHINE_ARN).toBeDefined();
+    expect(dispatcherFn.Properties.Environment.Variables.WATCH_INDEX_NAME).toBe('watchedTickers');
+    const query = statementsWithSid('QueryWatchedTickers');
+    expect(query.Action).toBe('dynamodb:Query');
+    expect(JSON.stringify(query.Resource)).toContain('/index/watchedTickers');
+    expect(query.Condition).toEqual({
+      'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['WATCH'] },
+    });
+    const refresh = statementsWithSid('RefreshTickerIndexObject');
+    expect(refresh.Action).toBe('s3:PutObject');
+    expect(JSON.stringify(refresh.Resource)).toContain('edgar/company_tickers_exchange.json');
+    const starts = policies
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
+      .filter((statement) => [statement.Action].flat().includes('states:StartExecution'));
+    expect(starts).toHaveLength(1);
+  });
+
+  it('the sweep map runs at concurrency 2 in sweep mode with a per-item catch to the DLQ', () => {
+    const machine: any = only(ingestion.findResources('AWS::StepFunctions::StateMachine'));
+    // The definition is a CFN join; stringifying escapes its inner quotes.
+    const definition = JSON.stringify(machine.Properties.DefinitionString);
+    expect(definition).toContain('\\"MaxConcurrency\\":2');
+    expect(definition).toContain('\\"mode\\":\\"sweep\\"');
+    expect(definition).toContain('SendToDlq');
+    expect(machine.Properties.TracingConfiguration).toEqual({ Enabled: true });
+    expect(machine.Properties.LoggingConfiguration.Level).toBe('ALL');
+  });
+
+  it('runs weekly and alarms on DLQ depth and sweep failure, to the alert topic', () => {
+    const rule: any = only(ingestion.findResources('AWS::Events::Rule'));
+    expect(rule.Properties.ScheduleExpression).toBe('cron(0 19 ? * SUN *)');
+    const queue: any = only(ingestion.findResources('AWS::SQS::Queue'));
+    expect(queue.Properties.MessageRetentionPeriod).toBe(14 * 24 * 60 * 60);
+    const alarms = Object.values(ingestion.findResources('AWS::CloudWatch::Alarm')) as any[];
+    expect(alarms).toHaveLength(2);
+    for (const alarm of alarms) {
+      expect(alarm.Properties.AlarmActions).toHaveLength(1);
+      expect(alarm.Properties.Threshold).toBe(1);
+    }
   });
 
   it('the financials route can fire it, and only it', () => {
@@ -632,6 +716,44 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     for (const fnResource of Object.values(template.findResources('AWS::Lambda::Function')) as any[]) {
       expect(fnResource.Properties.Environment.Variables.INGEST_FUNCTION_NAME).toBeUndefined();
     }
+  });
+});
+
+describe('the budget kill switch (cdk spec §8; backend spec §10)', () => {
+  it('prod with the flags off keeps Foundation compute-free and three-notification', () => {
+    expect(Object.keys(foundation.findResources('AWS::Lambda::Function'))).toEqual([]);
+    const budget: any = only(foundation.findResources('AWS::Budgets::Budget'));
+    expect(budget.Properties.NotificationsWithSubscribers).toHaveLength(3);
+  });
+
+  it('a spend-capable build wires the flipper to its own topic at the kill threshold', () => {
+    const flipper: any = only(foundationFeaturesOn.findResources('AWS::Lambda::Function'));
+    expect(flipper.Properties.Timeout).toBe(30);
+    expect(flipper.Properties.MemorySize).toBe(128);
+    expect(flipper.Properties.Environment.Variables.EXTRACTION_FLAG_PARAMETER).toBe(
+      '/app/prod/features/extraction',
+    );
+
+    const budget: any = only(foundationFeaturesOn.findResources('AWS::Budgets::Budget'));
+    const notifications: any[] = budget.Properties.NotificationsWithSubscribers;
+    expect(notifications).toHaveLength(4);
+    expect(notifications.map((entry) => entry.Notification.Threshold)).toEqual([
+      50,
+      80,
+      100,
+      prod.budgets.killSwitchAt,
+    ]);
+    // The kill notification publishes to a different topic than the alerts.
+    const alertAddress = JSON.stringify(notifications[0].Subscribers[0].Address);
+    const killAddress = JSON.stringify(notifications[3].Subscribers[0].Address);
+    expect(killAddress).not.toBe(alertAddress);
+
+    const policies = Object.values(foundationFeaturesOn.findResources('AWS::IAM::Policy')) as any[];
+    const flip = policies
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
+      .find((statement) => statement.Sid === 'FlipExtractionFlag');
+    expect(flip.Action).toBe('ssm:PutParameter');
+    expect(JSON.stringify(flip.Resource)).toContain('parameter/app/prod/features/extraction');
   });
 });
 

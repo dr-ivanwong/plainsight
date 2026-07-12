@@ -21,10 +21,15 @@ export interface IngestDeps {
 
 export type IngestOutcome =
   | { outcome: 'ingested'; ticker: string; servedYears: number; quarantinedYears: number }
+  | { outcome: 'unchanged'; ticker: string }
   | { outcome: 'lock_held'; ticker: string }
   | { outcome: 'unknown_ticker'; ticker: string };
 
-export async function runIngest(deps: IngestDeps, ticker: string): Promise<IngestOutcome> {
+export async function runIngest(
+  deps: IngestDeps,
+  ticker: string,
+  mode: 'on_demand' | 'sweep' = 'on_demand'
+): Promise<IngestOutcome> {
   const nowIso = deps.now().toISOString();
   const untilIso = new Date(deps.now().getTime() + INGEST_LOCK_LEASE_MS).toISOString();
 
@@ -38,6 +43,19 @@ export async function runIngest(deps: IngestDeps, ticker: string): Promise<Inges
       // client's retry loop caps out against a persistent 202; search-first
       // flows make this a typo path, not a product path.
       return { outcome: 'unknown_ticker', ticker };
+    }
+
+    let submissionsLatest: string | undefined;
+    if (mode === 'sweep') {
+      // Only tickers whose newest annual filing changed do any work (backend
+      // spec §5): one small submissions request against the stored marker.
+      const meta = await deps.store.getProfileMeta(ticker);
+      if (meta?.lastFilingSeen !== undefined) {
+        submissionsLatest = await deps.client.latestAnnualAccession(listing.cik);
+        if (submissionsLatest !== undefined && submissionsLatest === meta.lastFilingSeen) {
+          return { outcome: 'unchanged', ticker };
+        }
+      }
     }
 
     const document = await deps.client.fetchCompanyfacts(listing.cik);
@@ -67,11 +85,16 @@ export async function runIngest(deps: IngestDeps, ticker: string): Promise<Inges
 
     const latest = served.at(-1);
     if (latest !== undefined) {
-      const primaryAccession =
+      const mappedAccession =
         Object.values(latest.items)
           .map((item) => item.accession)
           .sort()
           .at(-1) ?? 'none';
+      // Prefer the submissions feed's newest annual accession when the sweep
+      // fetched it: it is exactly what next week's change detector compares
+      // against, so an amendment the mapping never selects (a 10-K/A whose
+      // periods the originals already cover) settles instead of re-ingesting
+      // weekly forever.
       await deps.store.completeProfile(
         {
           ticker,
@@ -79,7 +102,7 @@ export async function runIngest(deps: IngestDeps, ticker: string): Promise<Inges
           cik: listing.cik,
           exchange: listing.exchange,
           currency: 'USD',
-          lastFilingSeen: primaryAccession,
+          lastFilingSeen: submissionsLatest ?? mappedAccession,
           latestFyEndDate: latest.endDate
         },
         recordedAt
