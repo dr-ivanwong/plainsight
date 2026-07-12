@@ -3,6 +3,25 @@
 exports[`Data template matches the reviewed snapshot 1`] = `
 {
   "Outputs": {
+    "ExportsOutputFnGetAttTableCD117FA1ArnE2C8C204": {
+      "Export": {
+        "Name": "Data:ExportsOutputFnGetAttTableCD117FA1ArnE2C8C204",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "TableCD117FA1",
+          "Arn",
+        ],
+      },
+    },
+    "ExportsOutputRefTableCD117FA1D18A8047": {
+      "Export": {
+        "Name": "Data:ExportsOutputRefTableCD117FA1D18A8047",
+      },
+      "Value": {
+        "Ref": "TableCD117FA1",
+      },
+    },
     "TableArn": {
       "Description": "Table ARN, for the runbook and for wiring checks.",
       "Value": {

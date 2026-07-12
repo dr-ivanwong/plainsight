@@ -1,5 +1,6 @@
 import { Tags, type App } from 'aws-cdk-lib';
 import type { EnvConfig } from '../config/types';
+import { ApiStack } from './stacks/api';
 import { DataStack } from './stacks/data';
 import { FoundationStack } from './stacks/foundation';
 import { GithubOidcStack } from './stacks/github-oidc';
@@ -12,6 +13,8 @@ export interface PlainsightStacks {
   staticSite: StaticSiteStack;
   /** Absent until a consumer of the table is switched on (spec §1.2 feature gating). */
   data: DataStack | undefined;
+  /** Absent until features.api flips (spec §1.2). */
+  api: ApiStack | undefined;
 }
 
 /**
@@ -52,5 +55,10 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
       ? new DataStack(app, `${prefix}Data`, { env, config })
       : undefined;
 
-  return { foundation, githubOidc, staticSite, data };
+  const api =
+    config.features.api && data !== undefined
+      ? new ApiStack(app, `${prefix}Api`, { env, config, table: data.table })
+      : undefined;
+
+  return { foundation, githubOidc, staticSite, data, api };
 }

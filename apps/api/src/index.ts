@@ -18,3 +18,11 @@ export {
   type MappedItem,
   type MappedYear
 } from './edgar/mapping.js';
+export {
+  PROFILE_SORT_KEY,
+  STATEMENT_SORT_PREFIX,
+  statementSortKey,
+  TableReadStore,
+  tickerPartition,
+  type FinancialsReadStore
+} from './db/table.js';

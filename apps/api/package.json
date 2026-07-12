@@ -14,11 +14,14 @@
     "fixtures:record": "node tools/record-companyfacts.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.899.0",
+    "@aws-sdk/lib-dynamodb": "^3.899.0",
     "@plainsight/api-contract": "workspace:*",
     "@plainsight/calc-engine": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.155",
     "@types/node": "^22",
     "typescript": "~5.9.0",
     "vitest": "^4.1.10"

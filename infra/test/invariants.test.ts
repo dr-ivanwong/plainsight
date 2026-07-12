@@ -35,7 +35,16 @@ const phase2Config: EnvConfig = {
 const phase2App = new App();
 const phase2 = buildApp(phase2App, phase2Config);
 if (!phase2.data) throw new Error('a features-on build must synthesise the Data stack');
+if (!phase2.api) throw new Error('a features-on build must synthesise the Api stack');
 const data = Template.fromStack(phase2.data);
+const api = Template.fromStack(phase2.api);
+
+/** Every template under assertion, the feature-gated Phase 2 stacks included. */
+const allTemplates: Record<string, Template> = {
+  ...templates,
+  DataFeaturesOn: data,
+  ApiFeaturesOn: api,
+};
 
 /**
  * The one resource of its kind. Throws a plain Error (not an expect) because
@@ -114,7 +123,7 @@ describe('IAM wildcards (spec §6: no Action or Resource of literal *)', () => {
 
   it('no policy statement anywhere carries Action: * or Resource: *', () => {
     const violations: string[] = [];
-    for (const [stackName, template] of Object.entries(templates)) {
+    for (const [stackName, template] of Object.entries(allTemplates)) {
       const resources: Record<string, { Type: string; Properties?: any }> =
         template.toJSON().Resources ?? {};
       for (const [logicalId, resource] of Object.entries(resources)) {
@@ -444,6 +453,76 @@ describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
     expect(rehearsalTable.Properties.PointInTimeRecoverySpecification).toEqual({
       PointInTimeRecoveryEnabled: false,
     });
+  });
+});
+
+describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () => {
+  const functions = api.findResources('AWS::Lambda::Function');
+
+  it('every Lambda: ARM64, Node 22, explicit timeout and memory, table wired by env', () => {
+    const entries = Object.values(functions);
+    expect(entries).toHaveLength(2);
+    for (const fn of entries as any[]) {
+      expect(fn.Properties.Architectures).toEqual(['arm64']);
+      expect(fn.Properties.Runtime).toBe('nodejs22.x');
+      expect(fn.Properties.Timeout).toBe(10);
+      expect(fn.Properties.MemorySize).toBe(256);
+      expect(fn.Properties.Environment.Variables.TABLE_NAME).toBeDefined();
+    }
+  });
+
+  it('log retention is explicit log groups, not the custom-resource shortcut', () => {
+    // One group per function plus the access-log group; every group 30 days.
+    const groups = Object.values(api.findResources('AWS::Logs::LogGroup')) as any[];
+    expect(groups).toHaveLength(3);
+    for (const group of groups) {
+      expect(group.Properties.RetentionInDays).toBe(30);
+    }
+    for (const fn of Object.values(functions) as any[]) {
+      expect(fn.Properties.LoggingConfig.LogGroup).toBeDefined();
+    }
+    const resources: Record<string, { Type: string }> = api.toJSON().Resources ?? {};
+    const customTypes = Object.values(resources)
+      .map((resource) => resource.Type)
+      .filter((type) => type.startsWith('Custom::') || type === 'AWS::CloudFormation::CustomResource');
+    expect(customTypes).toEqual([]);
+  });
+
+  it('exposes exactly the two read routes, unauthenticated as the route table flags them', () => {
+    const routes = Object.values(api.findResources('AWS::ApiGatewayV2::Route')) as any[];
+    expect(routes.map((route) => route.Properties.RouteKey).sort()).toEqual([
+      'GET /v1/companies/{ticker}',
+      'GET /v1/companies/{ticker}/financials',
+    ]);
+    for (const route of routes) {
+      expect(route.Properties.AuthorizationType ?? 'NONE').toBe('NONE');
+    }
+  });
+
+  it('throttles every route at the pinned rate and logs access with the request id', () => {
+    const stage: any = only(api.findResources('AWS::ApiGatewayV2::Stage'));
+    expect(stage.Properties.DefaultRouteSettings).toEqual(
+      expect.objectContaining({ ThrottlingRateLimit: 10, ThrottlingBurstLimit: 20 }),
+    );
+    const format: string = stage.Properties.AccessLogSettings.Format;
+    expect(format).toContain('$context.requestId');
+    // The redaction rule (backend spec §11): no header or payload variables.
+    expect(format).not.toContain('$context.authorizer');
+    expect(format).not.toContain('header');
+  });
+
+  it('the read path holds no write permissions on the table', () => {
+    const policies = Object.values(api.findResources('AWS::IAM::Policy')) as any[];
+    expect(policies.length).toBeGreaterThan(0);
+    const writeActions = ['dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:DeleteItem', 'dynamodb:BatchWriteItem'];
+    for (const policy of policies) {
+      for (const statement of policy.Properties.PolicyDocument.Statement) {
+        const actions: string[] = [statement.Action].flat();
+        for (const action of actions) {
+          expect(writeActions, `${action} must not appear on the read path`).not.toContain(action);
+        }
+      }
+    }
   });
 });
 
