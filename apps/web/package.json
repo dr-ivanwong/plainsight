@@ -16,7 +16,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@plainsight/api-contract": "workspace:*",
     "@plainsight/calc-engine": "workspace:*",
+    "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-router": "^1.170.17",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",

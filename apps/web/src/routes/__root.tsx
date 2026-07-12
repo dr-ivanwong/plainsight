@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRootRoute, Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, type ReactElement } from 'react';
@@ -10,6 +11,16 @@ import * as styles from '../styles/shell.css';
 export const Route = createRootRoute({
   component: RootShell,
   notFoundComponent: NotFound,
+});
+
+// Server state (main plan §5: TanStack Query from Phase 2), provided at the
+// root route so every render of the tree carries it, tests included.
+// Everything it caches is an optional enhancement; IndexedDB remains the
+// source of truth.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 }
+  }
 });
 
 /** Screens that render in the wider column (frontend spec §7): the dashboard now, compare later. */
@@ -53,9 +64,11 @@ function RootShell(): ReactElement {
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),
   });
   return (
-    <main className={wide ? styles.columnWide : styles.column}>
-      <Outlet />
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <main className={wide ? styles.columnWide : styles.column}>
+        <Outlet />
+      </main>
+    </QueryClientProvider>
   );
 }
 

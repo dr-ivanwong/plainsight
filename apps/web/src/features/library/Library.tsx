@@ -8,6 +8,7 @@ import { useMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
 import { AddCompanySheet } from './AddCompanySheet';
 import { CompanyRow } from './CompanyRow';
+import { ImportTickerSheet } from './ImportTickerSheet';
 import * as styles from './library.css';
 import { LibraryEmpty } from './LibraryEmpty';
 
@@ -41,6 +42,11 @@ export function Library({
   addOpen,
   onAddOpen,
   onAddClose,
+  importOpen = false,
+  onImportOpen,
+  onImportClose,
+  onImportToManual,
+  online = true,
   onSample,
   showSampleBanner = false,
   onSampleBannerDismiss,
@@ -51,6 +57,11 @@ export function Library({
   addOpen: boolean;
   onAddOpen: () => void;
   onAddClose: () => void;
+  importOpen?: boolean;
+  onImportOpen?: () => void;
+  onImportClose?: () => void;
+  onImportToManual?: () => void;
+  online?: boolean;
   onSample?: () => void;
   showSampleBanner?: boolean;
   onSampleBannerDismiss?: () => void;
@@ -79,6 +90,17 @@ export function Library({
           <Link to="/settings" className={styles.toolbarLink}>
             Settings
           </Link>
+          {/* Online-only affordance (degradation matrix, main plan §5): hidden
+              offline, with the quiet pill marking the absence (frontend §2). */}
+          {onImportOpen === undefined ? null : online ? (
+            <button type="button" className={styles.addButton} onClick={onImportOpen}>
+              Import
+            </button>
+          ) : (
+            <span className={styles.offlinePill} title="Ticker import is available when online, or enter manually.">
+              Offline
+            </span>
+          )}
           {companies.length === 0 ? null : (
             <button type="button" className={styles.addButton} onClick={onAddOpen}>
               + Add
@@ -133,6 +155,13 @@ export function Library({
       )}
 
       <AddCompanySheet open={addOpen} onClose={onAddClose} />
+      {onImportClose === undefined || onImportToManual === undefined ? null : (
+        <ImportTickerSheet
+          open={importOpen}
+          onClose={onImportClose}
+          onEnterManually={onImportToManual}
+        />
+      )}
     </>
   );
 }

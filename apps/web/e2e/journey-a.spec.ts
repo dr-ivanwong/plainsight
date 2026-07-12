@@ -21,7 +21,9 @@ async function walkJourneyA(page: Page): Promise<void> {
   // Create the company.
   await page.getByRole('button', { name: 'Add a company' }).click();
   await page.getByLabel('Name').fill('Wesfarmers');
-  await page.getByLabel('Ticker').fill('WES');
+  // Exact: the library also mounts the import dialog, whose accessible name
+  // contains the word Ticker.
+  await page.getByLabel('Ticker', { exact: true }).fill('WES');
   await page.getByRole('button', { name: 'Add company' }).click();
   await expect(page.getByRole('heading', { name: 'Wesfarmers' })).toBeVisible();
 

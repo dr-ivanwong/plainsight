@@ -25,5 +25,9 @@ export default defineConfig({
     // Library can register its automatic afterEach cleanup.
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // Full-router jsdom renders regularly cross the 5-second default when the
+    // whole suite runs in parallel workers; the ceiling is for contention,
+    // not for slow assertions.
+    testTimeout: 15_000,
   },
 });

@@ -59,6 +59,19 @@ const toolbarControl = style({
 export const toolbarLink = toolbarControl;
 export const addButton = toolbarControl;
 
+/** The quiet offline marker (frontend spec §2): shown only where an online-only affordance was hidden. */
+export const offlinePill = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: touchTarget,
+  padding: `0 ${space[12]}`,
+  borderRadius: radius.medium,
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary,
+  border: `${hairline} solid ${colour.border}`
+});
+
 export const filter = style({
   width: '100%',
   minHeight: touchTarget,
