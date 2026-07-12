@@ -45,11 +45,13 @@ const ingestion = Template.fromStack(phase2.ingestion);
 const allTemplates: Record<string, Template> = {
   ...templates,
   FoundationFeaturesOn: Template.fromStack(phase2.foundation),
+  StaticSiteFeaturesOn: Template.fromStack(phase2.staticSite),
   DataFeaturesOn: data,
   ApiFeaturesOn: api,
   IngestionFeaturesOn: ingestion,
 };
 const foundationFeaturesOn = allTemplates['FoundationFeaturesOn'] as Template;
+const staticSiteFeaturesOn = allTemplates['StaticSiteFeaturesOn'] as Template;
 
 /**
  * The one resource of its kind. Throws a plain Error (not an expect) because
@@ -80,9 +82,13 @@ describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
         expect(props.VersioningConfiguration).toEqual({ Status: 'Enabled' });
       }
     }
-    // Exactly two buckets exist anywhere: the site bucket (Phase 0) and the
-    // ingestion artefacts bucket (Phase 2, features on).
-    expect(bucketsPerStack).toEqual({ StaticSite: 1, IngestionFeaturesOn: 1 });
+    // Exactly two buckets exist anywhere: the site bucket (in both StaticSite
+    // builds) and the ingestion artefacts bucket (features on).
+    expect(bucketsPerStack).toEqual({
+      StaticSite: 1,
+      StaticSiteFeaturesOn: 1,
+      IngestionFeaturesOn: 1,
+    });
   });
 
   it('the site bucket expires noncurrent versions after 30 days and is retained in prod', () => {
@@ -716,6 +722,86 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     for (const fnResource of Object.values(template.findResources('AWS::Lambda::Function')) as any[]) {
       expect(fnResource.Properties.Environment.Variables.INGEST_FUNCTION_NAME).toBeUndefined();
     }
+  });
+});
+
+describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
+  const prodDistribution: any = only(staticSite.findResources('AWS::CloudFront::Distribution'));
+  const phase2Distribution: any = only(
+    staticSiteFeaturesOn.findResources('AWS::CloudFront::Distribution'),
+  );
+
+  it('SPA routing is a viewer-request rewrite, not distribution-wide error responses', () => {
+    for (const distribution of [prodDistribution, phase2Distribution]) {
+      const distributionConfig = distribution.Properties.DistributionConfig;
+      // Custom error responses would rewrite API not_found envelopes into
+      // the app shell; the rewrite function is scoped to the site behaviour.
+      expect(distributionConfig.CustomErrorResponses).toBeUndefined();
+      expect(distributionConfig.DefaultCacheBehavior.FunctionAssociations).toHaveLength(1);
+    }
+    const fn: any = only(staticSite.findResources('AWS::CloudFront::Function'));
+    expect(fn.Properties.FunctionCode).toContain("startsWith('/v1/')");
+    expect(fn.Properties.FunctionCode).toContain("request.uri = '/index.html'");
+  });
+
+  it('prod with the flags off keeps the single-origin distribution', () => {
+    const distributionConfig = prodDistribution.Properties.DistributionConfig;
+    expect(distributionConfig.CacheBehaviors).toBeUndefined();
+    expect(distributionConfig.Origins).toHaveLength(1);
+  });
+
+  it('features on: the financials path caches 6 hours, everything else on /v1/* does not', () => {
+    const distributionConfig = phase2Distribution.Properties.DistributionConfig;
+    expect(distributionConfig.Origins).toHaveLength(2);
+    const behaviours: any[] = distributionConfig.CacheBehaviors;
+    // Insertion order is precedence: the specific path must outrank the
+    // catch-all.
+    expect(behaviours.map((behaviour) => behaviour.PathPattern)).toEqual([
+      '/v1/companies/*/financials',
+      '/v1/*',
+    ]);
+    for (const behaviour of behaviours) {
+      expect(behaviour.ViewerProtocolPolicy).toBe('redirect-to-https');
+      expect(behaviour.AllowedMethods).toEqual(['GET', 'HEAD']);
+      // No SPA rewrite on the API behaviours.
+      expect(behaviour.FunctionAssociations ?? []).toEqual([]);
+    }
+    // The catch-all uses the managed CachingDisabled policy.
+    expect(behaviours[1].CachePolicyId).toBe('4135ea2d-6df8-44a3-9df3-4b5a84be39ad');
+
+    const cachePolicy: any = only(
+      staticSiteFeaturesOn.findResources('AWS::CloudFront::CachePolicy'),
+    );
+    const policyConfig = cachePolicy.Properties.CachePolicyConfig;
+    expect(policyConfig.DefaultTTL).toBe(6 * 60 * 60);
+    expect(policyConfig.MaxTTL).toBe(6 * 60 * 60);
+    expect(policyConfig.MinTTL).toBe(0);
+    expect(policyConfig.ParametersInCacheKeyAndForwardedToOrigin.QueryStringsConfig).toEqual({
+      QueryStringBehavior: 'whitelist',
+      QueryStrings: ['years', 'statements'],
+    });
+  });
+
+  it('publishes the distribution id for the ingest path, features on only', () => {
+    staticSiteFeaturesOn.hasResourceProperties('AWS::SSM::Parameter', {
+      Name: '/app/prod/cloudfront/distribution-id',
+    });
+    expect(Object.keys(staticSite.findResources('AWS::SSM::Parameter'))).toEqual([]);
+  });
+
+  it('the ingest function can read the id and invalidate, nothing else new', () => {
+    const ingestFns = Object.values(ingestion.findResources('AWS::Lambda::Function')) as any[];
+    const ingestFn = ingestFns.find((fn) => fn.Properties.Timeout === 120);
+    expect(ingestFn.Properties.Environment.Variables.DISTRIBUTION_ID_PARAMETER).toBe(
+      '/app/prod/cloudfront/distribution-id',
+    );
+    const statements = (Object.values(ingestion.findResources('AWS::IAM::Policy')) as any[])
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[]);
+    const invalidate = statements.find((statement) => statement.Sid === 'InvalidateFinancialsPath');
+    expect(invalidate.Action).toBe('cloudfront:CreateInvalidation');
+    expect(JSON.stringify(invalidate.Resource)).toContain(':distribution/*');
+    const readId = statements.find((statement) => statement.Sid === 'ReadDistributionIdParameter');
+    expect(JSON.stringify(readId.Resource)).toContain('parameter/app/prod/cloudfront/distribution-id');
   });
 });
 

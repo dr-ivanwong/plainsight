@@ -46,21 +46,20 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
       "Properties": {
         "DistributionConfig": {
           "Comment": "Plainsight static site (prod)",
-          "CustomErrorResponses": [
-            {
-              "ErrorCode": 403,
-              "ResponseCode": 200,
-              "ResponsePagePath": "/index.html",
-            },
-            {
-              "ErrorCode": 404,
-              "ResponseCode": 200,
-              "ResponsePagePath": "/index.html",
-            },
-          ],
           "DefaultCacheBehavior": {
             "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
             "Compress": true,
+            "FunctionAssociations": [
+              {
+                "EventType": "viewer-request",
+                "FunctionARN": {
+                  "Fn::GetAtt": [
+                    "SpaRewrite1C145184",
+                    "FunctionARN",
+                  ],
+                },
+              },
+            ],
             "ResponseHeadersPolicyId": {
               "Ref": "SecurityHeadersE66B69D3",
             },
@@ -405,6 +404,38 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "SpaRewrite1C145184": {
+      "Properties": {
+        "AutoPublish": true,
+        "FunctionCode": "function handler(event) {
+  var request = event.request;
+  if (!request.uri.startsWith('/v1/') && !request.uri.includes('.')) {
+    request.uri = '/index.html';
+  }
+  return request;
+}",
+        "FunctionConfig": {
+          "Comment": "Extensionless app routes serve the shell; assets and /v1/* pass through.",
+          "Runtime": "cloudfront-js-2.0",
+        },
+        "Name": "ap-southeast-2StaticSiteSpaRewrite2F5A693C",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "owner",
+            "Value": "ivan",
+          },
+          {
+            "Key": "project",
+            "Value": "plainsight",
+          },
+        ],
+      },
+      "Type": "AWS::CloudFront::Function",
     },
   },
   "Rules": {

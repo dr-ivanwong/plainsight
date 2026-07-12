@@ -27,3 +27,13 @@ export const edgarContactParameterName = (envName: string): string =>
  * single source.
  */
 export const TICKER_INDEX_OBJECT_KEY = 'edgar/company_tickers_exchange.json';
+
+/**
+ * Where StaticSite publishes the distribution id once the API rides behind
+ * CloudFront. The ingest function reads it at runtime to invalidate a
+ * ticker's financials path after accepted writes (backend spec §5); reading
+ * by name keeps the stacks acyclic, because StaticSite depends on Api and
+ * so can never be referenced from the ingestion side at deploy time.
+ */
+export const distributionIdParameterName = (envName: string): string =>
+  `/app/${envName}/cloudfront/distribution-id`;

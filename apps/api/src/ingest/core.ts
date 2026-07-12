@@ -17,6 +17,13 @@ export interface IngestDeps {
   client: EdgarClient;
   store: IngestStore;
   now: () => Date;
+  /**
+   * Drops the ticker's financials path from the edge cache after accepted
+   * writes (backend spec §5); absent when no distribution fronts the API.
+   * Best-effort: the 6-hour TTL is the backstop, so a failed invalidation
+   * costs staleness, never correctness.
+   */
+  invalidateEdge?: ((ticker: string) => Promise<void>) | undefined;
 }
 
 export type IngestOutcome =
@@ -111,6 +118,21 @@ export async function runIngest(
     // With no servable years the profile stays incomplete on purpose: the
     // route keeps answering 202 rather than serving an empty company, and
     // the quarantine holds whatever failed the gates.
+
+    if (latest !== undefined && deps.invalidateEdge !== undefined) {
+      try {
+        await deps.invalidateEdge(ticker);
+      } catch (error) {
+        console.log(
+          JSON.stringify({
+            route: 'ingestTicker',
+            outcome: 'invalidation_failed',
+            ticker,
+            detail: error instanceof Error ? error.message : String(error)
+          })
+        );
+      }
+    }
 
     return {
       outcome: 'ingested',

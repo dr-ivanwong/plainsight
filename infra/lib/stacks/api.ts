@@ -35,6 +35,8 @@ export interface ApiStackProps extends StackProps {
  */
 export class ApiStack extends Stack {
   readonly httpApi: apigwv2.HttpApi;
+  /** The execute-api hostname, for the CloudFront origin (cdk spec §3: the same distribution fronts /v1/*). */
+  readonly apiDomainName: string;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -45,6 +47,7 @@ export class ApiStack extends Stack {
       description: 'The Plainsight read API (backend spec §2 route table).',
       createDefaultStage: false,
     });
+    this.apiDomainName = `${this.httpApi.apiId}.execute-api.${this.region}.${this.urlSuffix}`;
 
     // Access logs on, structured, with the redaction rule built into the
     // format: request id, route, status, latency; never payloads, tokens, or

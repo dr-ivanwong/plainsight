@@ -42,13 +42,6 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
   const foundation = new FoundationStack(app, `${prefix}Foundation`, { env, config });
   const githubOidc =
     config.envName === 'prod' ? new GithubOidcStack(app, 'GithubOidc', { env, config }) : undefined;
-  const staticSite = new StaticSiteStack(app, `${prefix}StaticSite`, {
-    env,
-    config,
-    // Prod gains the app pipeline's deploy role (a rehearsal copy has no
-    // GithubOidc and no pipeline; it is deployed by hand and torn down).
-    ...(githubOidc === undefined ? {} : { deployOidcProviderArn: githubOidc.providerArn }),
-  });
 
   // Phase 2 (spec §3): the table is the shared dependency of Api and
   // Ingestion, so it exists exactly when a consumer of it does. A stack that
@@ -83,6 +76,19 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
             : { ingestFunction: ingestion.ingestFunction, indexBucket: ingestion.indexBucket }),
         })
       : undefined;
+
+  // StaticSite builds last from Phase 2 on: the distribution fronts /v1/*
+  // (cdk spec §3), so it references the Api stack's hostname when the
+  // feature is on. Deploy order follows the references; Phase 0/1 configs
+  // see the same bucket-and-CDN stack as always.
+  const staticSite = new StaticSiteStack(app, `${prefix}StaticSite`, {
+    env,
+    config,
+    // Prod gains the app pipeline's deploy role (a rehearsal copy has no
+    // GithubOidc and no pipeline; it is deployed by hand and torn down).
+    ...(githubOidc === undefined ? {} : { deployOidcProviderArn: githubOidc.providerArn }),
+    ...(api === undefined ? {} : { apiDomainName: api.apiDomainName }),
+  });
 
   return { foundation, githubOidc, staticSite, data, ingestion, api };
 }

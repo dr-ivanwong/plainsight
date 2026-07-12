@@ -14,7 +14,12 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
-import { edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
+import {
+  distributionIdParameterName,
+  edgarContactParameterName,
+  LOG_RETENTION,
+  TICKER_INDEX_OBJECT_KEY,
+} from '../constants';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
 import { acknowledgeNagFinding } from '../nag';
 import { WATCHED_TICKERS_INDEX } from './data';
@@ -61,6 +66,7 @@ export class IngestionStack extends Stack {
         'of a public SEC index file; an access-log bucket would only grow and watch nothing.',
     );
 
+    const distributionParameter = distributionIdParameterName(config.envName);
     const ingest = new AppFunction(this, 'IngestTicker', {
       entry: handlerEntry('ingestTicker'),
       description:
@@ -72,9 +78,49 @@ export class IngestionStack extends Stack {
       environment: {
         TABLE_NAME: table.tableName,
         EDGAR_CONTACT_PARAMETER: contactParameter,
+        DISTRIBUTION_ID_PARAMETER: distributionParameter,
       },
     });
     this.ingestFunction = ingest.fn;
+
+    // Edge invalidation after accepted writes (backend spec §5). The
+    // distribution id arrives at runtime via the parameter StaticSite
+    // publishes (see constants.ts: StaticSite sits downstream of Api, so no
+    // deploy-time reference can exist in this direction), which forces the
+    // invalidation grant onto the distribution wildcard: the account has
+    // exactly one distribution, and invalidation is a cache lever, not a
+    // data-plane risk.
+    const invalidationArn = this.formatArn({
+      service: 'cloudfront',
+      region: '', // CloudFront ARNs are global
+      resource: 'distribution',
+      resourceName: '*',
+    });
+    ingest.fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'InvalidateFinancialsPath',
+        actions: ['cloudfront:CreateInvalidation'],
+        resources: [invalidationArn],
+      }),
+    );
+    ingest.fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'ReadDistributionIdParameter',
+        actions: ['ssm:GetParameter'],
+        resources: [
+          this.formatArn({ service: 'ssm', resource: `parameter${distributionParameter}` }),
+        ],
+      }),
+    );
+    // The finding id must be a plain string (metadata keys cannot hold
+    // tokens); cdk-nag flattens the partition ref to '<AWS::Partition>'.
+    acknowledgeNagFinding(
+      ingest,
+      `AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:cloudfront::${config.account}:distribution/*]`,
+      'The distribution id is runtime configuration (StaticSite publishes it downstream of Api; ' +
+        'a deploy-time reference here would be a stack cycle). One distribution exists in the ' +
+        'account, and CreateInvalidation only evicts cache entries.',
+    );
 
     // The ingestion path owns every write, and only in ticker partitions
     // (spec §6: single-table access scoped by key-prefix conditions where

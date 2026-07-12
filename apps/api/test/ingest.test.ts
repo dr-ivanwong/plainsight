@@ -401,6 +401,59 @@ describe('the ingest core', () => {
     expect(state.profile?.lastFilingSeen).toBe('acc-1');
   });
 
+  it('invalidates the edge after accepted writes, and only then', async () => {
+    const invalidated: string[] = [];
+    const invalidateEdge = async (ticker: string): Promise<void> => {
+      invalidated.push(ticker);
+    };
+    const served: FakeStoreState = {
+      rows: [],
+      quarantine: [],
+      profile: undefined,
+      lockAcquired: 0,
+      lockReleased: 0
+    };
+    await runIngest({ ...depsWith(served, syntheticCompanyfacts()), invalidateEdge }, 'AAPL');
+    expect(invalidated).toEqual(['AAPL']);
+
+    // Unchanged sweep passes write nothing, so nothing invalidates.
+    const unchanged: FakeStoreState = {
+      meta: { lastFilingSeen: 'acc-new-annual' },
+      rows: [],
+      quarantine: [],
+      profile: undefined,
+      lockAcquired: 0,
+      lockReleased: 0
+    };
+    await runIngest(
+      { ...depsWith(unchanged, syntheticCompanyfacts()), invalidateEdge },
+      'AAPL',
+      'sweep'
+    );
+    expect(invalidated).toEqual(['AAPL']);
+  });
+
+  it('a failed invalidation costs staleness, never the ingest', async () => {
+    const state: FakeStoreState = {
+      rows: [],
+      quarantine: [],
+      profile: undefined,
+      lockAcquired: 0,
+      lockReleased: 0
+    };
+    const outcome = await runIngest(
+      {
+        ...depsWith(state, syntheticCompanyfacts()),
+        invalidateEdge: async () => {
+          throw new Error('cloudfront unavailable');
+        }
+      },
+      'AAPL'
+    );
+    expect(outcome).toMatchObject({ outcome: 'ingested', servedYears: 1 });
+    expect(state.profile).toBeDefined();
+  });
+
   it('releases the lock when the fetch fails, and lets the error surface', async () => {
     const state: FakeStoreState = {
       rows: [],

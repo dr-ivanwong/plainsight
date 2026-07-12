@@ -3,8 +3,10 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
+import { distributionIdParameterName } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 
 /**
@@ -43,6 +45,13 @@ export interface StaticSiteStackProps extends StackProps {
    * the one-time GithubOidc scaffolding.
    */
   deployOidcProviderArn?: string;
+  /**
+   * The API's execute-api hostname. When present (features.api on), the
+   * distribution gains the /v1/* behaviours (cdk spec §3): the financials
+   * path with the 6-hour edge cache, everything else passed through
+   * uncached. Same origin as the app, so the CSP connect-src stays 'self'.
+   */
+  apiDomainName?: string;
 }
 
 /**
@@ -109,6 +118,28 @@ export class StaticSiteStack extends Stack {
       },
     });
 
+    // SPA routing at the viewer request, scoped to the site behaviour:
+    // extensionless app routes rewrite to the shell before the origin is
+    // asked, so S3 never has to 404 for a deep link. The old distribution-wide
+    // custom error responses would also have rewritten the API's not_found
+    // envelopes into the shell, which is exactly the kind of silent contract
+    // corruption the envelope tests exist to prevent.
+    const spaRewrite = new cloudfront.Function(this, 'SpaRewrite', {
+      comment: 'Extensionless app routes serve the shell; assets and /v1/* pass through.',
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      code: cloudfront.FunctionCode.fromInline(
+        [
+          'function handler(event) {',
+          '  var request = event.request;',
+          "  if (!request.uri.startsWith('/v1/') && !request.uri.includes('.')) {",
+          "    request.uri = '/index.html';",
+          '  }',
+          '  return request;',
+          '}',
+        ].join('\n'),
+      ),
+    });
+
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: `Plainsight static site (${config.envName})`,
       defaultBehavior: {
@@ -116,14 +147,11 @@ export class StaticSiteStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: securityHeaders,
+        functionAssociations: [
+          { function: spaRewrite, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
+        ],
       },
       defaultRootObject: 'index.html',
-      // SPA routing: the router owns deep links, so both S3 "not found"
-      // shapes (403 from OAC-denied listing, 404) serve the app shell.
-      errorResponses: [
-        { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html' },
-        { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html' },
-      ],
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       // Cheapest price class. AU users are served fine from its edges; for a
       // local-first PWA the CDN is touched on install and update, not on
@@ -132,6 +160,10 @@ export class StaticSiteStack extends Stack {
       // No logging, no WAF, no geo restriction: spec §8 not-list (ADR 0004);
       // suppressions with justifications below.
     });
+
+    if (props.apiDomainName !== undefined) {
+      this.addApiBehaviours(config, props.apiDomainName, securityHeaders);
+    }
 
     if (props.deployOidcProviderArn !== undefined) {
       this.addSiteDeployRole(config, props.deployOidcProviderArn);
@@ -173,9 +205,9 @@ export class StaticSiteStack extends Stack {
       {
         id: 'AwsSolutions-CFR5',
         reason:
-          'The only origin is S3 via origin access control, where transport is AWS-managed; there is ' +
-          'no custom origin whose TLS protocols could be configured. Recorded alongside CFR4 for the ' +
-          'default-certificate path (spec §3).',
+          'S3 origin transport is AWS-managed via origin access control, and the API origin (when ' +
+          'the feature is on) pins HTTPS-only with TLSv1.2 explicitly. Recorded alongside CFR4 for ' +
+          'the default-certificate path (spec §3).',
       },
     );
 
@@ -190,6 +222,65 @@ export class StaticSiteStack extends Stack {
     new CfnOutput(this, 'DistributionDomainName', {
       value: this.distribution.distributionDomainName,
       description: 'The site origin: https://<this>.',
+    });
+  }
+
+  /**
+   * The /v1/* behaviours (cdk spec §3; backend spec §2): the financials path
+   * carries the 6-hour edge cache with the pipeline invalidating on write,
+   * and this alone absorbs most read traffic at the edge (main plan §7);
+   * everything else on /v1/* passes through uncached. CloudFront never
+   * caches a 202, so a cold ticker's ingesting answer cannot get stuck at
+   * the edge while the ingest completes.
+   */
+  private addApiBehaviours(
+    config: EnvConfig,
+    apiDomainName: string,
+    securityHeaders: cloudfront.ResponseHeadersPolicy,
+  ): void {
+    const apiOrigin = new origins.HttpOrigin(apiDomainName, {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+      originSslProtocols: [cloudfront.OriginSslPolicy.TLS_V1_2],
+    });
+    const financialsCache = new cloudfront.CachePolicy(this, 'FinancialsCache', {
+      cachePolicyName: `plainsight-${config.envName}-financials-cache`,
+      comment: 'Financials change at most weekly per ticker; 6 hours at the edge, invalidated on write.',
+      defaultTtl: Duration.hours(6),
+      maxTtl: Duration.hours(6),
+      minTtl: Duration.seconds(0),
+      // The two query parameters shape the response, so they shape the key.
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList('years', 'statements'),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+    });
+    const behaviourDefaults = {
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+      // Forwards query strings and viewer headers minus Host, which API
+      // Gateway needs to be its own.
+      originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+      responseHeadersPolicy: securityHeaders,
+    };
+    // Insertion order is CloudFront precedence: the cached financials path
+    // must land before the uncached catch-all.
+    this.distribution.addBehavior('/v1/companies/*/financials', apiOrigin, {
+      ...behaviourDefaults,
+      cachePolicy: financialsCache,
+    });
+    this.distribution.addBehavior('/v1/*', apiOrigin, {
+      ...behaviourDefaults,
+      cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+    });
+
+    // The ingest function reads this at runtime to invalidate after accepted
+    // writes; by name, because this stack sits downstream of Api and can
+    // never be referenced from the ingestion side (see constants.ts).
+    new ssm.StringParameter(this, 'DistributionIdParameter', {
+      parameterName: distributionIdParameterName(config.envName),
+      stringValue: this.distribution.distributionId,
+      description: 'Distribution fronting /v1/*; the ingest path invalidates financials through it.',
     });
   }
 

@@ -10,6 +10,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@aws-sdk/client-cloudfront':
+        specifier: ^3.899.0
+        version: 3.1085.0
       '@aws-sdk/client-dynamodb':
         specifier: ^3.899.0
         version: 3.1085.0
@@ -248,6 +251,10 @@ packages:
 
   '@aws-sdk/checksums@3.1000.16':
     resolution: {integrity: sha512-EKnvkXSmz3IpA99tCNuI+dLFXyZyClSm8zns9sB/elvkU+MTuomAs6toJMPMBf98/fICG/urXDkzGz0/c3yyAQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/client-cloudfront@3.1085.0':
+    resolution: {integrity: sha512-fIGLTXHGFFrlhACzwKjPI/fCPzugTyblU1LV7B0n0BK/1+4udVMdE1OofEbKNlKuy8f1CyeOUaIRmEjcS3bTaA==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-dynamodb@3.1085.0':
@@ -3546,6 +3553,17 @@ snapshots:
       '@aws-sdk/core': 3.975.1
       '@aws-sdk/types': 3.974.0
       '@smithy/core': 3.29.3
+      '@smithy/types': 4.16.1
+      tslib: 2.8.1
+
+  '@aws-sdk/client-cloudfront@3.1085.0':
+    dependencies:
+      '@aws-sdk/core': 3.975.1
+      '@aws-sdk/credential-provider-node': 3.972.66
+      '@aws-sdk/types': 3.974.0
+      '@smithy/core': 3.29.3
+      '@smithy/fetch-http-handler': 5.6.5
+      '@smithy/node-http-handler': 4.9.5
       '@smithy/types': 4.16.1
       tslib: 2.8.1
 
