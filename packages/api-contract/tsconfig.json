@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    // Same rigour as the engine: this package is a boundary contract, and
+    // optionality mistakes here become wire-format mistakes.
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}

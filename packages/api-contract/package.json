@@ -1,0 +1,26 @@
+{
+  "name": "@plainsight/api-contract",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The read-API wire contract as Zod schemas: the error envelope and response shapes pinned by docs/plan/plainsight-backend.md section 2, shared by the Lambdas and the web client.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@plainsight/calc-engine": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "^4.1.10",
+    "typescript": "~5.9.0",
+    "vitest": "^4.1.10"
+  }
+}
