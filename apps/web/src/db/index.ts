@@ -23,6 +23,20 @@ export {
   type DismissalWrite
 } from './dismissals';
 export {
+  applyImport,
+  buildExport,
+  dryRunCounts,
+  EXPORT_FORMAT,
+  EXPORT_FORMAT_VERSION,
+  exportFileSchema,
+  parseExportFile,
+  type CarriedSettings,
+  type DryRunCounts,
+  type ExportFile,
+  type ParsedImport
+} from './exportFile';
+export { removeSampleData, wipeEverything } from './maintenance';
+export {
   companyRecordSchema,
   entryValueSchema,
   financialsSnapshotSchema,

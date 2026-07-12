@@ -1,19 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import type { ReactElement } from 'react';
 
-import { Placeholder } from '../components/Placeholder';
+import { DataScreen } from '../features/settings/DataScreen';
 
 // Data & storage (frontend spec §3): export, import, storage status, sample
 // removal, quarantined records, and the danger zone.
 export const Route = createFileRoute('/settings/data')({
-  component: DataAndStorage
+  component: DataScreen
 });
-
-function DataAndStorage(): ReactElement {
-  return (
-    <Placeholder
-      title="Data & storage"
-      note="Export, import and storage status land later in this phase."
-    />
-  );
-}
