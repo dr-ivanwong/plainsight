@@ -27,8 +27,17 @@ export interface PreparedDocument {
 
 export interface ExtractionRequest {
   readonly document: PreparedDocument;
-  /** buildExtractionPrompt() output, or buildRepairPrompt() on the retry. */
+  /** buildExtractionPrompt() output. */
   readonly prompt: string;
+  /**
+   * The single repair retry, as a continued conversation: the model's
+   * previous answer and the buildRepairPrompt() follow-up. Adapters place
+   * both verbatim; the ladder decides when.
+   */
+  readonly repair?: {
+    readonly previousResponse: string;
+    readonly followUp: string;
+  };
 }
 
 /**
