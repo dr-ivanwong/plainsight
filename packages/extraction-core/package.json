@@ -1,0 +1,26 @@
+{
+  "name": "@plainsight/extraction-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Isomorphic extraction layer per docs/plan/plainsight.md section 6: the provider registry, the extraction output schemas, and the versioned prompt pack, consumed identically by the browser (BYOK client-direct) and by Lambda.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@plainsight/calc-engine": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "^4.1.10",
+    "typescript": "~5.9.0",
+    "vitest": "^4.1.10"
+  }
+}
