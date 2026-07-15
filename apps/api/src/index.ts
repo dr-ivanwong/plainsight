@@ -58,3 +58,19 @@ export {
 } from './search/search.js';
 export { runGates, type GateOutcome, type GateVerdict } from './ingest/gates.js';
 export { INGEST_LOCK_LEASE_MS, runIngest, type IngestDeps, type IngestOutcome } from './ingest/core.js';
+export {
+  announcementsYearUrl,
+  displayAnnouncementUrl,
+  MapClient,
+  parseAnnouncementsPage,
+  type MapAnnouncement,
+  type MapClientDeps
+} from './asx/client.js';
+export { lodgementYears, resolveStatutoryReport } from './asx/resolve.js';
+export {
+  DocumentCache,
+  documentSortKey,
+  mapDocumentRecordSchema,
+  type DocumentCacheStore,
+  type MapDocumentRecord
+} from './asx/documents.js';
