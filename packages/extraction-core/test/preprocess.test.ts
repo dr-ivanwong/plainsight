@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { COLUMN_SEPARATOR, openPdf, preprocessPdf } from '../src/pdf/index.js';
 import { buildPdf, type MiniPage } from './helpers/minipdf.js';
 
-/** A statement-face page: title, labelled rows, a dense numbers grid, footer. */
+/** A statement-face page: title, subtitle, labelled rows, grid, footers. */
 function face(title: string, labels: string[], footer: string): MiniPage {
-  const texts = [{ x: 50, y: 800, str: title }];
+  const texts = [
+    { x: 50, y: 800, str: title },
+    { x: 50, y: 784, str: 'For the year ended 30 June 2025' }
+  ];
   labels.forEach((label, index) => {
     texts.push({ x: 50, y: 760 - index * 20, str: label });
     texts.push({ x: 300, y: 760 - index * 20, str: `${1 + index},${234 + index}.5` });
@@ -15,6 +18,11 @@ function face(title: string, labels: string[], footer: string): MiniPage {
       texts.push({ x: 300 + column * 60, y: 600 - row * 18, str: `${row * 4 + column + 1},101.${row}` });
     }
   }
+  texts.push({
+    x: 50,
+    y: 50,
+    str: 'The above statement should be read in conjunction with the accompanying notes.'
+  });
   texts.push({ x: 280, y: 30, str: footer });
   return { texts };
 }
@@ -34,7 +42,7 @@ const prosePage: MiniPage = {
     {
       x: 50,
       y: 700,
-      str: 'The directors present their report on the consolidated entity for the year ended 30 June 2025, together with sundry governance matter.'
+      str: 'The directors present their report on the consolidated entity for the period, together with sundry governance matter.'
     }
   ]
 };
@@ -59,29 +67,28 @@ const epsNotePage = (footer: string): MiniPage => ({
   ]
 });
 
-const incomeFace = face('Income statement', ['Revenue', 'Gross profit', 'Profit before income tax'], '57');
-const balanceFace = face('Balance sheet', ['Total current assets', 'Total equity'], '58');
-const cashflowFace = face(
-  'Statement of cash flows',
-  ['Net cash provided by operating activities'],
-  '59'
-);
+const income = (footer: string) =>
+  face('Income statement', ['Revenue', 'Gross profit', 'Profit before income tax'], footer);
+const balance = (footer: string) =>
+  face('Balance sheet', ['Total current assets', 'Total equity'], footer);
+const cashflow = (footer: string) =>
+  face('Statement of cash flows', ['Net cash provided by operating activities'], footer);
 
 describe('preprocessPdf', () => {
   it('locates the faces, confirms printed pages from footers, and assembles text sections', async () => {
     // Stray standalone integers in the headers (note references, column
     // keys) must lose the offset vote to the running footer.
     const incomeWithNoise: MiniPage = {
-      texts: [...incomeFace.texts, { x: 520, y: 800, str: '7' }]
+      texts: [...income('57').texts, { x: 520, y: 800, str: '7' }]
     };
     const cashflowWithNoise: MiniPage = {
-      texts: [...cashflowFace.texts, { x: 520, y: 800, str: '11' }]
+      texts: [...cashflow('59').texts, { x: 520, y: 800, str: '11' }]
     };
     const pdf = buildPdf([
       contentsPage,
       prosePage,
       incomeWithNoise,
-      balanceFace,
+      balance('58'),
       cashflowWithNoise,
       epsNotePage('60'),
       prosePage
@@ -94,9 +101,9 @@ describe('preprocessPdf', () => {
     expect(outcome.needsVision).toBe(false);
     expect(outcome.window).toEqual({ from: 3, to: 5, epsNotePage: 6 });
     expect(outcome.document.sections.map((section) => section.page)).toEqual([57, 58, 59, 60]);
-    const income = outcome.document.sections[0]?.text ?? '';
-    expect(income).toContain('Income statement');
-    expect(income).toContain(`Revenue${COLUMN_SEPARATOR}1,234.5`);
+    const first = outcome.document.sections[0]?.text ?? '';
+    expect(first).toContain('Income statement');
+    expect(first).toContain(`Revenue${COLUMN_SEPARATOR}1,234.5`);
     expect(outcome.document.sections.every((section) => section.imagePngBase64 === undefined)).toBe(
       true
     );
@@ -118,10 +125,11 @@ describe('preprocessPdf', () => {
     const pdf = buildPdf([
       contentsPage,
       prosePage,
-      incomeFace,
+      income('57'),
       scannedInsert,
-      cashflowFace,
-      epsNotePage('60'),
+      balance('59'),
+      cashflow('60'),
+      epsNotePage('61'),
       prosePage
     ]);
 
@@ -138,12 +146,46 @@ describe('preprocessPdf', () => {
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.needsVision).toBe(true);
-    expect(rendered).toEqual([3, 4, 5, 6]);
+    expect(rendered).toEqual([3, 4, 5, 6, 7]);
     expect(outcome.document.sections.every((section) => section.imagePngBase64 === 'UE5H')).toBe(
       true
     );
     // The scanned insert has no footer, so it carries no page claim.
-    expect(outcome.document.sections.map((section) => section.page)).toEqual([57, undefined, 59, 60]);
+    expect(outcome.document.sections.map((section) => section.page)).toEqual([
+      57,
+      undefined,
+      59,
+      60,
+      61
+    ]);
+  });
+
+  it('takes the overleaf of the EPS note when the diluted table runs on', async () => {
+    const overleaf: MiniPage = {
+      texts: [
+        { x: 50, y: 720, str: 'Weighted average number of ordinary shares (diluted) at 30 June' },
+        { x: 400, y: 720, str: '65,734,342' },
+        {
+          x: 50,
+          y: 700,
+          str: 'Options granted under the share option plans are considered to be potential ordinary shares'
+        },
+        {
+          x: 50,
+          y: 680,
+          str: 'and have been included in the determination of diluted earnings per share to the extent'
+        },
+        { x: 50, y: 660, str: 'to which they are dilutive; the remainder are anti-dilutive.' },
+        { x: 280, y: 30, str: '61' }
+      ]
+    };
+    const outcome = await preprocessPdf(
+      buildPdf([income('57'), balance('58'), cashflow('59'), epsNotePage('60'), overleaf])
+    );
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.window).toEqual({ from: 1, to: 3, epsNotePage: 4 });
+    expect(outcome.document.sections.map((section) => section.page)).toEqual([57, 58, 59, 60, 61]);
   });
 
   it('calls a whole scan a scanned document', async () => {
@@ -158,19 +200,38 @@ describe('preprocessPdf', () => {
   });
 
   it('withholds page numbers when the footers cannot form a majority', async () => {
-    const unnumbered = (title: string, labels: string[]): MiniPage => {
-      const built = face(title, labels, 'x');
-      return { texts: built.texts.filter((text) => text.str !== 'x') };
-    };
+    const unnumbered = (page: MiniPage): MiniPage => ({
+      texts: page.texts.filter((text) => !/^\d+$/.test(text.str))
+    });
     const outcome = await preprocessPdf(
-      buildPdf([
-        unnumbered('Income statement', ['Revenue', 'Gross profit']),
-        unnumbered('Balance sheet', ['Total current assets', 'Total equity'])
-      ])
+      buildPdf([unnumbered(income('57')), unnumbered(balance('58')), unnumbered(cashflow('59'))])
     );
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.document.sections.map((section) => section.page)).toEqual([
+      undefined,
+      undefined,
+      undefined
+    ]);
+  });
+
+  it('withholds page numbers on spread layouts where two offsets tie', async () => {
+    // Two printed pages per pdf page: each header carries both numbers, so
+    // adjacent offsets vote equally and no honest single offset exists.
+    const spread = (base: MiniPage, left: number): MiniPage => ({
+      texts: [
+        { x: 40, y: 820, str: String(left) },
+        { x: 560, y: 820, str: String(left + 1) },
+        ...base.texts.filter((text) => !/^\d+$/.test(text.str))
+      ]
+    });
+    const outcome = await preprocessPdf(
+      buildPdf([spread(income(''), 106), spread(balance(''), 108), spread(cashflow(''), 110)])
+    );
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.document.sections.map((section) => section.page)).toEqual([
+      undefined,
       undefined,
       undefined
     ]);
