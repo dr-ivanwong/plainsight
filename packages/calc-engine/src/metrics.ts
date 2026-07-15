@@ -180,10 +180,14 @@ function fcfOf(year: StatementYear): number {
 export function computeMetric(id: MetricId, ctx: MetricContext): MetricValue {
   const { year, price } = ctx;
 
-  // Valuation metrics: the price gate comes first; the dashboard collapses
-  // these cards into "Enter today's price" regardless of line-item state.
+  // Valuation metrics: the price gate comes first (the dashboard collapses
+  // these cards into "Enter today's price" regardless of line-item state),
+  // then the currency guard: a price cannot meet statements in another
+  // currency, because no FX exists anywhere (data-model section 4 policy;
+  // section 6 amendment of 2026-07-15).
   if (id === 'pe' || id === 'earningsYield' || id === 'fcfYield') {
     if (price === undefined) return notMeaningful('no_price');
+    if (price.currency !== year.currency) return notMeaningful('currency_mismatch');
     return computeValuationMetric(id, year, price);
   }
 

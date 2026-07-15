@@ -18,7 +18,10 @@ import { requireValue, yearComplete } from './values.js';
 
 /**
  * Market cap = price times the latest complete FY's diluted shares (data-model
- * section 6, price note). Null without a price or without a complete year.
+ * section 6, price note). Null without a price, without a complete year, or
+ * when the price currency differs from that year's statements (the section 6
+ * amendment of 2026-07-15: no FX exists anywhere, so a mixed-currency market
+ * cap would be a meaningless figure).
  */
 function marketCapMinor(
   yearsAscending: readonly StatementYear[],
@@ -28,6 +31,7 @@ function marketCapMinor(
   for (let i = yearsAscending.length - 1; i >= 0; i -= 1) {
     const year = yearsAscending[i] as StatementYear;
     if (yearComplete(year)) {
+      if (price.currency !== year.currency) return null;
       return price.amountMinor * requireValue(year, 'dilutedShares');
     }
   }

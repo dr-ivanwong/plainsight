@@ -19,7 +19,8 @@ export const NOT_MEANINGFUL_PHRASES: Readonly<Record<NotMeaningfulReason, string
   // The pinned rendering routes no_price to the enter-price card, not to a
   // metric phrase; this string is a defensive fallback so the formatter is
   // total and can never surface a blank.
-  no_price: 'n/m: no price'
+  no_price: 'n/m: no price',
+  currency_mismatch: 'n/m: price currency differs'
 };
 
 const TRUE_MINUS = '−';

@@ -159,5 +159,8 @@ export const REASON_EXPLAINERS: Readonly<Record<NotMeaningfulReason, string>> = 
     'There is no interest burden to cover this year; for coverage, that is a strength rather than a gap.',
   zero_revenue: 'With no revenue in the year, a margin has nothing to measure against.',
   zero_denominator: 'The denominator is zero this year, so the ratio is undefined.',
-  no_price: "Valuation needs a share price; enter today's price from the dashboard."
+  no_price: "Valuation needs a share price; enter today's price from the dashboard.",
+  currency_mismatch:
+    'The entered price is in a different currency from the statements, and the app never ' +
+    'converts; re-enter the price in the reporting currency to value against these figures.'
 };
