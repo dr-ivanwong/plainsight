@@ -82,7 +82,8 @@ describe('the pinned not-meaningful phrases', () => {
       no_interest_expense: 'n/m: no interest burden',
       zero_revenue: 'n/m: no revenue',
       zero_denominator: 'n/m: zero denominator',
-      no_price: 'n/m: no price'
+      no_price: 'n/m: no price',
+      currency_mismatch: 'n/m: price currency differs'
     });
   });
 });

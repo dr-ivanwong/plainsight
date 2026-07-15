@@ -246,6 +246,19 @@ describe('the valuation metrics and the price gate', () => {
     }
   });
 
+  it('refuses a price in another currency (the amendment of 2026-07-15)', () => {
+    // Regression capture: before the currency guard, these computed a
+    // meaningless figure from an AUD price against USD statements (the CSL
+    // shape). Now they are typed not-meaningful, before sufficiency.
+    const audPrice: PriceRecord = { amountMinor: 24_000, currency: 'AUD', asOf: '2026-07-15' };
+    for (const id of ['pe', 'earningsYield', 'fcfYield'] as const) {
+      expect(computeMetric(id, ctx(completeYear('FY2024'), undefined, audPrice))).toEqual({
+        status: 'not_meaningful',
+        reason: 'currency_mismatch'
+      });
+    }
+  });
+
   it('reports missing inputs once a price exists', () => {
     expect(computeMetric('pe', ctx(year('FY2024', {}), undefined, PRICE))).toEqual({
       status: 'insufficient_data',

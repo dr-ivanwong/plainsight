@@ -68,6 +68,15 @@ describe('computeMetricsReport', () => {
     ).toBeNull();
   });
 
+  it('market cap is null when the price currency differs from the statements (2026-07-15 amendment)', () => {
+    expect(
+      computeMetricsReport({
+        years: [completeYear('FY2024', { dilutedShares: 2_000 })],
+        price: { amountMinor: 24_000, currency: 'AUD', asOf: '2026-07-15' }
+      }).marketCapMinor
+    ).toBeNull();
+  });
+
   it('propagates fired flags', () => {
     const report = computeMetricsReport({
       years: [completeYear('FY2024', { interestExpense: 10_000 })]

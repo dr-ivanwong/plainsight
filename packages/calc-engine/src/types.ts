@@ -81,7 +81,13 @@ export type NotMeaningfulReason =
   | 'no_interest_expense'
   | 'zero_revenue'
   | 'zero_denominator'
-  | 'no_price';
+  | 'no_price'
+  // A price in one currency against statements in another: no FX exists
+  // anywhere (currency-comparability policy, data-model section 4), so the
+  // valuation metrics refuse to mix rather than compute a meaningless figure
+  // (amendment, owner-confirmed 2026-07-15; CSL made it real: AUD market
+  // price, USD statements).
+  | 'currency_mismatch';
 
 /**
  * Which balance the return metrics divided by (data-model section 4): the
