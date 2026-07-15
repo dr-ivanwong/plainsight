@@ -1,0 +1,1692 @@
+{
+  "meta": {
+    "name": "CSL",
+    "ticker": "CSL",
+    "exchange": "ASX",
+    "currency": "USD",
+    "source": "ASX-lodged annual reports, transcribed by hand",
+    "selectionPolicy": "Each fiscal year as printed in the annual report that carries it: odd years from their own report, even years from the following report’s comparative column.",
+    "documents": {
+      "ar2025": {
+        "title": "CSL Limited Annual Report 2024/25",
+        "url": "https://www.csl.com/-/media/shared/documents/annual-report/csl-annual-report-2025.pdf"
+      },
+      "ar2023": {
+        "title": "CSL Limited Annual Report 2022/23",
+        "url": "https://www.csl.com/-/media/shared/documents/annual-report/csl-annual-report-2023.pdf"
+      },
+      "ar2021": {
+        "title": "CSL Limited Annual Report 2020/21",
+        "url": "https://www.asx.com.au/asxpdf/20210903/pdf/45042h2jrs077g.pdf"
+      },
+      "ar2019": {
+        "title": "CSL Limited Annual Report 2019",
+        "url": "https://www.csl.com/-/media/csl/documents/annual-report-docs/csl-ltd-annual-report-2019-full.pdf"
+      },
+      "ar2017": {
+        "title": "CSL Limited Annual Report 2016/17",
+        "url": "https://www.csl.com/-/media/csl/documents/annual-report-docs/csl-ltd-annual-report-2017-full.pdf"
+      }
+    },
+    "generatedAt": "2026-07-15T10:52:53.540Z",
+    "notes": [
+      "Revenue is the printed Total Operating Revenue line, the basis on which the filings compute gross profit; it includes the other income line (well under one percent of the total in every year).",
+      "Interest expense is the face’s Finance costs line for all ten years: the note’s composition shifts across the decade (lease interest joins under AASB 16 in FY2020, fair-value items in FY2025), while the face line is printed every year; interest coverage is therefore marginally conservative.",
+      "Net income is profit attributable to CSL Limited shareholders (non-controlling interests arise from FY2023, CSL Vifor); total equity includes non-controlling interests, the figure on which the balance identity holds, consistent with the US corpus reading.",
+      "Short- and long-term debt are the face’s interest-bearing liabilities lines, which include lease liabilities from FY2020 under AASB 16; part of the FY2020 leverage step-up is that presentational change.",
+      "Cash is the balance-sheet cash and cash equivalents line; the cash-flow statement’s ending balance nets bank overdrafts and differs in some years.",
+      "Depreciation and amortisation appears only from FY2020: earlier cash flows use the direct method with no operating-section line, so the item stays absent for FY2016 to FY2019 (it is contextual and blocks nothing). The FY2020 to FY2023 line is printed as depreciation, amortisation and impairment.",
+      "FY2016 is transcribed from the FY2017 report’s restated USD comparative column (owner-approved 2026-07-15): the original FY2016 face prints no operating-profit line and derives gross profit on a sales-revenue basis, while the restated column matches the corpus presentation; CSL adopted USD presentation from FY2016, so all ten years are uniformly USD.",
+      "FY2020’s balance column is as restated in the FY2021 report (finalisation of the Vitaeris acquisition accounting); income and cash-flow columns are unrestated.",
+      "Dividends paid is the cash-flow line for dividends to CSL Limited shareholders (the only dividends line before FY2023; the non-controlling-interest dividends from FY2023 are excluded).",
+      "The fixture price is synthetic, chosen in USD (the statements’ currency) to exercise the valuation metrics; a real AUD market price deliberately renders the valuation metrics as the currency-mismatch state (data-model amendment of 2026-07-15)."
+    ]
+  },
+  "price": {
+    "amountMinor": 15000,
+    "currency": "USD",
+    "asOf": "2026-07-15",
+    "note": "Fixture price chosen to exercise the valuation metrics; not verified market data. In USD deliberately: see the currency-mismatch note."
+  },
+  "years": [
+    {
+      "fy": "FY2016",
+      "endDate": "2016-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 611530000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 305280000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 306250000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 143750000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 7160000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 155590000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 31350000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 124240000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 463117064
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 55660000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 381800000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 756270000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 137440000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 6230000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 308100000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 499550000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 256720000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 117860000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 49510000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 57900000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 64820000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2017",
+        "title": "CSL Limited Annual Report 2016/17",
+        "printedPages": {
+          "income": 81,
+          "balance": 82,
+          "cashflow": 84,
+          "eps": 99
+        }
+      }
+    },
+    {
+      "fy": "FY2017",
+      "endDate": "2017-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 692280000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 332680000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 359600000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 176890000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 9000000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 168980000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 35240000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 133740000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 456374648
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 84450000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 460210000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 912270000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 161810000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 12250000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 385270000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 595890000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 316380000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 124660000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 68910000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 60140000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 31490000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2017",
+        "title": "CSL Limited Annual Report 2016/17",
+        "printedPages": {
+          "income": 81,
+          "balance": 82,
+          "cashflow": 84,
+          "eps": 99
+        }
+      }
+    },
+    {
+      "fy": "FY2018",
+      "endDate": "2018-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 791530000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 353160000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 438370000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 238030000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 10840000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 228120000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 55230000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 172890000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 453876613
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 81470000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 499370000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 1077450000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 191470000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 22570000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 416060000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 669460000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 407990000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 190210000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 77880000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 67220000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 13840000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2019",
+        "title": "CSL Limited Annual Report 2019",
+        "printedPages": {
+          "income": 88,
+          "balance": 89,
+          "cashflow": 91,
+          "eps": 108
+        }
+      }
+    },
+    {
+      "fy": "FY2019",
+      "endDate": "2019-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 853860000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 376120000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 477740000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 250400000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 17670000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 234110000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 42240000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 191870000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 454027808
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 65780000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 554010000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 1231440000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 218820000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 42060000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 424220000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 706310000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 525130000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 164440000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 111760000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 80680000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2019",
+        "title": "CSL Limited Annual Report 2019",
+        "printedPages": {
+          "income": 88,
+          "balance": 89,
+          "cashflow": 91,
+          "eps": 108
+        }
+      }
+    },
+    {
+      "fy": "FY2020",
+      "endDate": "2020-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 915080000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 392440000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 522640000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 271650000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 15080000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 257270000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 47020000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 210250000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 455605010
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 119440000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 644620000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 1561550000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 214150000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 20230000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 579050000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 908790000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 652760000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 248830000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 120680000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 41980000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 88310000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2021",
+        "title": "CSL Limited Annual Report 2020/21",
+        "printedPages": {
+          "income": 106,
+          "balance": 107,
+          "cashflow": 109,
+          "eps": 126
+        }
+      }
+    },
+    {
+      "fy": "FY2021",
+      "endDate": "2021-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1031000000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 446670000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 584330000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 313000000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 17080000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 296310000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 58810000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 237500000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 456203803
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 180880000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 738970000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 1815690000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 310360000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 47380000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 533310000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 977560000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 838130000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 362190000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 119630000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 58960000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 95800000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2021",
+        "title": "CSL Limited Annual Report 2020/21",
+        "printedPages": {
+          "income": 106,
+          "balance": 107,
+          "cashflow": 109,
+          "eps": 126
+        }
+      }
+    },
+    {
+      "fy": "FY2022",
+      "endDate": "2022-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1056200000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 483000000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 573200000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 292700000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 16500000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 278000000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 52500000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 225500000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 470117188
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 1043600000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 1646100000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 2834600000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 710800000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 449400000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 516500000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1376900000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1457700000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 262900000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 107900000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 66800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 103900000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2023",
+        "title": "CSL Limited Annual Report 2022/23",
+        "printedPages": {
+          "income": 112,
+          "balance": 113,
+          "cashflow": 115,
+          "eps": 138
+        }
+      }
+    },
+    {
+      "fy": "FY2023",
+      "endDate": "2023-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1331000000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 646600000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 684400000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 306900000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 44400000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 266300000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 41900000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 219400000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 483886450
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 154800000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 925900000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3623400000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 460800000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 105500000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 1117200000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1840800000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1782600000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 260100000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 122800000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 83100000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 108500000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2023",
+        "title": "CSL Limited Annual Report 2022/23",
+        "printedPages": {
+          "income": 112,
+          "balance": 113,
+          "cashflow": 115,
+          "eps": 138
+        }
+      }
+    },
+    {
+      "fy": "FY2024",
+      "endDate": "2024-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1480000000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 712900000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 767100000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 381200000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 47600000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 337500000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 66100000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 264200000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 485199307
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 165700000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 1076800000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3802200000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 495000000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 94400000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 1123900000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1862100000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 1940100000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 276400000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 84700000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 93800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 119200000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2025",
+        "title": "CSL Limited Annual Report 2024/25",
+        "printedPages": {
+          "income": 90,
+          "balance": 91,
+          "cashflow": 93,
+          "eps": 109
+        }
+      }
+    },
+    {
+      "fy": "FY2025",
+      "endDate": "2025-06-30",
+      "currency": "USD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1555800000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 747900000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 807900000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 413400000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 44800000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 372400000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 58800000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 300200000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 486220349
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 215700000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 1185000000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3940400000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 481500000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 80400000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 1069400000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1799700000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 2140700000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 356100000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 63600000000
+        },
+        "depreciationAmortisation": {
+          "kind": "entered",
+          "amountMinor": 101700000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 133400000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2025",
+        "title": "CSL Limited Annual Report 2024/25",
+        "printedPages": {
+          "income": 90,
+          "balance": 91,
+          "cashflow": 93,
+          "eps": 109
+        }
+      }
+    }
+  ],
+  "expected": {
+    "metrics": {
+      "grossMargin": {
+        "FY2016": {
+          "status": "ok",
+          "display": "50.1%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "51.9%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "55.4%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "56.0%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "57.1%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "56.7%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "54.3%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "51.4%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "51.8%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "51.9%"
+        }
+      },
+      "operatingMargin": {
+        "FY2016": {
+          "status": "ok",
+          "display": "23.5%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "25.6%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "30.1%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "29.3%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "29.7%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "30.4%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "27.7%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "23.1%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "25.8%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "26.6%"
+        }
+      },
+      "netMargin": {
+        "FY2016": {
+          "status": "ok",
+          "display": "20.3%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "19.3%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "21.8%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "22.5%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "23.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "23.0%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "21.4%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "16.5%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "17.9%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "19.3%"
+        }
+      },
+      "roe": {
+        "FY2016": {
+          "status": "ok",
+          "display": "48.4%",
+          "basis": "ending"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "46.7%",
+          "basis": "average"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "47.7%",
+          "basis": "average"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "41.1%",
+          "basis": "average"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "35.7%",
+          "basis": "average"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "31.9%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "19.6%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "13.5%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "14.2%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "14.7%",
+          "basis": "average"
+        }
+      },
+      "roic": {
+        "FY2016": {
+          "status": "ok",
+          "display": "22.3%",
+          "basis": "ending"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "24.5%",
+          "basis": "average"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "25.9%",
+          "basis": "average"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "24.3%",
+          "basis": "average"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "21.6%",
+          "basis": "average"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "21.2%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "18.1%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "12.2%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "10.5%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "11.5%",
+          "basis": "average"
+        }
+      },
+      "debtToEquity": {
+        "FY2016": {
+          "status": "ok",
+          "display": "1.22"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "1.26"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "1.08"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "0.89"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "0.92"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "0.69"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "0.66"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "0.69"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.63"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "0.54"
+        }
+      },
+      "currentRatio": {
+        "FY2016": {
+          "status": "ok",
+          "display": "2.78"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "2.84"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "2.61"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "2.53"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "3.01"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "2.38"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "2.32"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "2.01"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "2.18"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "2.46"
+        }
+      },
+      "interestCoverage": {
+        "FY2016": {
+          "status": "ok",
+          "display": "20.1×"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "19.7×"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "22.0×"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "14.2×"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "18.0×"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "18.3×"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "17.7×"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "6.9×"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "8.0×"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "9.2×"
+        }
+      },
+      "fcf": {
+        "FY2016": {
+          "status": "ok",
+          "display": "$684m"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "$558m"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "$1.12b"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "$527m"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "$1.28b"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "$2.43b"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "$1.55b"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "$1.37b"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "$1.92b"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "$2.93b"
+        }
+      },
+      "fcfMargin": {
+        "FY2016": {
+          "status": "ok",
+          "display": "11.2%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "8.1%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "14.2%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "6.2%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "14.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "23.5%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "14.7%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "10.3%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "13.0%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "18.8%"
+        }
+      },
+      "fcfConversion": {
+        "FY2016": {
+          "status": "ok",
+          "display": "55.0%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "41.7%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "65.0%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "27.5%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "61.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "102.1%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "68.7%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "62.6%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "72.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "97.4%"
+        }
+      },
+      "pe": {
+        "FY2016": {
+          "status": "ok",
+          "display": "55.91"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "51.19"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "39.38"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "35.49"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "32.50"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "28.81"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "31.27"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "33.08"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "27.55"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "24.29"
+        }
+      },
+      "earningsYield": {
+        "FY2016": {
+          "status": "ok",
+          "display": "1.8%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "2.0%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "2.5%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "2.8%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "3.1%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "3.5%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "3.2%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "3.0%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "3.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "4.1%"
+        }
+      },
+      "fcfYield": {
+        "FY2016": {
+          "status": "ok",
+          "display": "1.0%"
+        },
+        "FY2017": {
+          "status": "ok",
+          "display": "0.8%"
+        },
+        "FY2018": {
+          "status": "ok",
+          "display": "1.6%"
+        },
+        "FY2019": {
+          "status": "ok",
+          "display": "0.8%"
+        },
+        "FY2020": {
+          "status": "ok",
+          "display": "1.9%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "3.5%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "2.2%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "1.9%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "2.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "4.0%"
+        }
+      }
+    },
+    "flags": []
+  }
+}

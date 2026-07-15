@@ -1,14 +1,15 @@
 # Golden fixtures
 
-The Phase 0 golden corpus (data-model spec section 11): one JSON file per company holding the canonical line items per fiscal year in integer minor units, per-year source references (EDGAR accession numbers), and the expected `MetricsReport` at P-2 display precision together with the expected red-flag results. `test/golden.test.ts` asserts the engine reproduces every expectation exactly; it is the Phase 0 exit criterion.
+The golden corpus (data-model spec section 11): one JSON file per company holding the canonical line items per fiscal year in integer minor units, per-year source references, and the expected `MetricsReport` at P-2 display precision together with the expected red-flag results. `test/golden.test.ts` asserts the engine reproduces every expectation exactly; the US five were the Phase 0 exit criterion, and the ASX companies join through Phase 2.5.
 
-| Company | Ticker | FYs | Generated |
-|---|---|---|---|
-| Apple | AAPL | 10 (FY2016 to FY2025) | 2026-07-11 |
-| Microsoft | MSFT | 6 (FY2020 to FY2025) | 2026-07-11 |
-| Coca-Cola | KO | 10 (FY2016 to FY2025) | 2026-07-11 |
-| Costco | COST | 10 (FY2016 to FY2025) | 2026-07-11 |
-| Union Pacific | UNP | 6 (FY2020 to FY2025) | 2026-07-11 |
+| Company | Ticker | FYs | Source | Generated |
+|---|---|---|---|---|
+| Apple | AAPL | 10 (FY2016 to FY2025) | EDGAR XBRL | 2026-07-11 |
+| Microsoft | MSFT | 6 (FY2020 to FY2025) | EDGAR XBRL | 2026-07-11 |
+| Coca-Cola | KO | 10 (FY2016 to FY2025) | EDGAR XBRL | 2026-07-11 |
+| Costco | COST | 10 (FY2016 to FY2025) | EDGAR XBRL | 2026-07-11 |
+| Union Pacific | UNP | 6 (FY2020 to FY2025) | EDGAR XBRL | 2026-07-11 |
+| CSL | CSL | 10 (FY2016 to FY2025) | Annual reports, hand-transcribed | 2026-07-15 |
 
 ## Provenance and verification
 
@@ -37,4 +38,18 @@ Real filings exercised corners the spec leaves open. The choices below are imple
 4. **Costco's stray gross-profit tag is excluded.** Costco prints no gross-profit line; a one-off `GrossProfit` tag in the FY2019 filing uses a net-sales basis (excluding membership fees) that disagrees with the total-revenue derivation by 3,352 USD million and would trip the P-8 gate. M1 therefore stays on the derived basis in all years. Note Costco's gross margin reads about 12.8% because total revenue includes membership fees; that is what the filing supports.
 5. **Equity prefers the including-noncontrolling-interests total.** The section 2 hint says "Total stockholders' equity", but the P-2 balance gate (assets = liabilities + equity) only closes with the including-NCI total for filers with NCI (KO, early COST). The mapping prefers `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest` and falls back to the parent-only figure. Net income remains parent-attributable (`NetIncomeLoss`), so ROE for NCI-carrying filers mixes a parent numerator with a total-equity denominator; conservative, and immaterial for this corpus, but worth pinning.
 6. **Rule window reading.** "Over the latest 3 years" (R3, R5) is implemented as the three-year span from t minus 3 to t (four consecutive labels, CAGR exponent one third). R1's magnitude test additionally requires positive cumulative net income; a loss-making three-year window stays silent rather than dividing by a degenerate base.
-7. **No red flags fire in this corpus.** All five are cash-generative mega caps; the expected flag list is empty for each, and the golden tests assert exactly that. The rules' firing behaviour is covered by unit tests with synthetic series.
+7. **No red flags fire in this corpus.** The US five and CSL are cash-generative large caps; the expected flag list is empty for each, and the golden tests assert exactly that. The rules' firing behaviour is covered by unit tests with synthetic series.
+
+## The ASX corpus (Phase 2.5)
+
+ASX companies have no EDGAR equivalent, so their fixtures are transcribed by hand from the lodged annual reports, never through the extraction pipeline: this corpus is the yardstick the pipeline is measured against. The hand-typed transcription (figures exactly as printed, in millions, with printed page numbers per statement) lives in [transcriptions/](transcriptions/); `tools/build-asx-fixture.mjs` checks it (balance identity and gross-profit identity within the P-2 tolerance, and net income over diluted shares must reproduce the PRINTED diluted EPS at its printed precision, which pins the transcription of all three figures together) and emits the fixture with expected values from the same independent implementation the EDGAR generator uses. Rebuild with `node tools/build-asx-fixture.mjs csl`.
+
+### CSL interpretation notes for owner review
+
+8. **CSL reports in US dollars and trades in Australian dollars.** All ten years are uniformly USD (the presentation-currency switch predates the corpus: even the FY2016 report is USD). The fixture price is synthetic USD so the valuation metrics exercise; entering a real AUD market price in the app renders them as the currency-mismatch state by design (data-model amendment of 2026-07-15).
+9. **Each year is sourced from the annual report that carries it**: odd years from their own report, even years from the following report's comparative column. Two consequences, both owner-approved or noted: FY2016 comes from the FY2017 report's restated comparative (approved 2026-07-15; the original FY2016 face prints no operating-profit line and derives gross profit on a sales-revenue basis), and FY2020's balance column is as restated in the FY2021 report for the Vitaeris acquisition finalisation.
+10. **Revenue is the printed Total Operating Revenue line**, the basis on which the filings compute gross profit; it includes the other income line (well under one percent of the total in every year).
+11. **Interest expense is the face's Finance costs line for all ten years.** The note's composition shifts across the decade (lease interest joins under AASB 16 in FY2020, fair-value losses in FY2025), while the face line is printed every year; interest coverage is therefore marginally conservative.
+12. **Net income is profit attributable to CSL shareholders; total equity includes non-controlling interests** (material from FY2023, CSL Vifor), the same mixed reading as note 5 and the figure on which the balance identity holds exactly in all ten years.
+13. **The debt items are the face's interest-bearing liabilities lines**, which include lease liabilities from FY2020 under AASB 16; part of the FY2020 leverage step-up is that presentational change. Cash is the balance-sheet line (the cash-flow ending balance nets bank overdrafts).
+14. **Depreciation and amortisation exists only from FY2020**: earlier cash flows use the direct method with no operating-section line, so the contextual item stays absent for FY2016 to FY2019. The FY2020 to FY2023 line is printed as depreciation, amortisation and impairment.

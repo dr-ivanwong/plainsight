@@ -34,7 +34,8 @@ type ExpectedMetric =
 interface Fixture {
   meta: { name: string; ticker: string; currency: string };
   price: { amountMinor: number; currency: string; asOf: string };
-  years: (StatementYear & { sourceRef: { system: string; accessions: string[] } })[];
+  /** The source reference shape differs by system (EDGAR accessions; ASX documents and printed pages). */
+  years: (StatementYear & { sourceRef: { system: string } & Record<string, unknown> })[];
   expected: {
     metrics: Record<MetricId, Record<FyLabel, ExpectedMetric>>;
     flags: { ruleId: string; severity: string; window: FyLabel[] }[];
@@ -44,9 +45,10 @@ interface Fixture {
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 const fixtureFiles = readdirSync(FIXTURES_DIR).filter((file) => file.endsWith('.json'));
 
-const EXPECTED_CORPUS = ['aapl.json', 'cost.json', 'ko.json', 'msft.json', 'unp.json'];
+// The Phase 0 five plus the Phase 2.5 ASX corpus as it lands (spec section 11).
+const EXPECTED_CORPUS = ['aapl.json', 'cost.json', 'csl.json', 'ko.json', 'msft.json', 'unp.json'];
 
-it('the Phase 0 corpus is present (5 companies, spec section 11)', () => {
+it('the golden corpus is present (spec section 11)', () => {
   expect(fixtureFiles.sort()).toEqual(EXPECTED_CORPUS);
 });
 
