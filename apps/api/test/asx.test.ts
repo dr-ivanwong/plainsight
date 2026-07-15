@@ -105,7 +105,7 @@ describe('the MAP client', () => {
     const statuses = [503, 429, 200];
     const client = new MapClient({
       contact: 'owner@example.com',
-      fetchImpl: vi.fn(async () => new Response(YEAR_PAGE, { status: statuses.shift() })) as unknown as typeof fetch,
+      fetchImpl: vi.fn(async () => new Response(YEAR_PAGE, { status: statuses.shift() ?? 200 })) as unknown as typeof fetch,
       sleep: () => Promise.resolve(),
       now: () => 0
     });
