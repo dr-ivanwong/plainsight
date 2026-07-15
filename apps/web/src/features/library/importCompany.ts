@@ -29,7 +29,7 @@ export interface ImportListing {
 /**
  * Re-importing a ticker opens what already exists rather than minting a
  * twin: the library is the owner's research, and a duplicate row would only
- * split it. Samples are excluded (the sample trio wears real tickers).
+ * split it. Samples are excluded (the sample set wears real tickers).
  */
 export async function existingImportTarget(
   db: PlainsightDb,

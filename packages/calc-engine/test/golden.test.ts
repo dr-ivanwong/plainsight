@@ -45,8 +45,19 @@ interface Fixture {
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 const fixtureFiles = readdirSync(FIXTURES_DIR).filter((file) => file.endsWith('.json'));
 
-// The Phase 0 five plus the Phase 2.5 ASX corpus as it lands (spec section 11).
-const EXPECTED_CORPUS = ['aapl.json', 'cost.json', 'csl.json', 'ko.json', 'msft.json', 'unp.json'];
+// The Phase 0 five plus the Phase 2.5 ASX corpus (spec section 11).
+const EXPECTED_CORPUS = [
+  'aapl.json',
+  'coh.json',
+  'cost.json',
+  'csl.json',
+  'jbh.json',
+  'ko.json',
+  'msft.json',
+  'unp.json',
+  'wes.json',
+  'wow.json'
+];
 
 it('the golden corpus is present (spec section 11)', () => {
   expect(fixtureFiles.sort()).toEqual(EXPECTED_CORPUS);

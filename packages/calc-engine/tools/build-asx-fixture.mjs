@@ -8,9 +8,24 @@
  *
  * The builder is also the transcription's checker. Before writing anything
  * it verifies, per year: the balance identity and the gross-profit identity
- * within the pinned tolerance; netIncome ÷ dilutedShares reproduces the
- * PRINTED diluted EPS at the printed precision (which pins all three figures
- * together); clean cent conversion; and safe-integer minor units.
+ * within the pinned tolerance (the gross-profit check is skipped when the
+ * filing prints no cost-of-sales or gross-profit line, the expenses-by-nature
+ * case); netIncome ÷ dilutedShares reproduces the PRINTED diluted EPS at the
+ * printed precision (which pins all three figures together); clean cent
+ * conversion; and safe-integer minor units.
+ *
+ * Transcription vocabulary beyond plain printed numbers:
+ * - a value of 'nrz' marks a line the filing does not print, entered as the
+ *   not-reported-zero state (a printed dash is a printed nil: enter 0);
+ * - eps.unit is 'cents' for filings that print EPS in cents ('dollars' when
+ *   omitted), and meta.valuesDp is the decimal places of the printed
+ *   millions (default 1), which sets the net-income print-rounding grain;
+ * - year.sharesDisclosedTo (in shares) widens the checksum by the share
+ *   count's disclosure grain when the note rounds the denominator (JB Hi-Fi
+ *   discloses to 0.1 million; Wesfarmers to whole millions);
+ * - eps.printSlack (printed EPS units) is an explicit, documented allowance
+ *   for a filing whose own printed figures do not reconcile; it requires
+ *   eps.slackNote and the residual is reported at build time.
  *
  * Usage: node tools/build-asx-fixture.mjs csl
  */
@@ -46,9 +61,14 @@ function millionsToMinor(valueMillions, context) {
 }
 
 const failures = [];
+const valuesDp = company.meta.valuesDp ?? 1;
 const years = company.years.map((year) => {
   const values = {};
   for (const [itemId, printed] of Object.entries(year.values)) {
+    if (printed === 'nrz') {
+      values[itemId] = { kind: 'not_reported_zero' };
+      continue;
+    }
     const amountMinor =
       itemId === 'dilutedShares'
         ? printed
@@ -59,30 +79,55 @@ const years = company.years.map((year) => {
     values[itemId] = { kind: 'entered', amountMinor };
   }
 
+  // Printed value in millions for the identity checks, with the
+  // not-reported-zero sentinel resolving to 0 (its meaning in sums).
+  const pv = (itemId) => (year.values[itemId] === 'nrz' ? 0 : year.values[itemId]);
+
   // Identity gates at the pinned tolerance: max(3 units at millions scale,
   // 0.1% of the larger side), in printed millions here.
   const tolerance = (larger) => Math.max(3, 0.001 * Math.abs(larger));
-  const { totalAssets, totalLiabilities, totalEquity, revenue, costOfRevenue, grossProfit } =
-    year.values;
-  const balanceDiff = Math.abs(totalAssets - (totalLiabilities + totalEquity));
-  if (balanceDiff > tolerance(Math.max(totalAssets, totalLiabilities + totalEquity))) {
+  const totalAssets = pv('totalAssets');
+  const liabilitiesPlusEquity = pv('totalLiabilities') + pv('totalEquity');
+  const balanceDiff = Math.abs(totalAssets - liabilitiesPlusEquity);
+  if (balanceDiff > tolerance(Math.max(totalAssets, liabilitiesPlusEquity))) {
     failures.push(`${year.fy}: balance identity off by ${balanceDiff.toFixed(1)}m`);
   }
-  const derivedGp = revenue - costOfRevenue;
-  if (Math.abs(grossProfit - derivedGp) > tolerance(Math.max(grossProfit, derivedGp))) {
-    failures.push(`${year.fy}: gross profit ${grossProfit} vs derived ${derivedGp.toFixed(1)}`);
+  if (year.values.costOfRevenue !== undefined && year.values.grossProfit !== undefined) {
+    const grossProfit = pv('grossProfit');
+    const derivedGp = pv('revenue') - pv('costOfRevenue');
+    if (Math.abs(grossProfit - derivedGp) > tolerance(Math.max(grossProfit, derivedGp))) {
+      failures.push(`${year.fy}: gross profit ${grossProfit} vs derived ${derivedGp.toFixed(1)}`);
+    }
   }
 
   // The printed-EPS checksum pins netIncome, dilutedShares, and the
   // transcription of both: net income in millions x 1e6 over the share
-  // count. The filing computes EPS from unrounded figures while the face
-  // prints millions, so the tolerance carries the print rounding of net
-  // income (±0.05m over the share count) on top of the EPS print rounding.
-  const computedEps = (year.values.netIncome * 1e6) / year.values.dilutedShares;
-  const epsTolerance = 0.5 * 10 ** -year.eps.dp + 0.05e6 / year.values.dilutedShares;
-  if (Math.abs(computedEps - year.eps.diluted) > epsTolerance) {
+  // count, in the printed unit. The filing computes EPS from unrounded
+  // figures while the face prints rounded millions, so the tolerance
+  // carries the print-rounding grains on top of the EPS print rounding:
+  // net income to half its printed decimal, the share count to its
+  // disclosure grain where the note rounds it, plus any documented
+  // print slack (see the header).
+  const unitFactor = (year.eps.unit ?? 'dollars') === 'cents' ? 100 : 1;
+  const dilutedShares = year.values.dilutedShares;
+  const computedEps = (pv('netIncome') * 1e6 * unitFactor) / dilutedShares;
+  const printSlack = year.eps.printSlack ?? 0;
+  if (printSlack > 0 && !year.eps.slackNote) {
+    failures.push(`${year.fy}: eps.printSlack requires eps.slackNote`);
+  }
+  const epsTolerance =
+    0.5 * 10 ** -year.eps.dp +
+    (0.5 * 10 ** -valuesDp * 1e6 * unitFactor) / dilutedShares +
+    (Math.abs(year.eps.diluted) * (year.sharesDisclosedTo ?? 0)) / dilutedShares +
+    printSlack;
+  const epsResidual = Math.abs(computedEps - year.eps.diluted);
+  if (epsResidual > epsTolerance) {
     failures.push(
       `${year.fy}: diluted EPS computes to ${computedEps.toFixed(year.eps.dp + 1)}, printed ${year.eps.diluted}`
+    );
+  } else if (printSlack > 0) {
+    console.log(
+      `${year.fy}: printed EPS residual ${epsResidual.toFixed(year.eps.dp + 2)} against slack ${printSlack} (${year.eps.slackNote})`
     );
   }
 

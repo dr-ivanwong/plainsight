@@ -1,0 +1,1030 @@
+{
+  "meta": {
+    "name": "Cochlear",
+    "ticker": "COH",
+    "exchange": "ASX",
+    "currency": "AUD",
+    "source": "ASX-lodged annual reports, transcribed by hand",
+    "selectionPolicy": "Each fiscal year as printed in the annual report that carries it: odd years from their own report, even years from the following report’s comparative column.",
+    "documents": {
+      "ar2025": {
+        "title": "Cochlear Limited Annual Report 2025",
+        "url": "https://announcements.asx.com.au/asxpdf/20250815/pdf/06mwwc8bndj71z.pdf"
+      },
+      "ar2023": {
+        "title": "Cochlear Limited Annual Report 2023",
+        "url": "https://announcements.asx.com.au/asxpdf/20230815/pdf/05smklwlw4lr8v.pdf"
+      },
+      "ar2021": {
+        "title": "Cochlear Limited Annual Report 2021",
+        "url": "https://www.annualreports.com/HostedData/AnnualReportArchive/C/ASX_COH_2021.pdf"
+      }
+    },
+    "generatedAt": "2026-07-15T11:47:03.732Z",
+    "notes": [
+      "Operating income is the face’s Results from operating activities line, printed every year; it sits above net finance income or expense, so interest income is excluded from it.",
+      "Interest expense is the face’s Finance expense, interest line (Cochlear separates finance income and finance expense on the face).",
+      "Short- and long-term debt are the face’s Loans and borrowings lines only: lease liabilities are presented separately and stay out of debt, the same reading as JB Hi-Fi. Years with no loans line are entered as not reported; FY2021’s and FY2023’s current line prints a dash, entered 0. FY2020’s borrowings (393.1 current, 79.9 non-current) funded the patent-litigation settlement and were repaid through FY2021 to FY2023.",
+      "Capex is the acquisition of leasehold improvements, plant and equipment and land and buildings line; the separately printed IT-system and other-intangible acquisition lines are excluded, consistent with capex as the property acquisitions line across the corpus.",
+      "The cash flows are direct-method in all six years with no depreciation line in the operating section, so depreciationAmortisation stays absent.",
+      "FY2020 is a loss year: the patent litigation expense (503.7) drives negative operating income and a pretax loss; the income tax benefit (32.8) is entered as negative tax expense; operating cash flow is negative (the settlement was paid during the year); and the printed diluted loss per share equals basic because potential shares are anti-dilutive. FY2020 also carries the equity raising (institutional placement and share purchase plan, about 1,075.6 combined) in financing.",
+      "The EPS note discloses exact weighted-average diluted share counts and the exact net profit, so the checksum needs no disclosure-grain terms.",
+      "Net income is net profit (no non-controlling interests in any year); total equity has no non-controlling component, and the balance identity holds exactly in all six years.",
+      "The FY2021 report is sourced from the annualreports.com archive mirror (the content is the lodged annual report; the statements and notes were read and verified page for page); the FY2023 and FY2025 reports are the ASX-lodged originals.",
+      "The fixture price is synthetic, in Australian dollars (the statements’ currency), chosen so the valuation metrics exercise; not verified market data."
+    ]
+  },
+  "price": {
+    "amountMinor": 31000,
+    "currency": "AUD",
+    "asOf": "2026-07-15",
+    "note": "Fixture price chosen to exercise the valuation metrics; not verified market data."
+  },
+  "years": [
+    {
+      "fy": "FY2020",
+      "endDate": "2020-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 132060000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 34440000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 97620000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": -26220000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 1050000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": -27110000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": -3280000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": -23830000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 59634602
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 56500000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 147750000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 257570000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 81750000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 39310000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 7990000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 117420000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 140150000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": -15780000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 9290000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 19370000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2021",
+        "title": "Cochlear Limited Annual Report 2021",
+        "printedPages": {
+          "income": 79,
+          "balance": 81,
+          "cashflow": 83,
+          "eps": 90
+        }
+      }
+    },
+    {
+      "fy": "FY2021",
+      "endDate": "2021-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 149760000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 41020000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 108740000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 37410000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 1200000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 36570000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 3920000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 32650000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 65734342
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 60960000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 123000000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 243820000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 40250000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 0
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 4500000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 73650000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 170170000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 27130000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 4120000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 7560000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2021",
+        "title": "Cochlear Limited Annual Report 2021",
+        "printedPages": {
+          "income": 79,
+          "balance": 81,
+          "cashflow": 83,
+          "eps": 90
+        }
+      }
+    },
+    {
+      "fy": "FY2022",
+      "endDate": "2022-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 164830000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 41100000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 123730000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 40000000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 860000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 39380000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 10470000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 28910000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 65770646
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 62930000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 132700000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 246510000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 52760000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 4260000000
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 77940000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 168570000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 37650000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 4450000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 19400000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 0
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2023",
+        "title": "Cochlear Limited Annual Report 2023",
+        "printedPages": {
+          "income": 113,
+          "balance": 114,
+          "cashflow": 117,
+          "eps": 122
+        }
+      }
+    },
+    {
+      "fy": "FY2023",
+      "endDate": "2023-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 193610000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 48800000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 144810000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 38950000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 940000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 39660000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 9600000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 30060000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 65896853
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 55550000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 136150000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 256870000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 57800000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 0
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 81990000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 174880000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 36240000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 5000000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 19740000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 2960000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2023",
+        "title": "Cochlear Limited Annual Report 2023",
+        "printedPages": {
+          "income": 113,
+          "balance": 114,
+          "cashflow": 117,
+          "eps": 122
+        }
+      }
+    },
+    {
+      "fy": "FY2024",
+      "endDate": "2024-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 223560000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 56210000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 167350000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 47500000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 920000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 48480000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 12800000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 35680000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 65720649
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 51360000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 145210000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 274510000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 63150000000
+        },
+        "shortTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 90460000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 184050000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 38880000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 6240000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 24570000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 4300000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2025",
+        "title": "Cochlear Limited Annual Report 2025",
+        "printedPages": {
+          "income": 128,
+          "balance": 129,
+          "cashflow": 132,
+          "eps": 136
+        }
+      }
+    },
+    {
+      "fy": "FY2025",
+      "endDate": "2025-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 234310000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 61520000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 172790000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 51780000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 1100000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 51850000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 12960000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 38890000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 65606224
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 27570000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 141680000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 282500000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 60230000000
+        },
+        "shortTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 87470000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 195030000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 23760000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 6240000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 27820000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 2830000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2025",
+        "title": "Cochlear Limited Annual Report 2025",
+        "printedPages": {
+          "income": 128,
+          "balance": 129,
+          "cashflow": 132,
+          "eps": 136
+        }
+      }
+    }
+  ],
+  "expected": {
+    "metrics": {
+      "grossMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "73.9%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "72.6%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "75.1%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "74.8%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "74.9%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "73.7%"
+        }
+      },
+      "operatingMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−19.9%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "25.0%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "24.3%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "20.1%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "21.2%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "22.1%"
+        }
+      },
+      "netMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−18.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "21.8%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "17.5%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "15.5%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "16.0%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "16.6%"
+        }
+      },
+      "roe": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−17.0%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "21.0%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "17.1%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "17.5%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "19.9%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "20.5%",
+          "basis": "average"
+        }
+      },
+      "roic": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−20.0%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "27.3%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "26.3%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "25.8%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "27.7%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "25.9%",
+          "basis": "average"
+        }
+      },
+      "debtToEquity": {
+        "FY2020": {
+          "status": "ok",
+          "display": "0.34"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "0.03"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "0.03"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "0.00"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.00"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "0.00"
+        }
+      },
+      "currentRatio": {
+        "FY2020": {
+          "status": "ok",
+          "display": "1.81"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "3.06"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "2.52"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "2.36"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "2.30"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "2.35"
+        }
+      },
+      "interestCoverage": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−25.0×"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "31.2×"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "46.5×"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "41.4×"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "51.6×"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "47.1×"
+        }
+      },
+      "fcf": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−$251m"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "$230m"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "$332m"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "$312m"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "$326m"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "$175m"
+        }
+      },
+      "fcfMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−19.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "15.4%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "20.1%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "16.1%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "14.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "7.5%"
+        }
+      },
+      "fcfConversion": {
+        "FY2020": {
+          "status": "not_meaningful",
+          "reason": "negative_earnings"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "70.5%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "114.8%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "103.9%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "91.5%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "45.1%"
+        }
+      },
+      "pe": {
+        "FY2020": {
+          "status": "not_meaningful",
+          "reason": "negative_earnings"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "62.41"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "70.53"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "67.96"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "57.10"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "52.30"
+        }
+      },
+      "earningsYield": {
+        "FY2020": {
+          "status": "not_meaningful",
+          "reason": "negative_earnings"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "1.6%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "1.4%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "1.5%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "1.8%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "1.9%"
+        }
+      },
+      "fcfYield": {
+        "FY2020": {
+          "status": "ok",
+          "display": "−1.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "1.1%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "1.6%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "1.5%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "1.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "0.9%"
+        }
+      }
+    },
+    "flags": []
+  }
+}
