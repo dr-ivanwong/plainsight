@@ -33,3 +33,13 @@ export {
   type PreparedDocument,
   type PreparedSection
 } from './provider.js';
+export { ProviderCallError, type FetchLike, type ProviderFailureKind } from './adapters/http.js';
+export { type AdapterConfig } from './adapters/shared.js';
+export { providerFor } from './adapters/factory.js';
+export {
+  runExtraction,
+  type AttemptFailureKind,
+  type AttemptRecord,
+  type LadderOutcome,
+  type RunExtractionOptions
+} from './ladder.js';
