@@ -62,11 +62,21 @@ function printedOffset(pages: readonly (readonly string[])[], windowPages: reado
     }
   }
   let best: { offset: number; count: number } | undefined;
+  let secondCount = 0;
   for (const [offset, count] of votes) {
-    if (best === undefined || count > best.count) best = { offset, count };
+    if (best === undefined || count > best.count) {
+      secondCount = best?.count ?? 0;
+      best = { offset, count };
+    } else if (count > secondCount) {
+      secondCount = count;
+    }
   }
-  const needed = Math.max(2, Math.ceil(windowPages.length / 2));
-  return best !== undefined && best.count >= needed ? best.offset : undefined;
+  // Near-unanimous and unrivalled: spread layouts (two printed pages per
+  // pdf page) vote two adjacent offsets equally and are rightly rejected.
+  const needed = Math.max(2, windowPages.length - 1);
+  return best !== undefined && best.count >= needed && best.count >= 2 * secondCount
+    ? best.offset
+    : undefined;
 }
 
 export async function preprocessPdf(
@@ -101,6 +111,15 @@ export async function preprocessPdf(
     }
     if (window.epsNotePage !== undefined && window.epsNotePage > window.to) {
       windowPages.push(window.epsNotePage);
+      // The note often opens with basic EPS and carries the diluted table
+      // overleaf; take the next page too when it reads like the same note.
+      const overleaf = window.epsNotePage + 1;
+      if (
+        overleaf <= pdf.pageCount &&
+        /diluted|weighted average/i.test(pages[overleaf - 1]!.join(' '))
+      ) {
+        windowPages.push(overleaf);
+      }
     }
 
     const needsVision = windowPages.some((pageNumber) => chars[pageNumber - 1]! < SPARSE_PAGE_CHARS);

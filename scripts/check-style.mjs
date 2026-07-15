@@ -86,8 +86,9 @@ const PLAN_CODE = /\b(?<!-)(?:[MRNDS]\d{1,2}|[A-Z][A-Z0-9]{0,7}-\d{1,3})\b/g;
 const PLAN_CODE_ALLOW = new Set(['S3']);
 // Well-known hyphenated technical terms, exempt by the leading letters of
 // their first segment: UTF-8, SHA-256, ISO- and RFC-numbered standards,
-// COVID-19, FY2024-25 ranges. Never name a review dimension after one.
-const PLAN_CODE_ALLOW_PREFIXES = new Set(['UTF', 'SHA', 'ISO', 'RFC', 'COVID', 'FY']);
+// COVID-19, FY2024-25 ranges, PDF-1.x format versions. Never name a review
+// dimension after one.
+const PLAN_CODE_ALLOW_PREFIXES = new Set(['UTF', 'SHA', 'ISO', 'RFC', 'COVID', 'FY', 'PDF']);
 
 // Blank out SVG path data (d="M12 4v16" is drawing, not a metric) the way
 // inline code spans are blanked: lengths preserved so columns stay right.
