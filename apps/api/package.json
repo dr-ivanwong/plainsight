@@ -22,6 +22,7 @@
     "@aws-sdk/client-ssm": "^3.899.0",
     "@aws-sdk/lib-dynamodb": "^3.899.0",
     "@plainsight/api-contract": "workspace:*",
+    "@plainsight/extraction-core": "workspace:*",
     "@plainsight/calc-engine": "workspace:*",
     "zod": "^4.4.3"
   },

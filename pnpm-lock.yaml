@@ -37,6 +37,9 @@ importers:
       '@plainsight/calc-engine':
         specifier: workspace:*
         version: link:../../packages/calc-engine
+      '@plainsight/extraction-core':
+        specifier: workspace:*
+        version: link:../../packages/extraction-core
       zod:
         specifier: ^4.4.3
         version: 4.4.3
