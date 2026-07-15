@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    // Isomorphic by construction: this package runs in the browser and in
+    // Lambda, so nothing here may touch Node-only or DOM-only APIs.
+    "lib": ["ES2023"],
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}
