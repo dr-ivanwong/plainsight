@@ -111,7 +111,7 @@ describe('the library', () => {
     expect(within(list).getByRole('link', { name: /Woolworths/ })).toBeVisible();
   });
 
-  it('loads the sample trio with one tap, banners it, and the banner dismisses for good', async () => {
+  it('loads the sample set with one tap, banners it, and the banner dismisses for good', async () => {
     renderLibrary();
     fireEvent.click(
       await screen.findByRole('button', { name: 'See it with sample data' })
@@ -120,7 +120,8 @@ describe('the library', () => {
     expect(await screen.findByRole('link', { name: /Apple, sample data/ })).toBeVisible();
     expect(screen.getByRole('link', { name: /Coca-Cola, sample data/ })).toBeVisible();
     expect(screen.getByRole('link', { name: /Costco, sample data/ })).toBeVisible();
-    expect(screen.getAllByText('Sample')).toHaveLength(3);
+    expect(screen.getByRole('link', { name: /CSL, sample data/ })).toBeVisible();
+    expect(screen.getAllByText('Sample')).toHaveLength(4);
 
     const bannerLink = screen.getByRole('link', { name: 'Data & storage' });
     expect(bannerLink.getAttribute('href')).toBe('/settings/data');

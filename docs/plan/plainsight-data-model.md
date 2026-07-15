@@ -270,7 +270,7 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 - **Fixture format:** one JSON file per company: canonical line items per FY in minor units, a per-statement source reference (filing id + page), the expected `MetricsReport` computed by hand at display precision, and the expected red-flag results.
 - **Acceptance:** line items equal the filing exactly (integer equality); metric values equal the hand computation at P-2 display precision; every bug ever found adds a regression fixture (main plan §5).
 - **Depth rationale (owner-confirmed 2026-07-11):** 10 FYs for sample-data companies (their fixtures back the S2/S3 ten-year sparklines end to end); 6 FYs minimum elsewhere, which covers the widest windows in the system (the 5-year delta chip needs 6 labels; R2 needs 4). Hand-verifying ten years for all ten companies (~6,000 figures) buys nothing the 6-year floor doesn't. CSL keeps 10 FYs because it joins the sample set with Phase 2.5 (D1).
-- **Sample subset:** the S2 "See it with sample data" fixtures are generated from this corpus (frontend §4). The sample set is Apple, Coca-Cola, Costco (D1, resolved); CSL joins it when Phase 2.5 lands.
+- **Sample subset:** the S2 "See it with sample data" fixtures are generated from this corpus (frontend §4). The sample set is Apple, Coca-Cola, Costco, and CSL (D1, resolved; CSL joined 2026-07-15 with the Phase 2.5 ASX golden files).
 
 ## 12. Open decisions and the owner review list
 

@@ -1,0 +1,1035 @@
+{
+  "meta": {
+    "name": "JB Hi-Fi",
+    "ticker": "JBH",
+    "exchange": "ASX",
+    "currency": "AUD",
+    "source": "ASX-lodged Appendix 4E and Financial Reports, transcribed by hand",
+    "selectionPolicy": "Each fiscal year as printed in the financial report that carries it: odd years from their own report, even years from the following report’s comparative column.",
+    "documents": {
+      "fr2025": {
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2025",
+        "url": "https://assets.ctfassets.net/xa93kvziwaye/5b5OE8DLaDkGbv1BcIyZYA/b7fa8486816253a975c9a19b5a59050e/Appendix_4E_and_Financial_Report_2025_Full_Year.pdf"
+      },
+      "fr2023": {
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2023",
+        "url": "https://assets.ctfassets.net/xa93kvziwaye/5VMzeyPDKFn41kQhKQVkXP/f81d1256e3d4961f456e7001465a701e/4E_140823.pdf"
+      },
+      "fr2021": {
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2021",
+        "url": "https://assets.ctfassets.net/xa93kvziwaye/Ao5IEwKHxEypJH1ysg4fT/9ae6e1b041539a70cd90489766d6cf8f/Appendix-4E-and-Financial-Report-2021-Full-Year.pdf"
+      }
+    },
+    "generatedAt": "2026-07-15T11:47:03.694Z",
+    "notes": [
+      "Operating income is the group EBIT printed in the directors’ report five-year summary: the statement of profit or loss has no operating-profit line (expenses by function straight to profit before tax). The printed EBIT reconciles to profit before tax plus finance costs less interest revenue exactly in FY2020 to FY2024 and within 0.1m in FY2025 (accrued versus received interest).",
+      "Interest expense is the face’s Finance costs line, which includes lease interest under AASB 16 (the cash flow statement splits borrowing interest from lease interest; the face line is their total plus minor items).",
+      "Short- and long-term debt are the face’s Borrowings lines only: JB Hi-Fi presents lease liabilities separately from borrowings, and the corpus keeps that split, so leverage reads near-zero debt with the store leases inside total liabilities. Years with no borrowings line on the face (both items in FY2020 and FY2021, one side in the other years as the facility moved between current and non-current) are entered as not reported; FY2025’s current borrowings prints a dash, entered 0.",
+      "EPS is printed in cents to two decimal places, and the weighted-average diluted share counts are disclosed only to 0.1 million, so the checksum tolerance carries a full disclosure-grain term: the printed FY2022 diluted denominator (114.2m) is itself a sum of rounded components and reproduces the printed EPS only at that grain.",
+      "The cash flows are direct-method in all six years with no depreciation line in the operating section, so depreciationAmortisation stays absent (contextual, blocks nothing).",
+      "Share repurchases is the printed off-market buy-back line alone (FY2022, 250.0): the separately printed buy-back transaction costs and the employee-share-trust purchases are excluded. FY2023 prints a dash for the buy-back, entered 0.",
+      "Net income is profit attributable to owners of the Company (non-controlling interests first arise in FY2025 from the e&s acquisition); total equity includes non-controlling interests, consistent with the corpus reading, and the balance identity holds exactly in all six years.",
+      "The fixture price is synthetic, in Australian dollars (the statements’ currency), chosen so the valuation metrics exercise; not verified market data."
+    ]
+  },
+  "price": {
+    "amountMinor": 11000,
+    "currency": "AUD",
+    "asOf": "2026-07-15",
+    "note": "Fixture price chosen to exercise the valuation metrics; not verified market data."
+  },
+  "years": [
+    {
+      "fy": "FY2020",
+      "endDate": "2020-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 791890000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 622480000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 169410000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 48330000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 3640000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 44800000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 14570000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 30230000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 116000000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 25150000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 124580000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 315230000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 134590000000
+        },
+        "shortTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 204660000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 110570000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 98130000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 4310000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 17230000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "fr2021",
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2021",
+        "printedPages": {
+          "income": 61,
+          "balance": 63,
+          "cashflow": 65,
+          "eps": 69,
+          "ebit": 36
+        }
+      }
+    },
+    {
+      "fy": "FY2021",
+      "endDate": "2021-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 891610000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 693890000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 197720000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 74310000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 2470000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 72000000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 21390000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 50610000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 115600000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 26320000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 144930000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 325530000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 135530000000
+        },
+        "shortTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 194690000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 130840000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 55870000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 5770000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 31020000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "fr2021",
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2021",
+        "printedPages": {
+          "income": 61,
+          "balance": 63,
+          "cashflow": 65,
+          "eps": 69,
+          "ebit": 36
+        }
+      }
+    },
+    {
+      "fy": "FY2022",
+      "endDate": "2022-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 923200000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 715160000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 208040000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 79460000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 2010000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 77530000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 23040000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 54490000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 114200000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 12560000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 142470000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 316140000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 130630000000
+        },
+        "shortTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 5940000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 188110000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 128030000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 62740000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 5760000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 31020000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 25000000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "fr2023",
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2023",
+        "printedPages": {
+          "income": 56,
+          "balance": 58,
+          "cashflow": 60,
+          "eps": 64,
+          "ebit": 34
+        }
+      }
+    },
+    {
+      "fy": "FY2023",
+      "endDate": "2023-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 962640000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 744390000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 218250000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 76900000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 2630000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 74710000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 22250000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 52460000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 109800000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 17730000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 139930000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 323490000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 118490000000
+        },
+        "shortTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 4980000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 181530000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 141960000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 71640000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 7200000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 38270000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 0
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "fr2023",
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2023",
+        "printedPages": {
+          "income": 56,
+          "balance": 58,
+          "cashflow": 60,
+          "eps": 64,
+          "ebit": 34
+        }
+      }
+    },
+    {
+      "fy": "FY2024",
+      "endDate": "2024-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 959240000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 745200000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 214040000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 64720000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 3100000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 62740000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 18860000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 43880000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 109800000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 31770000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 158630000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 348660000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 131080000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 1500000000
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 192750000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 155910000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 75260000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 7450000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 29850000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "fr2025",
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2025",
+        "printedPages": {
+          "income": 57,
+          "balance": 59,
+          "cashflow": 61,
+          "eps": 65,
+          "ebit": 33
+        }
+      }
+    },
+    {
+      "fy": "FY2025",
+      "endDate": "2025-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 1055480000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 819440000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 236040000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 69410000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 3770000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 66800000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 20520000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 46240000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 109700000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 28410000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 181560000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 388270000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 155100000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 0
+        },
+        "longTermDebt": {
+          "kind": "not_reported_zero"
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 226090000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 162180000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 71160000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 8230000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 38590000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "fr2025",
+        "title": "JB Hi-Fi Limited Appendix 4E and Financial Report 2025",
+        "printedPages": {
+          "income": 57,
+          "balance": 59,
+          "cashflow": 61,
+          "eps": 65,
+          "ebit": 33
+        }
+      }
+    }
+  ],
+  "expected": {
+    "metrics": {
+      "grossMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "21.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "22.2%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "22.5%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "22.7%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "22.3%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "22.4%"
+        }
+      },
+      "operatingMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "6.1%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "8.3%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "8.6%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "8.0%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "6.7%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "6.6%"
+        }
+      },
+      "netMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "3.8%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "5.7%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "5.9%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "5.4%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "4.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "4.4%"
+        }
+      },
+      "roe": {
+        "FY2020": {
+          "status": "ok",
+          "display": "27.3%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "41.9%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "42.1%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "38.9%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "29.5%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "29.1%",
+          "basis": "average"
+        }
+      },
+      "roic": {
+        "FY2020": {
+          "status": "ok",
+          "display": "38.2%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "55.0%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "49.4%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "43.1%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "35.5%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "37.1%",
+          "basis": "average"
+        }
+      },
+      "debtToEquity": {
+        "FY2020": {
+          "status": "ok",
+          "display": "0.00"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "0.00"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "0.05"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "0.04"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.01"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "0.00"
+        }
+      },
+      "currentRatio": {
+        "FY2020": {
+          "status": "ok",
+          "display": "0.93"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "1.07"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "1.09"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "1.18"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "1.21"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "1.17"
+        }
+      },
+      "interestCoverage": {
+        "FY2020": {
+          "status": "ok",
+          "display": "13.3×"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "30.1×"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "39.5×"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "29.2×"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "20.9×"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "18.4×"
+        }
+      },
+      "fcf": {
+        "FY2020": {
+          "status": "ok",
+          "display": "$938m"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "$501m"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "$570m"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "$644m"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "$678m"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "$629m"
+        }
+      },
+      "fcfMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "11.8%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "5.6%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "6.2%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "6.7%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "7.1%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "6.0%"
+        }
+      },
+      "fcfConversion": {
+        "FY2020": {
+          "status": "ok",
+          "display": "310.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "99.0%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "104.6%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "122.8%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "154.5%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "136.1%"
+        }
+      },
+      "pe": {
+        "FY2020": {
+          "status": "ok",
+          "display": "42.21"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "25.13"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "23.05"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "23.02"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "27.53"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "26.10"
+        }
+      },
+      "earningsYield": {
+        "FY2020": {
+          "status": "ok",
+          "display": "2.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "4.0%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "4.3%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "4.3%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "3.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "3.8%"
+        }
+      },
+      "fcfYield": {
+        "FY2020": {
+          "status": "ok",
+          "display": "7.4%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "3.9%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "4.5%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "5.3%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "5.6%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "5.2%"
+        }
+      }
+    },
+    "flags": [
+      {
+        "ruleId": "erodingMoat",
+        "severity": "orange",
+        "window": [
+          "FY2022",
+          "FY2023",
+          "FY2024",
+          "FY2025"
+        ]
+      }
+    ]
+  }
+}

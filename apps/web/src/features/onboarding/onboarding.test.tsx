@@ -76,7 +76,7 @@ describe('first run', () => {
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
   });
 
-  it('the sample choice loads the trio and lands on the populated library', async () => {
+  it('the sample choice loads the sample set and lands on the populated library', async () => {
     renderAt('/onboarding');
     await screen.findByRole('heading', { name: PANE_ONE });
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
@@ -86,7 +86,7 @@ describe('first run', () => {
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeVisible();
     expect(await screen.findByRole('link', { name: /Costco, sample data/ })).toBeVisible();
     expect(await getMeta(db, 'onboardingDone')).toBe(true);
-    expect(await db.companies.count()).toBe(3);
+    expect(await db.companies.count()).toBe(4);
   });
 
   it('stays reachable by address after completion', async () => {

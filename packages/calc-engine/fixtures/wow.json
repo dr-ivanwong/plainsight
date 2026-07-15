@@ -1,0 +1,1046 @@
+{
+  "meta": {
+    "name": "Woolworths",
+    "ticker": "WOW",
+    "exchange": "ASX",
+    "currency": "AUD",
+    "source": "ASX-lodged annual reports, transcribed by hand",
+    "selectionPolicy": "Each fiscal year as printed in the annual report that carries it: odd years from their own report, even years from the following report’s comparative column.",
+    "documents": {
+      "ar2025": {
+        "title": "Woolworths Group Annual Report 2025",
+        "url": "https://www.woolworthsgroup.com.au/content/dam/wwg/sustainability/reports/f25/Woolworths%20Group%20Annual%20Report%202025%20.pdf"
+      },
+      "ar2023": {
+        "title": "Woolworths Group 2023 Annual Report",
+        "url": "https://www.woolworthsgroup.com.au/content/dam/wwg/investors/reports/2023/f23-full-year/Woolworths%20Group%202023%20Annual%20Report.pdf"
+      },
+      "ar2021": {
+        "title": "Woolworths Group Annual Report 2021",
+        "url": "https://www.woolworthsgroup.com.au/content/dam/wwg/investors/reports/2021/195984_annual-report-2021.pdf"
+      }
+    },
+    "generatedAt": "2026-07-15T11:47:03.811Z",
+    "notes": [
+      "Woolworths reports on a 52/53-week retail calendar: each end date is the exact period end printed in the statement heading, and FY2024 is a 53-week period (ended 2024-06-30), which flatters its year-on-year comparisons by about a week of trading.",
+      "Interest expense is the face’s Net finance costs line (printed as Finance costs in the FY2021 report): Woolworths nets finance income against finance costs on the face, so coverage is marginally flattered relative to a gross reading; the note behind it splits the components.",
+      "Short- and long-term debt are the face’s Borrowings lines only (lease liabilities are presented separately and stay out of debt, the same reading as the other ASX retailers).",
+      "FY2021 is the Endeavour demerger year: the income face is the continuing basis, net income is total attributable to equity holders (2,074, including 468 of discontinued-operations profit); the balance sheet holds Endeavour inside assets held for sale or distribution (10,959) and the matching liabilities (5,231), with the 7,870 demerger distribution already deducted from equity, which is why total equity steps down to 1,739; and the operating cash flow and capex include Endeavour for the full period. Cash is the balance-sheet line (1,009); the cash-flow ending balance (1,446) includes Endeavour’s cash held for distribution.",
+      "FY2022 net income (7,934 attributable) includes the 6,387 demerger gain inside discontinued operations, and the checksum runs against the printed total-basis diluted EPS (644.8 cents). The return-on-equity spike this produces, and the leverage-flattered-returns flag the corpus expects over FY2022 to FY2025, are the rules reading real statements, recorded as items to investigate.",
+      "FY2022’s income items are as reclassified in the FY2023 report’s comparative column (2,071 moved from branch and administration expenses into cost of sales; the originally filed gross profit was 18,042, the re-presented figure 15,971), consistent with the even-years-from-the-following-report sourcing rule.",
+      "FY2020 is the restated comparative in the FY2021 report (the salaried team member remediation): its printed EPS figures do not reconcile with the note’s own printed net income and share counts at print precision (all four FY2020 EPS figures sit about 0.13 to 0.16 cents above the recomputation), so the year carries an explicit eps.printSlack of 0.1 cents, recorded here rather than hidden in a wider general tolerance.",
+      "Net income is profit attributable to equity holders of the parent entity; total equity includes non-controlling interests, and the balance identity holds exactly in all six years. Dividends paid is the cash-flow line for parent-entity dividends (the dividend reinvestment plan makes cash dividends smaller than declared dividends; non-controlling-interest dividends are excluded).",
+      "Cost of sales and gross profit print on the face in every year, and the cash flows are direct-method with no depreciation line, so depreciationAmortisation stays absent.",
+      "The fixture price is synthetic, in Australian dollars (the statements’ currency), chosen so the valuation metrics exercise; not verified market data."
+    ]
+  },
+  "price": {
+    "amountMinor": 3100,
+    "currency": "AUD",
+    "asOf": "2026-07-15",
+    "note": "Fixture price chosen to exercise the valuation metrics; not verified market data."
+  },
+  "years": [
+    {
+      "fy": "FY2020",
+      "endDate": "2020-06-28",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 5308000000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 3775000000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 1533000000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 202600000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 67100000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 135500000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 41700000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 116500000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 1265400000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 206800000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 812500000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3847200000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1345700000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 202700000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 190400000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 2944000000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 903200000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 456100000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 214900000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 113300000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2021",
+        "title": "Woolworths Group Annual Report 2021",
+        "printedPages": {
+          "income": 78,
+          "balance": 80,
+          "cashflow": 82,
+          "eps": 113
+        }
+      }
+    },
+    {
+      "fy": "FY2021",
+      "endDate": "2021-06-27",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 5569400000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 3936600000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 1632800000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 282300000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 61300000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 221000000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 60400000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 207400000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 1262600000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 100900000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 1578600000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3923600000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 2311700000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 11900000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 275300000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 3749700000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 173900000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 462400000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 238900000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 110400000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2021",
+        "title": "Woolworths Group Annual Report 2021",
+        "printedPages": {
+          "income": 78,
+          "balance": 80,
+          "cashflow": 82,
+          "eps": 113
+        }
+      }
+    },
+    {
+      "fy": "FY2022",
+      "endDate": "2022-06-26",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 6084900000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 4487800000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 1597100000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 269100000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 60000000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 209100000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 53400000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 793400000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 1230300000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 103200000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 611000000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3327300000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1075000000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 35400000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 393800000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 2716900000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 610400000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 337800000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 241600000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 100700000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 200000000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2023",
+        "title": "Woolworths Group 2023 Annual Report",
+        "printedPages": {
+          "income": 102,
+          "balance": 104,
+          "cashflow": 106,
+          "eps": 142
+        }
+      }
+    },
+    {
+      "fy": "FY2023",
+      "endDate": "2023-06-25",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 6429400000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 4711800000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 1717600000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 299900000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 67700000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 232200000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 69300000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 161800000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 1223100000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 113500000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 637500000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3364800000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1188600000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 46600000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 328900000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 2708300000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 656500000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 475400000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 251900000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 102600000000
+        },
+        "shareRepurchases": {
+          "kind": "entered",
+          "amountMinor": 0
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2023",
+        "title": "Woolworths Group 2023 Annual Report",
+        "printedPages": {
+          "income": 102,
+          "balance": 104,
+          "cashflow": 106,
+          "eps": 142
+        }
+      }
+    },
+    {
+      "fy": "FY2024",
+      "endDate": "2024-06-30",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 6792200000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 4937000000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 1855200000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 161600000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 74000000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 87600000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 75900000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 10800000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 1225700000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 129800000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 699100000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3393600000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1281900000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 71200000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 386600000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 2836600000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 557000000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 435900000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 254800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 117200000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2025",
+        "title": "Woolworths Group Annual Report 2025",
+        "printedPages": {
+          "income": 106,
+          "balance": 108,
+          "cashflow": 110,
+          "eps": 136
+        }
+      }
+    },
+    {
+      "fy": "FY2025",
+      "endDate": "2025-06-29",
+      "currency": "AUD",
+      "entryScale": "millions",
+      "values": {
+        "revenue": {
+          "kind": "entered",
+          "amountMinor": 6907700000000
+        },
+        "costOfRevenue": {
+          "kind": "entered",
+          "amountMinor": 5026200000000
+        },
+        "grossProfit": {
+          "kind": "entered",
+          "amountMinor": 1881500000000
+        },
+        "operatingIncome": {
+          "kind": "entered",
+          "amountMinor": 218500000000
+        },
+        "interestExpense": {
+          "kind": "entered",
+          "amountMinor": 81100000000
+        },
+        "pretaxIncome": {
+          "kind": "entered",
+          "amountMinor": 137400000000
+        },
+        "taxExpense": {
+          "kind": "entered",
+          "amountMinor": 42100000000
+        },
+        "netIncome": {
+          "kind": "entered",
+          "amountMinor": 96300000000
+        },
+        "dilutedShares": {
+          "kind": "entered",
+          "amountMinor": 1228700000
+        },
+        "cashAndEquivalents": {
+          "kind": "entered",
+          "amountMinor": 127500000000
+        },
+        "currentAssets": {
+          "kind": "entered",
+          "amountMinor": 699100000000
+        },
+        "totalAssets": {
+          "kind": "entered",
+          "amountMinor": 3382900000000
+        },
+        "currentLiabilities": {
+          "kind": "entered",
+          "amountMinor": 1229700000000
+        },
+        "shortTermDebt": {
+          "kind": "entered",
+          "amountMinor": 24400000000
+        },
+        "longTermDebt": {
+          "kind": "entered",
+          "amountMinor": 526700000000
+        },
+        "totalLiabilities": {
+          "kind": "entered",
+          "amountMinor": 2886700000000
+        },
+        "totalEquity": {
+          "kind": "entered",
+          "amountMinor": 496200000000
+        },
+        "operatingCashFlow": {
+          "kind": "entered",
+          "amountMinor": 455000000000
+        },
+        "capex": {
+          "kind": "entered",
+          "amountMinor": 252800000000
+        },
+        "dividendsPaid": {
+          "kind": "entered",
+          "amountMinor": 166100000000
+        }
+      },
+      "sourceRef": {
+        "system": "ASX_MAP",
+        "document": "ar2025",
+        "title": "Woolworths Group Annual Report 2025",
+        "printedPages": {
+          "income": 106,
+          "balance": 108,
+          "cashflow": 110,
+          "eps": 136
+        }
+      }
+    }
+  ],
+  "expected": {
+    "metrics": {
+      "grossMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "28.9%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "29.3%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "26.2%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "26.7%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "27.3%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "27.2%"
+        }
+      },
+      "operatingMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "3.8%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "5.1%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "4.4%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "4.7%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "2.4%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "3.2%"
+        }
+      },
+      "netMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "2.2%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "3.7%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "13.0%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "2.5%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.2%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "1.4%"
+        }
+      },
+      "roe": {
+        "FY2020": {
+          "status": "ok",
+          "display": "12.9%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "38.5%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "202.3%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "25.5%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "1.8%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "18.3%",
+          "basis": "average"
+        }
+      },
+      "roic": {
+        "FY2020": {
+          "status": "ok",
+          "display": "12.9%",
+          "basis": "ending"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "28.3%",
+          "basis": "average"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "30.9%",
+          "basis": "average"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "22.7%",
+          "basis": "average"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "9.9%",
+          "basis": "average"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "16.8%",
+          "basis": "average"
+        }
+      },
+      "debtToEquity": {
+        "FY2020": {
+          "status": "ok",
+          "display": "0.44"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "1.65"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "0.70"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "0.57"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.82"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "1.11"
+        }
+      },
+      "currentRatio": {
+        "FY2020": {
+          "status": "ok",
+          "display": "0.60"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "0.68"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "0.57"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "0.54"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.55"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "0.57"
+        }
+      },
+      "interestCoverage": {
+        "FY2020": {
+          "status": "ok",
+          "display": "3.0×"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "4.6×"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "4.5×"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "4.4×"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "2.2×"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "2.7×"
+        }
+      },
+      "fcf": {
+        "FY2020": {
+          "status": "ok",
+          "display": "$2.41b"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "$2.24b"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "$962m"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "$2.24b"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "$1.81b"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "$2.02b"
+        }
+      },
+      "fcfMargin": {
+        "FY2020": {
+          "status": "ok",
+          "display": "4.5%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "4.0%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "1.6%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "3.5%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "2.7%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "2.9%"
+        }
+      },
+      "fcfConversion": {
+        "FY2020": {
+          "status": "ok",
+          "display": "207.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "107.8%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "12.1%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "138.1%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "1676.9%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "210.0%"
+        }
+      },
+      "pe": {
+        "FY2020": {
+          "status": "ok",
+          "display": "33.67"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "18.87"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "4.81"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "23.43"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "351.82"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "39.55"
+        }
+      },
+      "earningsYield": {
+        "FY2020": {
+          "status": "ok",
+          "display": "3.0%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "5.3%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "20.8%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "4.3%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "0.3%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "2.5%"
+        }
+      },
+      "fcfYield": {
+        "FY2020": {
+          "status": "ok",
+          "display": "6.1%"
+        },
+        "FY2021": {
+          "status": "ok",
+          "display": "5.7%"
+        },
+        "FY2022": {
+          "status": "ok",
+          "display": "2.5%"
+        },
+        "FY2023": {
+          "status": "ok",
+          "display": "5.9%"
+        },
+        "FY2024": {
+          "status": "ok",
+          "display": "4.8%"
+        },
+        "FY2025": {
+          "status": "ok",
+          "display": "5.3%"
+        }
+      }
+    },
+    "flags": [
+      {
+        "ruleId": "leverageFlatteredReturns",
+        "severity": "orange",
+        "window": [
+          "FY2022",
+          "FY2023",
+          "FY2024",
+          "FY2025"
+        ]
+      },
+      {
+        "ruleId": "fragility",
+        "severity": "orange",
+        "window": [
+          "FY2025"
+        ]
+      }
+    ]
+  }
+}
