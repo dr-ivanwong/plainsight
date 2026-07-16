@@ -5,7 +5,17 @@
  */
 import type { SearchResponse, SearchResult } from '@plainsight/api-contract';
 import { z } from 'zod';
-import type { TickerListing } from '../edgar/client.js';
+
+/**
+ * One searchable listing from either market: EDGAR's TickerListing satisfies
+ * it (with a CIK), the ASX directory rows satisfy it without one.
+ */
+export interface SearchListing {
+  ticker: string;
+  name: string;
+  cik?: number | undefined;
+  exchange?: string | undefined;
+}
 
 export const SEARCH_PAGE_SIZE = 20;
 
@@ -31,10 +41,10 @@ export function decodePageToken(token: string, q: string): number | undefined {
   }
 }
 
-const toResult = (listing: TickerListing): SearchResult => ({
+const toResult = (listing: SearchListing): SearchResult => ({
   ticker: listing.ticker,
   name: listing.name,
-  cik: listing.cik,
+  ...(listing.cik === undefined ? {} : { cik: listing.cik }),
   ...(listing.exchange === undefined ? {} : { exchange: listing.exchange })
 });
 
@@ -42,16 +52,18 @@ const toResult = (listing: TickerListing): SearchResult => ({
  * Ranks the whole index for a query. Categories never interleave: an exact
  * ticker match outranks every prefix match, which outranks every name match;
  * within a category the ordering is deterministic (shorter ticker first,
- * then alphabetical) so pagination is stable.
+ * then alphabetical) so pagination is stable. A bare code is an exact match
+ * for its .AX listing too: WOW must surface Woolworths beside WideOpenWest,
+ * with the exchange badges doing the disambiguation.
  */
-export function rankListings(listings: readonly TickerListing[], q: string): SearchResult[] {
+export function rankListings(listings: readonly SearchListing[], q: string): SearchResult[] {
   const upper = q.toUpperCase();
   const lower = q.toLowerCase();
-  const exact: TickerListing[] = [];
-  const prefix: TickerListing[] = [];
-  const byName: TickerListing[] = [];
+  const exact: SearchListing[] = [];
+  const prefix: SearchListing[] = [];
+  const byName: SearchListing[] = [];
   for (const listing of listings) {
-    if (listing.ticker === upper) {
+    if (listing.ticker === upper || listing.ticker === `${upper}.AX`) {
       exact.push(listing);
     } else if (listing.ticker.startsWith(upper)) {
       prefix.push(listing);
@@ -66,7 +78,7 @@ export function rankListings(listings: readonly TickerListing[], q: string): Sea
 
 /** One page of results with the continuation token when more remain. */
 export function searchListings(
-  listings: readonly TickerListing[],
+  listings: readonly SearchListing[],
   q: string,
   offset: number
 ): SearchResponse {

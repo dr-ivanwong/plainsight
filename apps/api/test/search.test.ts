@@ -6,8 +6,8 @@ import { errorEnvelopeSchema, searchResponseSchema } from '@plainsight/api-contr
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { describe, expect, it } from 'vitest';
 import type { TickerListing } from '../src/edgar/client.js';
-import { createSearchHandler } from '../src/handlers/searchTickers.js';
-import { IndexLoader, type IndexObjectStore } from '../src/search/load.js';
+import { createSearchHandler, mergedLoad } from '../src/handlers/searchTickers.js';
+import { IndexLoader, parseAsxDirectoryObject, parseTickerIndexObject, serialiseAsxDirectory, serialiseTickerIndex, type IndexObjectStore } from '../src/search/load.js';
 import {
   decodePageToken,
   encodePageToken,
@@ -103,10 +103,12 @@ describe('the index loader', () => {
     let secCalls = 0;
     const loader = new IndexLoader({
       objectStore: store(JSON.stringify(secDocument)),
-      fetchFromSec: async () => {
+      fetchFromOrigin: async () => {
         secCalls += 1;
         return [];
       },
+      parse: parseTickerIndexObject,
+      serialise: serialiseTickerIndex,
       now: () => 0,
       log: () => {}
     });
@@ -119,7 +121,9 @@ describe('the index loader', () => {
     const objectStore = store(undefined);
     const loader = new IndexLoader({
       objectStore,
-      fetchFromSec: async () => [listing('KO', 'Coca-Cola Co', 21344, 'NYSE')],
+      fetchFromOrigin: async () => [listing('KO', 'Coca-Cola Co', 21344, 'NYSE')],
+      parse: parseTickerIndexObject,
+      serialise: serialiseTickerIndex,
       now: () => 0,
       log: () => {}
     });
@@ -146,7 +150,9 @@ describe('the index loader', () => {
     };
     const loader = new IndexLoader({
       objectStore,
-      fetchFromSec: async () => [],
+      fetchFromOrigin: async () => [],
+      parse: parseTickerIndexObject,
+      serialise: serialiseTickerIndex,
       now: () => clock,
       log: () => {}
     });
@@ -169,7 +175,9 @@ describe('the index loader', () => {
           throw new Error('access denied');
         }
       },
-      fetchFromSec: async () => [listing('AAPL', 'Apple Inc.', 320193)],
+      fetchFromOrigin: async () => [listing('AAPL', 'Apple Inc.', 320193)],
+      parse: parseTickerIndexObject,
+      serialise: serialiseTickerIndex,
       now: () => 0,
       log: (entry) => {
         logged.push(entry['outcome'] as string);
@@ -183,7 +191,9 @@ describe('the index loader', () => {
   it('runs SEC-only when no bucket is configured', async () => {
     const loader = new IndexLoader({
       objectStore: undefined,
-      fetchFromSec: async () => [listing('AAPL', 'Apple Inc.', 320193)],
+      fetchFromOrigin: async () => [listing('AAPL', 'Apple Inc.', 320193)],
+      parse: parseTickerIndexObject,
+      serialise: serialiseTickerIndex,
       now: () => 0,
       log: () => {}
     });
@@ -192,13 +202,7 @@ describe('the index loader', () => {
 });
 
 describe('the search route', () => {
-  const loaderOf = (listings: TickerListing[]): IndexLoader =>
-    new IndexLoader({
-      objectStore: undefined,
-      fetchFromSec: async () => listings,
-      now: () => 0,
-      log: () => {}
-    });
+  const loaderOf = (listings: TickerListing[]) => async () => listings;
 
   const event = (query?: Record<string, string>): APIGatewayProxyEventV2 =>
     ({
@@ -233,18 +237,63 @@ describe('the search route', () => {
   });
 
   it('answers internal on a loader failure, envelope-true', async () => {
-    const failing = new IndexLoader({
-      objectStore: undefined,
-      fetchFromSec: async () => {
-        throw new Error('sec is down');
-      },
-      now: () => 0,
-      log: () => {}
-    });
+    const failing = async (): Promise<TickerListing[]> => {
+      throw new Error('sec is down');
+    };
     const response = await createSearchHandler(failing)(event({ q: 'apple' }));
     expect(response.statusCode).toBe(500);
     const envelope = errorEnvelopeSchema.parse(bodyOf(response));
     expect(envelope.error.code).toBe('internal');
     expect(envelope.error.message).not.toContain('sec is down');
+  });
+});
+
+describe('the merged two-market index (Phase 2.5)', () => {
+  const merged: TickerListing[] = [
+    ...LISTINGS,
+    listing('WOW', 'WideOpenWest Inc', 1701051, 'NYSE'),
+    { ticker: 'WOW.AX', name: 'WOOLWORTHS GROUP LIMITED', exchange: 'ASX' } as TickerListing,
+    { ticker: 'CSL.AX', name: 'CSL LIMITED', exchange: 'ASX' } as TickerListing
+  ];
+
+  it('a bare code exact-matches its .AX listing beside the US one', () => {
+    const results = rankListings(merged, 'wow');
+    expect(results[0]?.ticker).toBe('WOW');
+    expect(results[1]?.ticker).toBe('WOW.AX');
+    expect(results[1]?.cik).toBeUndefined();
+    expect(results[1]?.exchange).toBe('ASX');
+  });
+
+  it('the full .AX ticker is an exact match too', () => {
+    expect(rankListings(merged, 'CSL.AX')[0]?.ticker).toBe('CSL.AX');
+  });
+
+  it('mergedLoad degrades to EDGAR-only when the ASX list is unavailable', async () => {
+    const edgar = new IndexLoader({
+      objectStore: undefined,
+      fetchFromOrigin: async () => LISTINGS,
+      parse: parseTickerIndexObject,
+      serialise: serialiseTickerIndex,
+      now: () => 0,
+      log: () => {}
+    });
+    const asx = new IndexLoader({
+      objectStore: undefined,
+      fetchFromOrigin: async () => {
+        throw new Error('asx is down');
+      },
+      parse: parseAsxDirectoryObject,
+      serialise: serialiseAsxDirectory,
+      now: () => 0,
+      log: () => {}
+    });
+    const listings = await mergedLoad(edgar, asx)();
+    expect(listings).toHaveLength(LISTINGS.length);
+  });
+
+  it('the ASX directory object round-trips through its serialised shape', () => {
+    const listings = [{ ticker: 'COH.AX', name: 'COCHLEAR LIMITED', exchange: 'ASX' }];
+    const parsed = parseAsxDirectoryObject(serialiseAsxDirectory(listings));
+    expect(parsed).toEqual(listings);
   });
 });

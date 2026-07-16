@@ -8,14 +8,18 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
 import { getCachedParameter } from '../aws/ssmParam.js';
+import { MapClient } from '../asx/client.js';
 import { TableStore, type SweepStore } from '../db/table.js';
 import { EdgarClient } from '../edgar/client.js';
-import { serialiseTickerIndex, TICKER_INDEX_KEY } from '../search/load.js';
+import { ASX_DIRECTORY_KEY, serialiseAsxDirectory, serialiseTickerIndex, TICKER_INDEX_KEY } from '../search/load.js';
 
 export interface SweepDispatcherDeps {
   client: EdgarClient;
+  /** The ASX directory refresh (backend spec §8); absent when unwired. */
+  mapClient?: MapClient | undefined;
   store: SweepStore;
   putIndexObject: ((body: string) => Promise<void>) | undefined;
+  putAsxDirectoryObject?: ((body: string) => Promise<void>) | undefined;
   startSweep: (tickers: string[]) => Promise<void>;
   log: (entry: Record<string, string | number>) => void;
 }
@@ -24,11 +28,12 @@ export interface SweepDispatchOutcome {
   outcome: 'dispatched' | 'nothing_watched';
   tickers: number;
   indexRefreshed: boolean;
+  asxDirectoryRefreshed: boolean;
 }
 
 export async function runSweepDispatch(deps: SweepDispatcherDeps): Promise<SweepDispatchOutcome> {
-  // The index refresh keeps ticker search current (backend spec §8); a
-  // failure here must not cost the sweep itself.
+  // The index refreshes keep ticker search current (backend spec §8); a
+  // failure in either must not cost the sweep itself, or the other market.
   let indexRefreshed = false;
   if (deps.putIndexObject !== undefined) {
     try {
@@ -44,12 +49,27 @@ export async function runSweepDispatch(deps: SweepDispatcherDeps): Promise<Sweep
     }
   }
 
+  let asxDirectoryRefreshed = false;
+  if (deps.putAsxDirectoryObject !== undefined && deps.mapClient !== undefined) {
+    try {
+      const listings = await deps.mapClient.fetchListedCompanies();
+      await deps.putAsxDirectoryObject(serialiseAsxDirectory(listings));
+      asxDirectoryRefreshed = true;
+    } catch (error) {
+      deps.log({
+        route: 'sweepDispatcher',
+        outcome: 'asx_directory_refresh_failed',
+        detail: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
   const tickers = await deps.store.listWatchedTickers();
   if (tickers.length === 0) {
-    return { outcome: 'nothing_watched', tickers: 0, indexRefreshed };
+    return { outcome: 'nothing_watched', tickers: 0, indexRefreshed, asxDirectoryRefreshed };
   }
   await deps.startSweep(tickers);
-  return { outcome: 'dispatched', tickers: tickers.length, indexRefreshed };
+  return { outcome: 'dispatched', tickers: tickers.length, indexRefreshed, asxDirectoryRefreshed };
 }
 
 let deps: SweepDispatcherDeps | undefined;
@@ -63,25 +83,29 @@ async function buildDeps(): Promise<SweepDispatcherDeps> {
 
   const bucket = process.env['INDEX_BUCKET'];
   const key = process.env['INDEX_KEY'] ?? TICKER_INDEX_KEY;
+  const asxKey = process.env['ASX_INDEX_KEY'] ?? ASX_DIRECTORY_KEY;
   const s3 = bucket ? new S3Client({}) : undefined;
   const sfn = new SFNClient({});
+  const putObject =
+    s3 === undefined || bucket === undefined
+      ? undefined
+      : (objectKey: string) => async (body: string) => {
+          await s3.send(
+            new PutObjectCommand({
+              Bucket: bucket,
+              Key: objectKey,
+              Body: body,
+              ContentType: 'application/json'
+            })
+          );
+        };
 
   return {
     client: new EdgarClient({ contact }),
+    mapClient: new MapClient({ contact }),
     store: TableStore.fromEnv(),
-    putIndexObject:
-      s3 === undefined || bucket === undefined
-        ? undefined
-        : async (body) => {
-            await s3.send(
-              new PutObjectCommand({
-                Bucket: bucket,
-                Key: key,
-                Body: body,
-                ContentType: 'application/json'
-              })
-            );
-          },
+    putIndexObject: putObject?.(key),
+    putAsxDirectoryObject: putObject?.(asxKey),
     startSweep: async (tickers) => {
       await sfn.send(
         new StartExecutionCommand({

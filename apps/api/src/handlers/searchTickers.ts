@@ -1,21 +1,33 @@
 /**
  * GET /v1/search?q=…&pageToken=… (backend spec §2, §8): the in-memory ticker
- * search. No search infrastructure, single-digit-millisecond queries once the
- * index is warm. Phase 2 serves the EDGAR index; the ASX list joins in Phase
- * 2.5 when those tickers can actually ingest.
+ * search over both markets' lists, EDGAR plus the ASX directory, merged
+ * before ranking so exchange badges disambiguate colliding symbols. No
+ * search infrastructure, single-digit-millisecond queries once the index is
+ * warm. An unreadable ASX list degrades to EDGAR-only rather than failing
+ * the route: one market's outage never hides the other.
  */
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { errorEnvelope, searchResponseSchema } from '@plainsight/api-contract';
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
 import { getCachedParameter } from '../aws/ssmParam.js';
+import { MapClient } from '../asx/client.js';
 import { EdgarClient } from '../edgar/client.js';
 import { jsonResponse, logOutcome, requestIdOf } from '../http/respond.js';
-import { IndexLoader, TICKER_INDEX_KEY, type IndexObjectStore } from '../search/load.js';
-import { decodePageToken, searchListings } from '../search/search.js';
+import {
+  ASX_DIRECTORY_KEY,
+  IndexLoader,
+  parseAsxDirectoryObject,
+  parseTickerIndexObject,
+  serialiseAsxDirectory,
+  serialiseTickerIndex,
+  TICKER_INDEX_KEY,
+  type IndexObjectStore
+} from '../search/load.js';
+import { decodePageToken, searchListings, type SearchListing } from '../search/search.js';
 
 const MAX_QUERY_LENGTH = 40;
 
-export function createSearchHandler(loader: IndexLoader) {
+export function createSearchHandler(loadAll: () => Promise<SearchListing[]>) {
   return async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> => {
     const requestId = requestIdOf(event);
     try {
@@ -39,7 +51,7 @@ export function createSearchHandler(loader: IndexLoader) {
         offset = decoded;
       }
 
-      const listings = await loader.load();
+      const listings = await loadAll();
       const body = searchResponseSchema.parse(searchListings(listings, q, offset));
       logOutcome({ requestId, route: 'searchTickers', outcome: 'ok' });
       return jsonResponse(200, body);
@@ -58,12 +70,29 @@ export function createSearchHandler(loader: IndexLoader) {
   };
 }
 
-function buildObjectStore(): IndexObjectStore | undefined {
+/** Both markets merged; the ASX list degrades to empty rather than failing. */
+export function mergedLoad(edgar: IndexLoader, asx: IndexLoader): () => Promise<SearchListing[]> {
+  return async () => {
+    const edgarListings = await edgar.load();
+    let asxListings: SearchListing[] = [];
+    try {
+      asxListings = await asx.load();
+    } catch (error) {
+      console.log(
+        JSON.stringify({
+          route: 'searchTickers',
+          outcome: 'asx_directory_unavailable',
+          detail: error instanceof Error ? error.message : String(error)
+        })
+      );
+    }
+    return [...edgarListings, ...asxListings];
+  };
+}
+
+function buildObjectStore(key: string): IndexObjectStore | undefined {
   const bucket = process.env['INDEX_BUCKET'];
   if (!bucket) return undefined;
-  // The stack sets the key alongside the bucket so the grant, the sweep, and
-  // this reader stay on one object; the constant is the code-side default.
-  const key = process.env['INDEX_KEY'] ?? TICKER_INDEX_KEY;
   const s3 = new S3Client({});
   return {
     get: async () => {
@@ -88,25 +117,41 @@ function buildObjectStore(): IndexObjectStore | undefined {
   };
 }
 
-let loader: IndexLoader | undefined;
+let load: (() => Promise<SearchListing[]>) | undefined;
 
-async function buildLoader(): Promise<IndexLoader> {
+async function buildLoad(): Promise<() => Promise<SearchListing[]>> {
   const contactParameter = process.env['EDGAR_CONTACT_PARAMETER'];
   if (!contactParameter) throw new Error('EDGAR_CONTACT_PARAMETER is not set');
   const contact = await getCachedParameter(contactParameter);
-  const client = new EdgarClient({ contact });
-  return new IndexLoader({
-    objectStore: buildObjectStore(),
-    fetchFromSec: () => client.fetchTickerListings(),
+  const log = (entry: Record<string, string>) => console.log(JSON.stringify(entry));
+
+  const edgarClient = new EdgarClient({ contact });
+  const edgar = new IndexLoader({
+    objectStore: buildObjectStore(process.env['INDEX_KEY'] ?? TICKER_INDEX_KEY),
+    fetchFromOrigin: () => edgarClient.fetchTickerListings(),
+    parse: parseTickerIndexObject,
+    serialise: serialiseTickerIndex,
     now: Date.now,
-    log: (entry) => console.log(JSON.stringify(entry))
+    log
   });
+
+  const mapClient = new MapClient({ contact });
+  const asx = new IndexLoader({
+    objectStore: buildObjectStore(process.env['ASX_INDEX_KEY'] ?? ASX_DIRECTORY_KEY),
+    fetchFromOrigin: () => mapClient.fetchListedCompanies(),
+    parse: parseAsxDirectoryObject,
+    serialise: serialiseAsxDirectory,
+    now: Date.now,
+    log
+  });
+
+  return mergedLoad(edgar, asx);
 }
 
 /** Lambda entry point; everything is built lazily so tests can import the module bare. */
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
-  loader ??= await buildLoader();
-  return createSearchHandler(loader)(event);
+  load ??= await buildLoad();
+  return createSearchHandler(load)(event);
 };

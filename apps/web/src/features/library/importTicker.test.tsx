@@ -152,3 +152,56 @@ describe('the offline posture (degradation matrix, main plan §5)', () => {
     expect(screen.queryByText('Offline')).not.toBeInTheDocument();
   });
 });
+
+describe('the ASX import (Phase 2.5)', () => {
+  it('imports a .AX listing with its extraction provenance intact', async () => {
+    searchMock.mockResolvedValue({
+      results: [{ ticker: 'COH.AX', name: 'COCHLEAR LIMITED', exchange: 'ASX' }]
+    });
+    financialsMock.mockResolvedValueOnce({
+      kind: 'ok',
+      data: {
+        ticker: 'COH.AX',
+        statements: [
+          {
+            fy: 'FY2025',
+            statement: 'income',
+            endDate: '2025-06-30',
+            currency: 'AUD',
+            values: { revenue: 234310000000, netIncome: 38890000000 },
+            provenance: {
+              source: 'asx_map',
+              recordedAt: '2026-07-16T03:00:00Z',
+              filing: { system: 'ASX_MAP', documentId: '02980612' },
+              extraction: {
+                provider: 'anthropic-haiku-4.5',
+                model: 'claude-haiku-4-5-20251001',
+                promptVersion: 'statements-1',
+                fields: { revenue: { confidence: 1, page: 128 } }
+              },
+              mappingVersion: 'statements-1'
+            }
+          }
+        ],
+        gaps: []
+      }
+    });
+    const router = renderAt('/?import=1');
+
+    const input = await screen.findByRole('searchbox', {
+      name: 'Search by ticker or company name'
+    });
+    fireEvent.change(input, { target: { value: 'cochlear' } });
+    const result = await screen.findByRole('button', { name: /COH\.AX.*COCHLEAR/ });
+    expect(screen.getByText('ASX')).toBeVisible();
+    fireEvent.click(result);
+
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/company\//));
+    const imported = await db.companies.filter((entry) => entry.ticker === 'COH.AX').first();
+    expect(imported?.name).toBe('COCHLEAR LIMITED');
+    expect(imported?.currency).toBe('AUD');
+    const rows = await db.statements.where('companyId').equals(imported?.id ?? '').toArray();
+    expect(rows[0]?.provenance.source).toBe('asx_map');
+    expect(rows[0]?.provenance.extraction?.fields?.revenue?.page).toBe(128);
+  });
+});

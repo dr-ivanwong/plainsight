@@ -3,6 +3,7 @@
  * side, over fakes; the per-ticker behaviour lives in ingest.test.ts.
  */
 import { describe, expect, it } from 'vitest';
+import { MapClient, parseListedCompaniesCsv } from '../src/index.js';
 import { EdgarClient } from '../src/edgar/client.js';
 import { runSweepDispatch, type SweepDispatcherDeps } from '../src/handlers/sweepDispatcher.js';
 
@@ -80,7 +81,7 @@ describe('the sweep dispatcher', () => {
   it('refreshes the index copy and starts the sweep over every watched ticker', async () => {
     const { deps: dispatchDeps, started, puts } = deps();
     const outcome = await runSweepDispatch(dispatchDeps);
-    expect(outcome).toEqual({ outcome: 'dispatched', tickers: 2, indexRefreshed: true });
+    expect(outcome).toEqual({ outcome: 'dispatched', tickers: 2, indexRefreshed: true, asxDirectoryRefreshed: false });
     expect(started).toEqual([['AAPL', 'KO']]);
     expect(puts).toHaveLength(1);
     expect(JSON.parse(puts[0] as string).data[0]).toEqual([320193, 'Apple Inc.', 'AAPL', 'Nasdaq']);
@@ -91,7 +92,7 @@ describe('the sweep dispatcher', () => {
       store: { listWatchedTickers: async () => [] }
     });
     const outcome = await runSweepDispatch(dispatchDeps);
-    expect(outcome).toEqual({ outcome: 'nothing_watched', tickers: 0, indexRefreshed: true });
+    expect(outcome).toEqual({ outcome: 'nothing_watched', tickers: 0, indexRefreshed: true, asxDirectoryRefreshed: false });
     expect(started).toEqual([]);
   });
 
@@ -115,7 +116,62 @@ describe('the sweep dispatcher', () => {
   it('runs without an index bucket at all', async () => {
     const { deps: dispatchDeps, puts } = deps({ putIndexObject: undefined });
     const outcome = await runSweepDispatch(dispatchDeps);
-    expect(outcome).toEqual({ outcome: 'dispatched', tickers: 2, indexRefreshed: false });
+    expect(outcome).toEqual({ outcome: 'dispatched', tickers: 2, indexRefreshed: false, asxDirectoryRefreshed: false });
     expect(puts).toEqual([]);
+  });
+});
+
+describe('the ASX directory refresh (backend spec §8, Phase 2.5)', () => {
+  const CSV = [
+    'ASX listed companies as at Thu Jul 16 20:36:08 AEST 2026',
+    '',
+    'Company name,ASX code,GICS industry group',
+    '"CSL LIMITED","CSL","Pharmaceuticals, Biotechnology & Life Sciences"',
+    '"JB HI-FI LIMITED","JBH","Retailing"'
+  ].join('\r\n');
+
+  it('parses the directory into .AX-qualified listings', () => {
+    const listings = parseListedCompaniesCsv(CSV);
+    expect(listings).toEqual([
+      { ticker: 'CSL.AX', name: 'CSL LIMITED', exchange: 'ASX' },
+      { ticker: 'JBH.AX', name: 'JB HI-FI LIMITED', exchange: 'ASX' }
+    ]);
+  });
+
+  it('refreshes the directory object beside the index, each failure independent', async () => {
+    const asxPuts: string[] = [];
+    const mapClient = new MapClient({
+      contact: 'owner@example.com',
+      fetchImpl: (async () => new Response(CSV)) as typeof fetch,
+      sleep: () => Promise.resolve(),
+      now: () => 0
+    });
+    const started: string[][] = [];
+    const outcome = await runSweepDispatch({
+      client: client({}),
+      mapClient,
+      store: { listWatchedTickers: async () => ['CSL.AX'] },
+      putIndexObject: async () => {
+        throw new Error('edgar bucket denied');
+      },
+      putAsxDirectoryObject: async (body) => {
+        asxPuts.push(body);
+      },
+      startSweep: async (tickers) => {
+        started.push(tickers);
+      },
+      log: () => {}
+    });
+    expect(outcome).toEqual({
+      outcome: 'dispatched',
+      tickers: 1,
+      indexRefreshed: false,
+      asxDirectoryRefreshed: true
+    });
+    expect(JSON.parse(asxPuts[0] as string).data).toEqual([
+      ['CSL.AX', 'CSL LIMITED'],
+      ['JBH.AX', 'JB HI-FI LIMITED']
+    ]);
+    expect(started).toEqual([['CSL.AX']]);
   });
 });
