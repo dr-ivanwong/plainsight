@@ -101,7 +101,8 @@ export class TableReadStore implements FinancialsReadStore {
 /** A quarantined year: gate-failed rows, held for review, never served (backend spec §5). */
 export interface QuarantineEntry {
   documentId: string;
-  fy: FyLabel;
+  /** Usually a fiscal label; extraction failures may carry whatever the model wrote. */
+  fy: string;
   reasons: string[];
   rows: FinancialsStatement[];
 }
@@ -110,7 +111,8 @@ export interface QuarantineEntry {
 export interface ProfileWrite {
   ticker: string;
   name: string;
-  cik: number;
+  /** EDGAR filers only; ASX companies carry no CIK. */
+  cik?: number | undefined;
   exchange?: string | undefined;
   currency: string;
   /** Primary accession of the newest served year; the sweep's change detector. */
@@ -285,21 +287,22 @@ export class TableStore extends TableReadStore implements IngestStore, SweepStor
         // definition of a watched ticker (backend spec §3), and with the
         // watchPartition attribute it enters the sparse watch index.
         UpdateExpression:
-          'SET ticker = :ticker, #n = :name, cik = :cik, currency = :currency, ' +
+          'SET ticker = :ticker, #n = :name, currency = :currency, ' +
           'lastFilingSeen = :lastFilingSeen, latestFyEndDate = :latestFyEndDate, ' +
           'watchedSince = if_not_exists(watchedSince, :now), watchPartition = :watch' +
+          (profile.cik === undefined ? '' : ', cik = :cik') +
           (profile.exchange === undefined ? '' : ', exchange = :exchange') +
           ' REMOVE ingestLockUntil',
         ExpressionAttributeNames: { '#n': 'name' },
         ExpressionAttributeValues: {
           ':ticker': profile.ticker,
           ':name': profile.name,
-          ':cik': profile.cik,
           ':currency': profile.currency,
           ':lastFilingSeen': profile.lastFilingSeen,
           ':latestFyEndDate': profile.latestFyEndDate,
           ':now': nowIso,
           ':watch': WATCH_PARTITION_VALUE,
+          ...(profile.cik === undefined ? {} : { ':cik': profile.cik }),
           ...(profile.exchange === undefined ? {} : { ':exchange': profile.exchange })
         }
       })

@@ -18,6 +18,7 @@
  *    configuration keyed by ticker: a served pipeline cannot carry a hand
  *    list of companies.
  */
+import type { CurrencyCode } from '@plainsight/calc-engine';
 import {
   fyLabelFromEndDate,
   fyYear,
@@ -270,7 +271,7 @@ export interface MappedItem {
 export interface MappedYear {
   fy: FyLabel;
   endDate: string;
-  currency: 'USD';
+  currency: CurrencyCode;
   items: Partial<Record<LineItemId, MappedItem>>;
 }
 

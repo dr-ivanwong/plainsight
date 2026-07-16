@@ -47,7 +47,8 @@ const integerMinor = z.number().int().min(Number.MIN_SAFE_INTEGER).max(Number.MA
 export const companyProfileSchema = z.object({
   ticker: tickerSchema,
   name: nonEmpty,
-  cik: z.number().int().positive(),
+  /** EDGAR filers only; ASX companies have no CIK (Phase 2.5 widening). */
+  cik: z.number().int().positive().optional(),
   exchange: nonEmpty.optional(),
   sector: nonEmpty.optional(),
   currency: currencyCode
@@ -59,17 +60,33 @@ export type CompanyProfile = z.infer<typeof companyProfileSchema>;
  * Provenance as the canonical pipeline serves it: the trust chain is
  * mandatory, not optional, so a served row always names its filing and the
  * mapping version that read it (data-model spec §9; tap-to-see-source).
- * Phase 2 serves EDGAR only; the ASX MAP source widens this additively in
- * Phase 2.5.
+ * Phase 2 served EDGAR only; Phase 2.5 widened this additively with the ASX
+ * MAP source and the extraction reference (backend spec §6: which model read
+ * this filing is part of the audit trail), whose field-level confidence and
+ * printed pages power tap-to-source on extracted numbers.
  */
+export const extractionFieldRefSchema = z.object({
+  confidence: z.number().min(0).max(1),
+  page: z.number().int().positive().optional(),
+  cell: nonEmpty.optional()
+});
+
+export const extractionRefSchema = z.object({
+  provider: nonEmpty,
+  model: nonEmpty,
+  promptVersion: nonEmpty,
+  fields: z.partialRecord(enumOf(LINE_ITEM_IDS), extractionFieldRefSchema).optional()
+});
+
 export const financialsProvenanceSchema = z.object({
-  source: z.literal('edgar'),
+  source: enumOf(['edgar', 'asx_map']),
   recordedAt: isoDateTime,
   filing: z.object({
-    system: z.literal('EDGAR'),
+    system: enumOf(['EDGAR', 'ASX_MAP']),
     documentId: nonEmpty,
     url: z.url().optional()
   }),
+  extraction: extractionRefSchema.optional(),
   mappingVersion: nonEmpty
 });
 

@@ -17,6 +17,7 @@ import type { EnvConfig } from '../../config/types';
 import {
   distributionIdParameterName,
   edgarContactParameterName,
+  extractionParameterPrefix,
   LOG_RETENTION,
   TICKER_INDEX_OBJECT_KEY,
 } from '../constants';
@@ -157,6 +158,97 @@ export class IngestionStack extends Stack {
       'X-Ray daemon writes (PutTraceSegments, PutTelemetryRecords) support no resource-level ' +
         'scoping; tracing is deliberately on for the ingestion path only (main plan §6).',
     );
+
+    // --- ASX extraction (backend spec §5, Phase 2.5) -----------------------
+
+    // The .AX route: ingestTicker delegates asynchronously, so this function
+    // owns the ladder's time and the preprocessor's memory (the pinned §10
+    // sizing) while the front door stays one function for both sources.
+    const extract = new AppFunction(this, 'ExtractFiling', {
+      entry: handlerEntry('extractFiling'),
+      description:
+        'ASX statutory-report extraction: MAP fetch, preprocess, cheap-first ladder, gates, DOC# cache (backend spec §5).',
+      timeout: Duration.seconds(300),
+      memorySize: 1536,
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        TABLE_NAME: table.tableName,
+        CONTACT_PARAMETER: contactParameter,
+        DISTRIBUTION_ID_PARAMETER: distributionParameter,
+      },
+    });
+    ingest.fn.addEnvironment('EXTRACT_FUNCTION_NAME', extract.fn.functionName);
+    extract.fn.grantInvoke(ingest.fn);
+    acknowledgeNagFinding(
+      ingest,
+      `AwsSolutions-IAM5[Resource::<${this.getLogicalId(extract.fn.node.defaultChild as lambda.CfnFunction)}.Arn>:*]`,
+      "grantInvoke's version-qualified suffix (':*') on exactly the one extraction function " +
+        'the router delegates .AX tickers to; nothing broader is reachable.',
+    );
+
+    extract.fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'ExtractWriteTickerPartitions',
+        actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:BatchWriteItem'],
+        resources: [table.tableArn],
+        conditions: {
+          'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },
+        },
+      }),
+    );
+    const extractionKeysArn = this.formatArn({
+      service: 'ssm',
+      resource: `parameter${extractionParameterPrefix(config.envName)}*`,
+    });
+    extract.fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'ReadProviderKeyParameters',
+        actions: ['ssm:GetParameter'],
+        resources: [
+          extractionKeysArn,
+          this.formatArn({ service: 'ssm', resource: `parameter${contactParameter}` }),
+          this.formatArn({ service: 'ssm', resource: `parameter${distributionParameter}` }),
+        ],
+      }),
+    );
+    acknowledgeNagFinding(
+      extract,
+      `AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:ssm:${this.region}:${config.account}:parameter${extractionParameterPrefix(config.envName)}*]`,
+      'One SecureString per provider rung lives under this prefix, created out-of-band; the ' +
+        'registry names each rung and the ladder skips absent parameters, so the wildcard is ' +
+        'the set of provider keys and nothing else.',
+    );
+    extract.fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: 'ExtractInvalidateFinancialsPath',
+        actions: ['cloudfront:CreateInvalidation'],
+        resources: [invalidationArn],
+      }),
+    );
+    acknowledgeNagFinding(
+      extract,
+      `AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:cloudfront::${config.account}:distribution/*]`,
+      'Same shape as the ingest function: the distribution id is runtime configuration and ' +
+        'CreateInvalidation only evicts cache entries.',
+    );
+    acknowledgeNagFinding(
+      extract,
+      'AwsSolutions-IAM5[Resource::*]',
+      'X-Ray daemon writes (PutTraceSegments, PutTelemetryRecords) support no resource-level ' +
+        'scoping; tracing is deliberately on for the ingestion path only (main plan §6).',
+    );
+
+    // The router's delegation is asynchronous, so extraction failures never
+    // reach the sweep DLQ; this alarm is their symptom surface.
+    new cloudwatch.Alarm(this, 'ExtractFilingErrorsAlarm', {
+      alarmDescription:
+        'The ASX extraction function errored; check its log group and the quarantine queue.',
+      metric: extract.fn.metricErrors({ period: Duration.minutes(5) }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    }).addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
 
     // --- The weekly sweep (backend spec §5) --------------------------------
 

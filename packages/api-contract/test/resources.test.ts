@@ -76,6 +76,40 @@ describe('financials response (backend spec section 2)', () => {
     expect(financialsStatementSchema.safeParse(unknownItem).success).toBe(false);
   });
 
+  it('carries the ASX MAP source with its extraction reference (Phase 2.5 widening)', () => {
+    const asxRow = {
+      ...incomeRow,
+      currency: 'AUD',
+      provenance: {
+        source: 'asx_map',
+        recordedAt: '2026-07-16T03:00:00Z',
+        filing: {
+          system: 'ASX_MAP',
+          documentId: '02980612',
+          url: 'https://www.asx.com.au/asx/v2/statistics/displayAnnouncement.do?display=pdf&idsId=02980612'
+        },
+        extraction: {
+          provider: 'anthropic-haiku-4.5',
+          model: 'claude-haiku-4-5-20251001',
+          promptVersion: 'statements-1',
+          fields: { revenue: { confidence: 0.98, page: 128 } }
+        },
+        mappingVersion: 'statements-1'
+      }
+    } satisfies FinancialsStatement;
+    const parsed = financialsStatementSchema.parse(asxRow);
+    expect(parsed.provenance.extraction?.fields?.revenue?.page).toBe(128);
+
+    const badConfidence = {
+      ...asxRow,
+      provenance: {
+        ...asxRow.provenance,
+        extraction: { ...asxRow.provenance.extraction, fields: { revenue: { confidence: 1.2 } } }
+      }
+    };
+    expect(financialsStatementSchema.safeParse(badConfidence).success).toBe(false);
+  });
+
   it('requires the full trust chain in provenance', () => {
     const { mappingVersion: _dropped, ...withoutMapping } = provenance;
     const noMapping = { ...incomeRow, provenance: withoutMapping };
@@ -119,6 +153,9 @@ describe('company profile', () => {
     expect(companyProfileSchema.parse(full).cik).toBe(320193);
     const minimal = { ticker: 'AAPL', name: 'Apple Inc.', cik: 320193, currency: 'USD' };
     expect(companyProfileSchema.safeParse(minimal).success).toBe(true);
+    // ASX companies carry no CIK (Phase 2.5 widening).
+    const asx = { ticker: 'COH.AX', name: 'COCHLEAR LIMITED', exchange: 'ASX', currency: 'AUD' };
+    expect(companyProfileSchema.safeParse(asx).success).toBe(true);
   });
 
   it('rejects a non-positive CIK and a malformed currency', () => {

@@ -5,11 +5,13 @@
  * concurrent invoke is a cheap no-op.
  */
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront';
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import { tickerSchema } from '@plainsight/api-contract';
 import { z } from 'zod';
 import { getCachedParameter } from '../aws/ssmParam.js';
 import { TableStore } from '../db/table.js';
 import { EdgarClient } from '../edgar/client.js';
+import { asxCodeOf } from '../ingest/asxCore.js';
 import { runIngest, type IngestDeps, type IngestOutcome } from '../ingest/core.js';
 
 const eventSchema = z.object({
@@ -69,8 +71,43 @@ async function buildDeps(): Promise<IngestDeps> {
   };
 }
 
-export const handler = async (event: unknown): Promise<IngestOutcome> => {
+/** The ingest router's one fork: .AX tickers belong to the extraction engine. */
+export type RoutedOutcome = IngestOutcome | { outcome: 'delegated'; ticker: string };
+
+let lambda: LambdaClient | undefined;
+
+/**
+ * ASX tickers delegate to the extraction function asynchronously: it owns
+ * the 300-second budget the ladder needs, while this function keeps the
+ * EDGAR fast path and stays the single front door for the financials route
+ * and the sweep alike. No extraction function configured means ASX ingestion
+ * is off: the ticker stays cold and the client's 202 caps out, the same
+ * degraded state as any other missing ingestion wiring.
+ */
+async function delegateToExtraction(ticker: string, mode: string): Promise<RoutedOutcome> {
+  const functionName = process.env['EXTRACT_FUNCTION_NAME'];
+  if (!functionName) {
+    console.log(JSON.stringify({ route: 'ingestTicker', outcome: 'asx_ingestion_off', ticker }));
+    return { outcome: 'delegated', ticker };
+  }
+  lambda ??= new LambdaClient({});
+  await lambda.send(
+    new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: 'Event',
+      Payload: JSON.stringify({ ticker, mode })
+    })
+  );
+  return { outcome: 'delegated', ticker };
+}
+
+export const handler = async (event: unknown): Promise<RoutedOutcome> => {
   const { ticker, mode } = eventSchema.parse(event);
+  if (asxCodeOf(ticker) !== undefined) {
+    const outcome = await delegateToExtraction(ticker, mode ?? 'on_demand');
+    console.log(JSON.stringify({ route: 'ingestTicker', ...outcome }));
+    return outcome;
+  }
   deps ??= await buildDeps();
   const outcome = await runIngest(deps, ticker, mode ?? 'on_demand');
   console.log(JSON.stringify({ route: 'ingestTicker', ...outcome }));

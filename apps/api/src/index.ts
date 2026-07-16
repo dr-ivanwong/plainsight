@@ -74,3 +74,19 @@ export {
   type DocumentCacheStore,
   type MapDocumentRecord
 } from './asx/documents.js';
+export {
+  convertExtraction,
+  convertExtractedYear,
+  toAsxStatementRows,
+  type ConversionOutcome,
+  type ConvertedYear
+} from './asx/convert.js';
+export { parseCompanyName, type AnnouncementsYear } from './asx/client.js';
+export { resolveStatutoryReports } from './asx/resolve.js';
+export {
+  ASX_TICKER_SUFFIX,
+  asxCodeOf,
+  runAsxIngest,
+  type AsxIngestDeps,
+  type AsxIngestOutcome
+} from './ingest/asxCore.js';
