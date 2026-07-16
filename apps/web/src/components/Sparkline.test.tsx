@@ -30,6 +30,25 @@ describe('Sparkline', () => {
     expect(container.querySelector('svg')).toBeNull();
   });
 
+  it('grounds the line with an area closed to the bottom edge', () => {
+    const { container } = render(
+      <Sparkline
+        points={[
+          { fy: 'FY2022', value: 0.4 },
+          { fy: 'FY2023', value: 0.5 },
+          { fy: 'FY2024', value: 0.45 }
+        ]}
+      />
+    );
+    const area = container.querySelector('polygon');
+    expect(area).not.toBeNull();
+    const coords = area?.getAttribute('points') ?? '';
+    expect(coords.startsWith('2.00,28')).toBe(true);
+    expect(coords.endsWith('98.00,28')).toBe(true);
+    // The line itself sits between the corners, unchanged.
+    expect(coords).toContain('50.00,2.00');
+  });
+
   it('draws a centre line for a flat series instead of dividing by zero', () => {
     const { container } = render(
       <Sparkline

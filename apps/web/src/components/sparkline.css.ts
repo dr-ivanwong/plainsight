@@ -17,3 +17,10 @@ export const line = style({
   strokeLinejoin: 'round',
   vectorEffect: 'non-scaling-stroke'
 });
+
+/** Grounding under the line, not information (dashboard design plan §4.4). */
+export const area = style({
+  fill: 'currentColor',
+  fillOpacity: 0.1,
+  stroke: 'none'
+});

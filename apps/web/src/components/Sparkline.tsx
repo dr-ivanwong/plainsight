@@ -27,7 +27,10 @@ const PAD = 2;
  * decorative by contract; the value and delta beside it carry the information
  * as text, and the detail sheet carries the full chart with its table
  * fallback. Needs at least two labelled years (data-sufficiency policy);
- * a flat series draws a centre line rather than dividing by zero.
+ * a flat series draws a centre line rather than dividing by zero. The area
+ * beneath the line is grounding, not information (dashboard design plan
+ * §4.4): the stroke colour at a tenth of the opacity, closed to the bottom
+ * edge, following currentColor wherever the line goes.
  */
 export function Sparkline({ points }: { points: readonly SparkPoint[] }): ReactElement | null {
   if (points.length < 2) return null;
@@ -41,6 +44,7 @@ export function Sparkline({ points }: { points: readonly SparkPoint[] }): ReactE
   const line = points
     .map((point, index) => `${x(index).toFixed(2)},${y(point.value).toFixed(2)}`)
     .join(' ');
+  const area = `${x(0).toFixed(2)},${HEIGHT} ${line} ${x(points.length - 1).toFixed(2)},${HEIGHT}`;
 
   return (
     <svg
@@ -50,6 +54,7 @@ export function Sparkline({ points }: { points: readonly SparkPoint[] }): ReactE
       aria-hidden="true"
       focusable="false"
     >
+      <polygon className={styles.area} points={area} />
       <polyline className={styles.line} points={line} />
     </svg>
   );
