@@ -61,11 +61,20 @@ export const heroFacts = style({
   fontVariantNumeric: 'tabular-nums'
 });
 
-/** 3 to 4 columns at the wide column width (frontend spec §7). */
+/**
+ * Auto-fit below the wide breakpoint; four deterministic columns at it, wide
+ * enough to seat the coming multi-year row (dashboard design plan §5.1,
+ * frontend spec §7).
+ */
 export const grid = style({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-  gap: space[12]
+  gap: space[12],
+  '@media': {
+    'screen and (min-width: 900px)': {
+      gridTemplateColumns: 'repeat(4, 1fr)'
+    }
+  }
 });
 
 /** The quiet all-caps group label, a full-width row of the card grid (dashboard design plan §3.3, §5.2). */

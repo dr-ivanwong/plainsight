@@ -177,7 +177,7 @@ Keystrokes never cross feature boundaries: `MoneyField` holds local state, commi
 
 ## 7. Responsive rules
 
-Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(auto-fit, minmax(160px, 1fr))` → 3–4 columns). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
+Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 
