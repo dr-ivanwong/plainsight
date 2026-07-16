@@ -19,10 +19,11 @@ let client: SSMClient | undefined;
 
 export async function getCachedParameter(
   name: string,
-  now: () => number = Date.now
+  now: () => number = Date.now,
+  ttlMs: number = CACHE_TTL_MS
 ): Promise<string> {
   const hit = cache.get(name);
-  if (hit !== undefined && now() - hit.fetchedAt < CACHE_TTL_MS) return hit.value;
+  if (hit !== undefined && now() - hit.fetchedAt < ttlMs) return hit.value;
   client ??= new SSMClient({});
   const result = await client.send(new GetParameterCommand({ Name: name }));
   const value = result.Parameter?.Value;

@@ -176,6 +176,9 @@ export class IngestionStack extends Stack {
         TABLE_NAME: table.tableName,
         CONTACT_PARAMETER: contactParameter,
         DISTRIBUTION_ID_PARAMETER: distributionParameter,
+        // The budget kill switch: the Foundation flipper sets this flag to
+        // 'false' at the kill threshold, and this function is the spender.
+        EXTRACTION_FLAG_PARAMETER: `/app/${config.envName}/features/extraction`,
       },
     });
     ingest.fn.addEnvironment('EXTRACT_FUNCTION_NAME', extract.fn.functionName);
@@ -209,6 +212,10 @@ export class IngestionStack extends Stack {
           extractionKeysArn,
           this.formatArn({ service: 'ssm', resource: `parameter${contactParameter}` }),
           this.formatArn({ service: 'ssm', resource: `parameter${distributionParameter}` }),
+          this.formatArn({
+            service: 'ssm',
+            resource: `parameter/app/${config.envName}/features/extraction`,
+          }),
         ],
       }),
     );
