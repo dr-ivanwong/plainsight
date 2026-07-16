@@ -59,7 +59,7 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 
 ### S3: Company dashboard
 
-Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards; M10 and M13 render in their siblings' detail sheets per companion §12 D2), red-flag section, entry points to S4/S5/S8.
+Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2), red-flag section, entry points to S4/S5/S8.
 
 | State | Rendering |
 |---|---|

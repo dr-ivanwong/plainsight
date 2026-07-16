@@ -68,6 +68,24 @@ export const grid = style({
   gap: space[12]
 });
 
+/** The quiet all-caps group label, a full-width row of the card grid (dashboard design plan §3.3, §5.2). */
+export const sectionLabel = style({
+  gridColumn: '1 / -1',
+  marginBottom: space[8],
+  fontSize: fontSize.caption2,
+  fontWeight: fontWeight.semibold,
+  letterSpacing: tracking.sectionLabel,
+  textTransform: 'uppercase',
+  color: colour.textSecondary,
+  selectors: {
+    // Groups separate generously: with the uniform grid gap alone, a label
+    // would sit closer to the previous group's cards than to its own.
+    '&:not(:first-of-type)': {
+      marginTop: space[24]
+    }
+  }
+});
+
 export const cardLink = style({
   display: 'block',
   textDecoration: 'none',
