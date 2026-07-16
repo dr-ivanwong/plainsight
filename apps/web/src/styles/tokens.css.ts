@@ -21,6 +21,7 @@ const contractShape: Record<keyof ThemePalette, null> = {
   background: null,
   surface: null,
   surfaceElevated: null,
+  surfaceHover: null,
   textPrimary: null,
   textSecondary: null,
   border: null,
@@ -35,12 +36,39 @@ const contractShape: Record<keyof ThemePalette, null> = {
 /** Theme-aware colour variables. Values come from palette.ts per theme. */
 export const colour = createThemeContract(contractShape);
 
+/**
+ * Theme-aware card shadows (dashboard design plan §3.1). Light mode carries
+ * depth with barely-there shadows; dark mode resolves them to none and steps
+ * surface brightness instead. Not palette data: shadows are not colours, and
+ * palette.ts stays pure colour for the contrast test.
+ */
+export const elevation = createThemeContract({
+  card: null,
+  cardHover: null,
+});
+
+const lightElevation = {
+  card: '0 1px 3px rgba(0, 0, 0, 0.08)',
+  cardHover: '0 2px 8px rgba(0, 0, 0, 0.10)',
+};
+
+const darkElevation = {
+  card: 'none',
+  cardHover: 'none',
+};
+
 // Light is the default; the dark palette applies when the system asks for it.
 globalStyle(':root', {
-  vars: assignVars(colour, lightPalette),
+  vars: {
+    ...assignVars(colour, lightPalette),
+    ...assignVars(elevation, lightElevation),
+  },
   '@media': {
     '(prefers-color-scheme: dark)': {
-      vars: assignVars(colour, darkPalette),
+      vars: {
+        ...assignVars(colour, darkPalette),
+        ...assignVars(elevation, darkElevation),
+      },
     },
   },
 });
@@ -49,10 +77,16 @@ globalStyle(':root', {
 // on <html> outranks the bare :root rules above in either direction, and
 // removing the attribute returns to the system preference.
 globalStyle(':root[data-theme="light"]', {
-  vars: assignVars(colour, lightPalette),
+  vars: {
+    ...assignVars(colour, lightPalette),
+    ...assignVars(elevation, lightElevation),
+  },
 });
 globalStyle(':root[data-theme="dark"]', {
-  vars: assignVars(colour, darkPalette),
+  vars: {
+    ...assignVars(colour, darkPalette),
+    ...assignVars(elevation, darkElevation),
+  },
 });
 
 // Typography

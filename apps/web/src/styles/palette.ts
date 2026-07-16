@@ -14,12 +14,12 @@
  *   re-derived for dark backgrounds (desaturated, higher luminance).
  *
  * Contrast contracts, enforced by contrast.test.ts in both themes:
- * - textPrimary and textSecondary reach 4.5:1 on background, surface, and
- *   surfaceElevated.
+ * - textPrimary and textSecondary reach 4.5:1 on background, surface,
+ *   surfaceElevated, and surfaceHover.
  * - accent reaches 3:1 on background and surface (large text and interactive
  *   elements).
- * - healthy, investigate, and flag reach 3:1 on background, surface, and
- *   surfaceElevated.
+ * - healthy, investigate, and flag reach 3:1 on background, surface,
+ *   surfaceElevated, and surfaceHover.
  * - onAccent reaches 4.5:1 on accentFill.
  */
 
@@ -30,6 +30,8 @@ export interface ThemePalette {
   surface: string;
   /** Raised surface: sheets and popovers. Light mode elevates with shadow instead, so it stays white. */
   surfaceElevated: string;
+  /** Card surface while hovered on pointer devices: light stays white and lets the shadow deepen; dark steps brightness between surface and surfaceElevated (dashboard design plan §3.1). */
+  surfaceHover: string;
   /** Primary text and display numbers. */
   textPrimary: string;
   /** Labels, captions, secondary values. */
@@ -54,6 +56,7 @@ export const lightPalette: ThemePalette = {
   background: '#F2F2F7',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
+  surfaceHover: '#FFFFFF',
   textPrimary: '#1D1D1F',
   textSecondary: '#65656A',
   border: '#D2D2D7',
@@ -69,6 +72,7 @@ export const darkPalette: ThemePalette = {
   background: '#000000',
   surface: '#1C1C1E',
   surfaceElevated: '#2C2C2E',
+  surfaceHover: '#252527',
   textPrimary: '#F5F5F7',
   textSecondary: '#98989F',
   border: '#38383A',
