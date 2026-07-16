@@ -49,7 +49,12 @@ function contrastRatio(a: string, b: string): number {
 }
 
 /** Backgrounds that text and semantic colours actually render on. */
-const renderedBackgrounds = ['background', 'surface', 'surfaceElevated'] as const;
+const renderedBackgrounds = [
+  'background',
+  'surface',
+  'surfaceElevated',
+  'surfaceHover',
+] as const;
 
 /** Returns the rendered backgrounds on which `foreground` misses `minimum`. */
 function contrastShortfalls(
