@@ -15,6 +15,7 @@ import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
 import {
+  ASX_DIRECTORY_OBJECT_KEY,
   distributionIdParameterName,
   edgarContactParameterName,
   extractionParameterPrefix,
@@ -334,6 +335,7 @@ export class IngestionStack extends Stack {
         EDGAR_CONTACT_PARAMETER: contactParameter,
         INDEX_BUCKET: this.indexBucket.bucketName,
         INDEX_KEY: TICKER_INDEX_OBJECT_KEY,
+        ASX_INDEX_KEY: ASX_DIRECTORY_OBJECT_KEY,
       },
     });
     stateMachine.grantStartExecution(dispatcher.fn);
@@ -351,7 +353,10 @@ export class IngestionStack extends Stack {
       new iam.PolicyStatement({
         sid: 'RefreshTickerIndexObject',
         actions: ['s3:PutObject'],
-        resources: [this.indexBucket.arnForObjects(TICKER_INDEX_OBJECT_KEY)],
+        resources: [
+          this.indexBucket.arnForObjects(TICKER_INDEX_OBJECT_KEY),
+          this.indexBucket.arnForObjects(ASX_DIRECTORY_OBJECT_KEY),
+        ],
       }),
     );
     dispatcher.fn.addToRolePolicy(

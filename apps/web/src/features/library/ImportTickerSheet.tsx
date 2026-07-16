@@ -18,6 +18,8 @@ import * as styles from './importTicker.css';
  * the cap is a minute of patience before the manual path is offered.
  */
 const MAX_ATTEMPTS = 12;
+/** ASX extraction reads whole annual reports; give it three minutes, not one. */
+const MAX_ATTEMPTS_ASX = 36;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -32,7 +34,8 @@ async function runImport(
     // Re-importing opens the owner's existing research instead of a twin.
     return { companyId: existing.id, alreadyInLibrary: true };
   }
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  const maxAttempts = listing.ticker.endsWith('.AX') ? MAX_ATTEMPTS_ASX : MAX_ATTEMPTS;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const result = await fetchFinancials(listing.ticker);
     if (result.kind === 'ok') {
       if (result.data.statements.length === 0) {
@@ -51,7 +54,7 @@ async function runImport(
     throw new ImportError(result.message);
   }
   throw new ImportError(
-    'Still fetching the filings after a minute. Try again shortly, or enter the numbers manually.'
+    'Still fetching the filings. The work continues in the background; try again shortly, or enter the numbers manually.'
   );
 }
 
@@ -112,12 +115,15 @@ export function ImportTickerSheet({
         {importing ? (
           <div className={styles.progress} role="status" aria-live="polite">
             <p className={styles.progressPrimary}>
-              Fetching {pickedTicker ?? 'the'} filings from EDGAR…
+              Fetching {pickedTicker ?? 'the'} filings from{' '}
+              {pickedTicker?.endsWith('.AX') ? 'the ASX announcements platform' : 'EDGAR'}…
             </p>
             <p className={styles.progressSecondary}>
               {waiting
-                ? 'First request for this ticker: its filings are being ingested. This takes about ten seconds.'
-                : 'Ten years of standardised statements, each number linked to its filing.'}
+                ? pickedTicker?.endsWith('.AX')
+                  ? 'First request for this ticker: its annual reports are being read. This can take a couple of minutes.'
+                  : 'First request for this ticker: its filings are being ingested. This takes about ten seconds.'
+                : 'Standardised statements, each number linked to its filing.'}
             </p>
           </div>
         ) : (

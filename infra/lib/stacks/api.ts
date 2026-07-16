@@ -9,7 +9,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import type * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
-import { edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
+import { ASX_DIRECTORY_OBJECT_KEY, edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
 
@@ -140,7 +140,11 @@ export class ApiStack extends Stack {
         EDGAR_CONTACT_PARAMETER: contactParameter,
         ...(indexBucket === undefined
           ? {}
-          : { INDEX_BUCKET: indexBucket.bucketName, INDEX_KEY: TICKER_INDEX_OBJECT_KEY }),
+          : {
+              INDEX_BUCKET: indexBucket.bucketName,
+              INDEX_KEY: TICKER_INDEX_OBJECT_KEY,
+              ASX_INDEX_KEY: ASX_DIRECTORY_OBJECT_KEY,
+            }),
       },
     });
     if (indexBucket !== undefined) {
@@ -149,7 +153,10 @@ export class ApiStack extends Stack {
         new iam.PolicyStatement({
           sid: 'ReadWriteTickerIndexObject',
           actions: ['s3:GetObject', 's3:PutObject'],
-          resources: [indexBucket.arnForObjects(TICKER_INDEX_OBJECT_KEY)],
+          resources: [
+            indexBucket.arnForObjects(TICKER_INDEX_OBJECT_KEY),
+            indexBucket.arnForObjects(ASX_DIRECTORY_OBJECT_KEY),
+          ],
         }),
       );
     }

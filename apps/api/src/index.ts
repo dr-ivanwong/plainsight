@@ -39,7 +39,11 @@ export {
   type TickerListing
 } from './edgar/client.js';
 export {
+  ASX_DIRECTORY_KEY,
   IndexLoader,
+  parseAsxDirectoryObject,
+  parseTickerIndexObject,
+  serialiseAsxDirectory,
   serialiseTickerIndex,
   TICKER_INDEX_KEY,
   type IndexObjectStore
@@ -54,9 +58,10 @@ export {
   encodePageToken,
   rankListings,
   SEARCH_PAGE_SIZE,
-  searchListings
+  searchListings,
+  type SearchListing
 } from './search/search.js';
-export { runGates, type GateOutcome, type GateVerdict } from './ingest/gates.js';
+export { runGates, type GateOutcome, type GateVerdict, type GateYear } from './ingest/gates.js';
 export { INGEST_LOCK_LEASE_MS, runIngest, type IngestDeps, type IngestOutcome } from './ingest/core.js';
 export {
   announcementsYearUrl,
@@ -81,7 +86,12 @@ export {
   type ConversionOutcome,
   type ConvertedYear
 } from './asx/convert.js';
-export { parseCompanyName, type AnnouncementsYear } from './asx/client.js';
+export {
+  LISTED_COMPANIES_URL,
+  parseCompanyName,
+  parseListedCompaniesCsv,
+  type AnnouncementsYear
+} from './asx/client.js';
 export { resolveStatutoryReports } from './asx/resolve.js';
 export {
   ASX_TICKER_SUFFIX,

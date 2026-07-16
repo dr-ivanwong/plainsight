@@ -76,7 +76,9 @@ function PriceCard({ company }: { company: CompanyRecord }): ReactElement {
     <article className={styles.priceCard} aria-label="Enter today's price">
       <h3 className={styles.priceTitle}>Enter today&apos;s price</h3>
       <p className={styles.priceNote}>
-        The two valuation measures need a share price in {company.currency}.
+        The two valuation measures need a share price in {company.currency}, the currency the
+        statements report in. Where the market quotes another currency (CSL trades in AUD and
+        reports in USD), convert before entering: the app never converts for you.
       </p>
       <form className={styles.priceForm} onSubmit={(event) => void handleSubmit(event)}>
         <label className={styles.priceField}>

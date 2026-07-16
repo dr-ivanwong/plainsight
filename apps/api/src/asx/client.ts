@@ -22,6 +22,27 @@ export const announcementsYearUrl = (asxCode: string, year: number): string =>
 export const displayAnnouncementUrl = (idsId: string): string =>
   `https://www.asx.com.au/asx/v2/statistics/displayAnnouncement.do?display=pdf&idsId=${idsId}`;
 
+export const LISTED_COMPANIES_URL = 'https://www.asx.com.au/asx/research/ASXListedCompanies.csv';
+
+/**
+ * The listed-companies directory (backend spec §8): a dated preamble line,
+ * a blank line, a header, then quoted CSV rows of name, code, GICS group.
+ * Tickers come out .AX-qualified, ready for the merged search index.
+ */
+export function parseListedCompaniesCsv(csv: string): { ticker: string; name: string; exchange: string }[] {
+  const listings: { ticker: string; name: string; exchange: string }[] = [];
+  for (const line of csv.split(/\r?\n/)) {
+    const fields = [...line.matchAll(/"((?:[^"]|"")*)"/g)].map((match) =>
+      (match[1] ?? '').replace(/""/g, '"').trim()
+    );
+    const [name, code] = fields;
+    // Preamble, header, and blank lines carry no quoted code column.
+    if (name === undefined || code === undefined || !/^[A-Z0-9]{1,6}$/.test(code)) continue;
+    listings.push({ ticker: `${code}.AX`, name, exchange: 'ASX' });
+  }
+  return listings;
+}
+
 export interface MapAnnouncement {
   /** The MAP document id, immutable; the DOC# cache key. */
   idsId: string;
@@ -116,6 +137,12 @@ export class MapClient {
   /** The year's announcements for a code, newest first, as the page lists them. */
   async listAnnouncements(asxCode: string, year: number): Promise<MapAnnouncement[]> {
     return (await this.fetchAnnouncementsYear(asxCode, year)).announcements;
+  }
+
+  /** The listed-companies directory, .AX-qualified, for the search index. */
+  async fetchListedCompanies(): Promise<{ ticker: string; name: string; exchange: string }[]> {
+    const response = await this.request(LISTED_COMPANIES_URL);
+    return parseListedCompaniesCsv(await response.text());
   }
 
   /** The year page in full: announcements plus the listed company name. */

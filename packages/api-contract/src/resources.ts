@@ -149,7 +149,8 @@ export type FinancialsResponse = z.infer<typeof financialsResponseSchema>;
 export const searchResultSchema = z.object({
   ticker: tickerSchema,
   name: nonEmpty,
-  cik: z.number().int().positive(),
+  /** EDGAR listings only; ASX listings carry no CIK (Phase 2.5 widening). */
+  cik: z.number().int().positive().optional(),
   exchange: nonEmpty.optional()
 });
 

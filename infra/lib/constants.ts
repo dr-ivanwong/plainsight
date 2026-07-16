@@ -37,6 +37,9 @@ export const edgarContactParameterName = (envName: string): string =>
  */
 export const TICKER_INDEX_OBJECT_KEY = 'edgar/company_tickers_exchange.json';
 
+/** The ASX listed-companies directory copy, refreshed beside the SEC index. */
+export const ASX_DIRECTORY_OBJECT_KEY = 'asx/listed-companies.json';
+
 /**
  * Where StaticSite publishes the distribution id once the API rides behind
  * CloudFront. The ingest function reads it at runtime to invalidate a
