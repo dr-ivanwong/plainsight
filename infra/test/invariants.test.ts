@@ -640,6 +640,7 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
   const functions = Object.values(ingestion.findResources('AWS::Lambda::Function')) as any[];
   const ingestFn: any = functions.find((fn) => fn.Properties.Timeout === 120);
   const dispatcherFn: any = functions.find((fn) => fn.Properties.Timeout === 60);
+  const extractFn: any = functions.find((fn) => fn.Properties.Timeout === 300);
   const policies = Object.values(ingestion.findResources('AWS::IAM::Policy')) as any[];
   const statementsWithSid = (sid: string): any =>
     policies
@@ -647,7 +648,7 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
       .find((statement) => statement.Sid === sid);
 
   it('the ingest function carries the pinned sizing and X-Ray tracing', () => {
-    expect(functions).toHaveLength(2);
+    expect(functions).toHaveLength(3);
     expect(ingestFn).toBeDefined();
     expect(ingestFn.Properties.MemorySize).toBe(512);
     expect(ingestFn.Properties.Architectures).toEqual(['arm64']);
@@ -657,6 +658,49 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     expect(ingestFn.Properties.Environment.Variables.EDGAR_CONTACT_PARAMETER).toBe(
       '/app/prod/edgar/contact',
     );
+    // The router knows the extraction function; the delegation is the .AX fork.
+    expect(ingestFn.Properties.Environment.Variables.EXTRACT_FUNCTION_NAME).toBeDefined();
+  });
+
+  it('the extraction function carries the pinned §10 sizing and scoped grants', () => {
+    expect(extractFn).toBeDefined();
+    expect(extractFn.Properties.MemorySize).toBe(1536);
+    expect(extractFn.Properties.Architectures).toEqual(['arm64']);
+    expect(extractFn.Properties.Runtime).toBe('nodejs22.x');
+    expect(extractFn.Properties.TracingConfig).toEqual({ Mode: 'Active' });
+    expect(extractFn.Properties.Environment.Variables.TABLE_NAME).toBeDefined();
+    expect(extractFn.Properties.Environment.Variables.CONTACT_PARAMETER).toBe(
+      '/app/prod/edgar/contact',
+    );
+
+    // Writes stay inside ticker partitions; GetItem joins for the DOC# cache.
+    const writes = statementsWithSid('ExtractWriteTickerPartitions');
+    expect(writes.Action).toEqual([
+      'dynamodb:GetItem',
+      'dynamodb:PutItem',
+      'dynamodb:UpdateItem',
+      'dynamodb:BatchWriteItem',
+    ]);
+    expect(writes.Condition).toEqual({
+      'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },
+    });
+
+    // Provider keys are readable only under the extraction prefix.
+    const keys = statementsWithSid('ReadProviderKeyParameters');
+    expect(keys.Action).toBe('ssm:GetParameter');
+    expect(JSON.stringify(keys.Resource)).toContain('parameter/app/prod/extraction/*');
+
+    // Exactly two invoke grants exist in this stack (the sweep task invoking
+    // the router; the router delegating to extraction), each aimed at one
+    // named function, never a wildcard.
+    const invokes = policies
+      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
+      .filter((statement) => [statement.Action].flat().includes('lambda:InvokeFunction'));
+    expect(invokes).toHaveLength(2);
+    for (const statement of invokes) {
+      expect(JSON.stringify(statement.Resource)).toContain('Fn');
+      expect(JSON.stringify(statement.Resource)).not.toContain('"*"');
+    }
   });
 
   it('writes only ticker partitions, never deletes, and reads one SSM parameter', () => {
@@ -715,11 +759,16 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     const queue: any = only(ingestion.findResources('AWS::SQS::Queue'));
     expect(queue.Properties.MessageRetentionPeriod).toBe(14 * 24 * 60 * 60);
     const alarms = Object.values(ingestion.findResources('AWS::CloudWatch::Alarm')) as any[];
-    expect(alarms).toHaveLength(2);
+    // DLQ depth, sweep failure, and the extraction function's errors (its
+    // delegation is asynchronous, so failures never reach the sweep DLQ).
+    expect(alarms).toHaveLength(3);
     for (const alarm of alarms) {
       expect(alarm.Properties.AlarmActions).toHaveLength(1);
       expect(alarm.Properties.Threshold).toBe(1);
     }
+    expect(
+      alarms.some((alarm) => alarm.Properties.MetricName === 'Errors'),
+    ).toBe(true);
   });
 
   it('the financials route can fire it, and only it', () => {

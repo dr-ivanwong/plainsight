@@ -10,14 +10,26 @@
 import { scaleUnitMinor } from '@plainsight/calc-engine';
 import type { MappedYear } from '../edgar/mapping.js';
 
-export interface GateVerdict {
-  year: MappedYear;
+/**
+ * What the gates actually read: labelled years of minor-unit items. EDGAR's
+ * MappedYear and the ASX conversion both satisfy it, so one gate
+ * implementation guards both sources (backend spec §5: the gates are pinned
+ * for both).
+ */
+export interface GateYear {
+  fy: MappedYear['fy'];
+  endDate: string;
+  items: Partial<Record<keyof MappedYear['items'], { amountMinor: number }>>;
+}
+
+export interface GateVerdict<Y extends GateYear = MappedYear> {
+  year: Y;
   reasons: string[];
 }
 
-export interface GateOutcome {
-  served: MappedYear[];
-  quarantined: GateVerdict[];
+export interface GateOutcome<Y extends GateYear = MappedYear> {
+  served: Y[];
+  quarantined: GateVerdict<Y>[];
 }
 
 /**
@@ -28,7 +40,7 @@ export interface GateOutcome {
 const toleranceMinor = (largerSideMinor: number): number =>
   Math.max(3 * scaleUnitMinor('millions'), 0.001 * Math.abs(largerSideMinor));
 
-function balanceIdentityReason(year: MappedYear): string | undefined {
+function balanceIdentityReason(year: GateYear): string | undefined {
   const assets = year.items.totalAssets?.amountMinor;
   const liabilities = year.items.totalLiabilities?.amountMinor;
   const equity = year.items.totalEquity?.amountMinor;
@@ -50,7 +62,7 @@ function balanceIdentityReason(year: MappedYear): string | undefined {
  */
 const SCALE_JUMP_RATIO = 20;
 
-function scaleJumpReasons(previous: MappedYear | undefined, year: MappedYear): string[] {
+function scaleJumpReasons(previous: GateYear | undefined, year: GateYear): string[] {
   if (previous === undefined) return [];
   const reasons: string[] = [];
   for (const itemId of ['revenue', 'totalAssets'] as const) {
@@ -68,10 +80,10 @@ function scaleJumpReasons(previous: MappedYear | undefined, year: MappedYear): s
 }
 
 /** Runs every gate over the mapped years, in fiscal order. */
-export function runGates(years: MappedYear[]): GateOutcome {
-  const served: MappedYear[] = [];
-  const quarantined: GateVerdict[] = [];
-  let previousServed: MappedYear | undefined;
+export function runGates<Y extends GateYear>(years: Y[]): GateOutcome<Y> {
+  const served: Y[] = [];
+  const quarantined: GateVerdict<Y>[] = [];
+  let previousServed: Y | undefined;
   for (const year of years) {
     const reasons: string[] = [];
     const balance = balanceIdentityReason(year);

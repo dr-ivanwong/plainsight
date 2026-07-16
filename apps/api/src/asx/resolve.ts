@@ -42,15 +42,45 @@ export function resolveStatutoryReport(
   const windowStart = Date.parse(fyEndDate);
   const windowEnd = windowStart + LODGEMENT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
-  const candidates = announcements.filter((announcement) => {
-    const lodged = Date.parse(announcement.date);
-    return (
-      lodged > windowStart &&
-      lodged <= windowEnd &&
-      INCLUDE.test(announcement.headline) &&
-      !EXCLUDE.test(announcement.headline)
-    );
-  });
+  return pickStatutory(
+    announcements.filter((announcement) => {
+      const lodged = Date.parse(announcement.date);
+      return lodged > windowStart && lodged <= windowEnd;
+    })
+  );
+}
+
+/**
+ * The statutory lodgements across whatever announcements were fetched, one
+ * per lodgement season, newest first: the on-demand ASX ingest's backfill
+ * reads the last few year pages and takes the top of this list. Companies
+ * lodge one statutory report per fiscal year, so grouping by the calendar
+ * year of lodgement is grouping by fiscal year for every 30 June balancer
+ * and remains one-per-season for the rest.
+ */
+export function resolveStatutoryReports(
+  announcements: readonly MapAnnouncement[]
+): MapAnnouncement[] {
+  const bySeason = new Map<number, MapAnnouncement[]>();
+  for (const announcement of announcements) {
+    const year = Number(announcement.date.slice(0, 4));
+    const season = bySeason.get(year);
+    if (season === undefined) bySeason.set(year, [announcement]);
+    else season.push(announcement);
+  }
+  const picks: MapAnnouncement[] = [];
+  for (const season of bySeason.values()) {
+    const pick = pickStatutory(season);
+    if (pick !== undefined) picks.push(pick);
+  }
+  return picks.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function pickStatutory(inWindow: readonly MapAnnouncement[]): MapAnnouncement | undefined {
+  const candidates = inWindow.filter(
+    (announcement) =>
+      INCLUDE.test(announcement.headline) && !EXCLUDE.test(announcement.headline)
+  );
   if (candidates.length === 0) return undefined;
 
   const byWeight = (tier: readonly MapAnnouncement[]): MapAnnouncement | undefined =>

@@ -14,6 +14,8 @@ export {
 } from './envelope.js';
 export {
   companyProfileSchema,
+  extractionFieldRefSchema,
+  extractionRefSchema,
   financialsProvenanceSchema,
   financialsResponseSchema,
   financialsStatementSchema,

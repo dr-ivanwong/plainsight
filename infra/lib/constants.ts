@@ -16,6 +16,15 @@ export const LOG_RETENTION = RetentionDays.ONE_MONTH;
  * name, the same pattern as the pipeline's provider keys (cdk spec §1.4).
  * Read by the ingest function and by ticker search's SEC fallback.
  */
+/**
+ * The extraction provider key parameters live under this prefix, one
+ * SecureString per rung, created out-of-band (never in code or state); the
+ * registry in extraction-core names each rung's parameter and the ladder
+ * skips rungs whose parameter does not exist.
+ */
+export const extractionParameterPrefix = (envName: string): string =>
+  `/app/${envName}/extraction/`;
+
 export const edgarContactParameterName = (envName: string): string =>
   `/app/${envName}/edgar/contact`;
 

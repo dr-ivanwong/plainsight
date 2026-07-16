@@ -62,6 +62,18 @@ export function parseAnnouncementsPage(html: string): MapAnnouncement[] {
   return announcements;
 }
 
+/** The listed name from the year page's heading ("CSL LIMITED (CSL)"). */
+export function parseCompanyName(html: string): string | undefined {
+  const match = html.match(/announcements for\s*(?:<br\s*\/?>)?\s*([^<(]+)\(/i);
+  const name = match?.[1]?.replace(/\s+/g, ' ').trim();
+  return name === undefined || name === '' ? undefined : name;
+}
+
+export interface AnnouncementsYear {
+  announcements: MapAnnouncement[];
+  companyName?: string | undefined;
+}
+
 export interface MapClientDeps {
   contact: string;
   fetchImpl?: typeof fetch;
@@ -103,8 +115,18 @@ export class MapClient {
 
   /** The year's announcements for a code, newest first, as the page lists them. */
   async listAnnouncements(asxCode: string, year: number): Promise<MapAnnouncement[]> {
+    return (await this.fetchAnnouncementsYear(asxCode, year)).announcements;
+  }
+
+  /** The year page in full: announcements plus the listed company name. */
+  async fetchAnnouncementsYear(asxCode: string, year: number): Promise<AnnouncementsYear> {
     const response = await this.request(announcementsYearUrl(asxCode, year));
-    return parseAnnouncementsPage(await response.text());
+    const html = await response.text();
+    const companyName = parseCompanyName(html);
+    return {
+      announcements: parseAnnouncementsPage(html),
+      ...(companyName === undefined ? {} : { companyName })
+    };
   }
 
   /**
