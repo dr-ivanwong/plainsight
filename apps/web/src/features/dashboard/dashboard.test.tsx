@@ -4,7 +4,7 @@
 // degenerate phrases, insufficient-data deep links, and the collapsing
 // valuation cards.
 import 'fake-indexeddb/auto';
-import type { EntryValue, FyLabel } from '@plainsight/calc-engine';
+import { METRIC_IDS, METRICS, type EntryValue, type FyLabel } from '@plainsight/calc-engine';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -19,6 +19,7 @@ import {
   type StatementWrite
 } from '../../db';
 import { routeTree } from '../../routeTree.gen';
+import { DASHBOARD_SECTIONS } from './sections';
 
 const e = (amountMinor: number): EntryValue => ({ kind: 'entered', amountMinor });
 
@@ -116,6 +117,26 @@ describe('the company dashboard', () => {
     expect(within(screen.getByRole('article', { name: 'P/E' })).getByText('20.00')).toBeVisible();
     expect(screen.queryByText('FCF margin')).not.toBeInTheDocument();
     expect(screen.queryByText('Earnings yield')).not.toBeInTheDocument();
+  });
+
+  it('holds the section map to the dictionary card flags, in order', () => {
+    expect(DASHBOARD_SECTIONS.flatMap((section) => section.ids)).toEqual(
+      METRIC_IDS.filter((id) => METRICS[id].card)
+    );
+  });
+
+  it('groups the cards under the five quiet section labels', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+
+    await screen.findByRole('article', { name: 'Gross margin' });
+    const metrics = screen.getByRole('region', { name: 'Metrics' });
+    const labels = within(metrics)
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(labels).toEqual(['Profitability', 'Returns', 'Safety', 'Cash', 'Valuation']);
   });
 
   it('collapses the two valuation cards into one enter-price card until a price exists', async () => {

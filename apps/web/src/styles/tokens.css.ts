@@ -117,6 +117,8 @@ export const tracking = {
   display: '-0.02em',
   /** For the 11px and 13px caption sizes. */
   caption: '0.01em',
+  /** For all-caps micro-labels (the dashboard's section headers): wide enough to keep 11px capitals legible (dashboard design plan §3.3). */
+  sectionLabel: '0.06em',
 } as const;
 
 export const lineHeight = {

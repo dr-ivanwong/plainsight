@@ -118,7 +118,7 @@ sectionLabel:
   marginBottom: space[8]
 ```
 
-This follows Apple's grouped-list section header pattern (Settings, Health): small, quiet, uppercase, out of the way. The wide tracking keeps the small caps legible.
+This follows Apple's grouped-list section header pattern (Settings, Health): small, quiet, uppercase, out of the way. The wide tracking keeps the small caps legible. In the grid, every label after the first also takes `marginTop: space[24]`: the uniform 12px gap alone would seat a label closer to the previous group's cards than to its own, and groups separate generously.
 
 ### 3.4 Table-view tokens (new)
 
@@ -541,7 +541,7 @@ The plans are contracts: a decision that moves updates its document in the same 
 |---|---|---|---|
 | Main plan | §4 progressive disclosure ("12 numbers... never on-screen by default") | Reword to 12 metrics with multi-year visibility; record the loosening in the §12 log | Steps 6-7 |
 | Main plan | §12 decision log | New entries: the delta-chip colour departure; the 12-numbers loosening | Steps 3, 6 |
-| Frontend spec | §3 S3 (card contents and states) | Multi-year row, key-stats header, view toggle, year-range control, trends section, table-mode states | Steps 6-11 |
+| Frontend spec | §3 S3 (card contents and states) | Section grouping, multi-year row, key-stats header, view toggle, year-range control, trends section, table-mode states | Steps 2, 6-11 |
 | Frontend spec | §5 component inventory | DeltaChip contract change; add KeyStats, MetricTable, TrendChart/TrendSection | Steps 3, 7, 10, 11 |
 | Frontend spec | §7 responsive rules | Replace the `minmax(160px, 1fr)` "3-4 columns" parenthetical with the ≥900px `repeat(4, 1fr)` rule | Step 8 |
 | Data-model spec | §6 dictionary | Pin per-metric direction (`higherIsBetter`), today an explicitly unpinned display hint | Step 3 |

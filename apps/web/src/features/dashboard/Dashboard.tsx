@@ -1,6 +1,5 @@
 import {
   LINE_ITEMS,
-  METRIC_IDS,
   METRICS,
   type FyLabel,
   type LineItemId,
@@ -8,7 +7,7 @@ import {
   type MetricSeries
 } from '@plainsight/calc-engine';
 import { Link } from '@tanstack/react-router';
-import { useState, type FormEvent, type ReactElement } from 'react';
+import { Fragment, useState, type FormEvent, type ReactElement } from 'react';
 
 import { MetricCard } from '../../components/MetricCard';
 import { parseEntryText } from '../../components/moneyEntry';
@@ -20,9 +19,7 @@ import { useRedFlags } from '../../hooks/useRedFlags';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
 import { MetricSheet } from './MetricSheet';
-
-/** The 12 dashboard cards come straight from the dictionary's card flags (the metric-budget decision). */
-const CARD_IDS: readonly MetricId[] = METRIC_IDS.filter((id) => METRICS[id].card);
+import { DASHBOARD_SECTIONS } from './sections';
 
 const STALE_PRICE_MS = 90 * 86_400_000;
 
@@ -116,9 +113,10 @@ function PriceCard({ company }: { company: CompanyRecord }): ReactElement {
 
 /**
  * The company dashboard (frontend spec §3): hero facts, then the twelve-card
- * grid. Insufficient cards are the door back into data entry, landing on the
- * first missing number. Sparklines, deltas and the red-flag section join with
- * the dashboard-depth slice.
+ * grid in its five groups (dashboard design plan §5.2). Insufficient cards
+ * are the door back into data entry, landing on the first missing number.
+ * Sparklines, deltas and the red-flag section join with the dashboard-depth
+ * slice.
  */
 export function Dashboard({
   metrics,
@@ -142,6 +140,64 @@ export function Dashboard({
   // Sparklines draw the labelled years that computed; they need at least two
   // (data-sufficiency policy), which Sparkline itself enforces.
   const sparkFor = (series: MetricSeries): SparkPoint[] => okPoints(series, report.fyLabels);
+
+  // One dashboard card. The section map supplies the ids, which the dashboard
+  // test holds to the dictionary's card flags (the metric-budget decision).
+  const renderCard = (id: MetricId): ReactElement | null => {
+    const def = METRICS[id];
+    const series = report.metrics[id];
+    const latest = series.latest;
+    if (latest === null) return null;
+
+    const valuation = id === 'pe' || id === 'fcfYield';
+    if (valuation && price === null) {
+      // Both valuation cards collapse into the single price card.
+      return id === 'pe' ? <PriceCard key="price" company={company} /> : null;
+    }
+
+    const spark = sparkFor(series);
+    if (latest.status === 'insufficient_data' && report.latestFy !== null) {
+      return (
+        <Link
+          key={id}
+          to="/company/$id/entry"
+          params={{ id: company.id }}
+          search={entrySearchFor(latest.missing, report.latestFy)}
+          className={styles.cardLink}
+        >
+          <MetricCard
+            label={def.label}
+            value={latest}
+            kind={def.format}
+            currency={company.currency}
+            spark={spark}
+            delta={series.delta ?? undefined}
+          />
+        </Link>
+      );
+    }
+
+    return (
+      <Link
+        key={id}
+        to="/company/$id"
+        params={{ id: company.id }}
+        search={{ metric: id }}
+        className={styles.cardLink}
+      >
+        <MetricCard
+          label={def.label}
+          value={latest}
+          kind={def.format}
+          currency={company.currency}
+          spark={spark}
+          delta={series.delta ?? undefined}
+          footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
+          stale={valuation && priceIsStale}
+        />
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -179,61 +235,12 @@ export function Dashboard({
       ) : (
         <>
           <section className={styles.grid} aria-label="Metrics">
-            {CARD_IDS.map((id) => {
-              const def = METRICS[id];
-              const series = report.metrics[id];
-              const latest = series.latest;
-              if (latest === null) return null;
-
-              const valuation = id === 'pe' || id === 'fcfYield';
-              if (valuation && price === null) {
-                // Both valuation cards collapse into the single price card.
-                return id === 'pe' ? <PriceCard key="price" company={company} /> : null;
-              }
-
-              const spark = sparkFor(series);
-              if (latest.status === 'insufficient_data' && report.latestFy !== null) {
-                return (
-                  <Link
-                    key={id}
-                    to="/company/$id/entry"
-                    params={{ id: company.id }}
-                    search={entrySearchFor(latest.missing, report.latestFy)}
-                    className={styles.cardLink}
-                  >
-                    <MetricCard
-                      label={def.label}
-                      value={latest}
-                      kind={def.format}
-                      currency={company.currency}
-                      spark={spark}
-                      delta={series.delta ?? undefined}
-                    />
-                  </Link>
-                );
-              }
-
-              return (
-                <Link
-                  key={id}
-                  to="/company/$id"
-                  params={{ id: company.id }}
-                  search={{ metric: id }}
-                  className={styles.cardLink}
-                >
-                  <MetricCard
-                    label={def.label}
-                    value={latest}
-                    kind={def.format}
-                    currency={company.currency}
-                    spark={spark}
-                    delta={series.delta ?? undefined}
-                    footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
-                    stale={valuation && priceIsStale}
-                  />
-                </Link>
-              );
-            })}
+            {DASHBOARD_SECTIONS.map(({ label, ids }) => (
+              <Fragment key={label}>
+                <h2 className={styles.sectionLabel}>{label}</h2>
+                {ids.map((id) => renderCard(id))}
+              </Fragment>
+            ))}
           </section>
 
           {report.fyLabels.length === 1 ? (
