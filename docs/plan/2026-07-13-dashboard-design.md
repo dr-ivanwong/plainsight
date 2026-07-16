@@ -452,6 +452,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 
 ### Step 5: sparkline area fill and health colour
 
+- Split at build time (2026-07-16): the area fill carries no semantics and ships on its own; the health-colour half is the same signal as steps 3-4, shares their owner review, and lands with them.
 - Extend `Sparkline` with the area polygon and optional `health` prop.
 - Update `sparkline.css.ts` with the fill and colour-variant styles.
 - Update `Dashboard.tsx` to pass health state through.
