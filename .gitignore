@@ -10,3 +10,6 @@ cdk.out/
 # Playwright
 apps/web/test-results/
 apps/web/playwright-report/
+
+# Bake-off outputs and corpus document cache (keys and PDFs never commit)
+packages/extraction-core/bakeoff-results/
