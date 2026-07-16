@@ -32,6 +32,61 @@ With `ORIGIN=https://<DistributionDomainName>`:
 - In the app: Import → AAPL → the dashboard renders the ten-year model, and a metric detail sheet's provenance names the EDGAR filing.
 - Run the sweep once by hand and watch it succeed: `aws stepfunctions start-execution --state-machine-arn <SweepStateMachineArn> --input '{"tickers":["AAPL"]}'`. An unchanged ticker reports `unchanged` and does no work.
 
+## Phase 2.5 go-live (ASX extraction)
+
+Everything deploys with the Phase 2 stacks (the ingestion flag covers the extraction function); what turns ASX ingestion on is the provider keys, and nothing spends until they exist.
+
+1. **Run the bake-off locally first** (this is the pinned accuracy gate, main plan §8: proceed only at 99.5% post-validation field accuracy). From `packages/extraction-core`, with any subset of keys:
+
+   ```sh
+   corepack pnpm build
+   EDGAR_CONTACT=you@example.com \
+   ANTHROPIC_API_KEY=... GEMINI_API_KEY=... DEEPSEEK_API_KEY=... GROQ_API_KEY=... \
+   node tools/bakeoff.mjs
+   ```
+
+   The scorecard (field accuracy against the hand-typed transcriptions, gate pass rate, latency, estimated cost per rung) lands in `bakeoff-results/`, gitignored. Corpus documents download once from the URLs the transcriptions record.
+2. **Pin the ladder from the scorecard**: reorder the entries in `packages/extraction-core/src/registry.ts` to the measured order (accuracy first, then cost), commit the scorecard summary into this repository's docs beside the change, and re-run the bake-off whenever the registry changes.
+3. **Create the provider key parameters** for the rungs the pinned ladder uses (SecureStrings, never in code or state; the registry names each parameter):
+
+   ```sh
+   aws ssm put-parameter --name /app/prod/extraction/anthropic-api-key --type SecureString --value ...
+   aws ssm put-parameter --name /app/prod/extraction/gemini-api-key   --type SecureString --value ...
+   aws ssm put-parameter --name /app/prod/extraction/deepseek-api-key --type SecureString --value ...
+   aws ssm put-parameter --name /app/prod/extraction/groq-api-key     --type SecureString --value ...
+   ```
+
+   Any subset works: the ladder skips rungs whose parameter is absent, and with none at all the extraction function declines loudly and writes nothing.
+4. **Set provider-side spend caps** on each key (the provider dashboards), the control that actually bounds a leak; the budget kill switch below is the backstop.
+
+### The ASX exit smoke
+
+With `ORIGIN=https://<DistributionDomainName>`:
+
+- `curl "$ORIGIN/v1/search?q=COH"` returns COCHLEAR LIMITED as `COH.AX` with the ASX badge beside any US collision.
+- `curl -i "$ORIGIN/v1/companies/COH.AX/financials"` answers `202`; the first pass reads three annual reports (a couple of minutes, not EDGAR's ten seconds), then `200` with six fiscal years whose provenance names the MAP document, the provider, the model, the prompt version, and per-field printed pages.
+- Repeat the import for the same ticker: the `DOC#` cache answers and no model is called (`aws dynamodb query` on `TICKER#COH.AX` / `begins_with(SK, 'DOC#')` shows the cached extractions).
+- In the app: Import → search `COH` → pick the ASX badge → the dashboard renders, a detail sheet's provenance names the annual report and its printed page, and the enter-price card states the statements' currency.
+- Cross-check one company against its golden fixture: the served FY2025 values for COH.AX must equal `packages/calc-engine/fixtures/coh.json` (that equality is the whole point of the corpus).
+
+### ASX quarantine notes
+
+Two quarantine layers exist for ASX (both under the ticker partition, never served):
+
+- **Document-level** (`DOC#` items with `status: quarantined`): preprocessing refused the document (a scan, no statements found) or every ladder rung failed. The cache is deliberately final; to re-try after a fix, delete the `DOC#` item and re-fire the ingest:
+
+  ```sh
+  aws dynamodb delete-item --table-name <TableName> \
+    --key '{"PK":{"S":"TICKER#COH.AX"},"SK":{"S":"DOC#<idsId>"}}'
+  aws lambda invoke --function-name <IngestFunctionName> \
+    --cli-binary-format raw-in-base64-out \
+    --payload '{"ticker":"COH.AX"}' /tmp/out.json
+  ```
+
+- **Year-level** (`QUAR#` items suffixed with the fiscal year): the conversion or the gates rejected a year (a failed print checksum names the three figures it pins). Same review posture as EDGAR quarantine above; a prompt or registry fix warrants the document-level re-run.
+
+The extraction function's errors alarm on the Foundation topic is the symptom surface (its delegation is asynchronous, so the sweep DLQ never sees it fail); its log group carries the per-document trail.
+
 ## Rebuild from zero (the drill)
 
 Everything is IaC plus exactly two out-of-band artefacts: the CDK bootstrap and the contact parameter. From an empty account, run go-live steps 2 to 7. Canonical data needs no restore: any ticker re-ingests on demand and the weekly sweep refreshes the watched set. The owner's research lives on the owner's devices (and from Phase 3, the table's user partitions restore via point-in-time recovery). Exercise the drill on a rehearsal overlay when an infra change deserves it (`--context env=rehearsal`; see the infra README).
@@ -71,7 +126,7 @@ At the budget's kill threshold, the flipper sets `/app/prod/features/extraction`
 aws ssm put-parameter --name /app/prod/features/extraction --value true --overwrite
 ```
 
-Two notes: the flag gates extraction only (Phase 2.5's spender); the read API and the sweep cannot spend meaningfully. And a CloudFormation redeploy of Foundation resets the runtime flags to their template defaults, so re-check the flag after Foundation deploys.
+Two notes: the flag gates extraction only (Phase 2.5's spender: the extraction function reads it within a minute of a flip and declines before touching a key); the read API and the sweep cannot spend meaningfully. And a CloudFormation redeploy of Foundation resets the runtime flags to their template defaults, so re-check the flag after Foundation deploys.
 
 ## Rollback
 

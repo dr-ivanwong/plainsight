@@ -414,3 +414,18 @@ describe('asxCodeOf', () => {
     expect(asxCodeOf('.AX')).toBeUndefined();
   });
 });
+
+describe('the extraction kill switch', () => {
+  it('honours false, and reads missing wiring or parameters as enabled', async () => {
+    const { extractionEnabled } = await import('../src/handlers/extractFiling.js');
+
+    delete process.env['EXTRACTION_FLAG_PARAMETER'];
+    expect(await extractionEnabled()).toBe(true);
+
+    process.env['EXTRACTION_FLAG_PARAMETER'] = '/app/prod/features/extraction';
+    expect(await extractionEnabled(() => Promise.resolve('false'))).toBe(false);
+    expect(await extractionEnabled(() => Promise.resolve('true'))).toBe(true);
+    expect(await extractionEnabled(() => Promise.reject(new Error('missing')))).toBe(true);
+    delete process.env['EXTRACTION_FLAG_PARAMETER'];
+  });
+});

@@ -43,6 +43,29 @@ async function credentialFor(parameterName: string): Promise<string | undefined>
   }
 }
 
+/** The kill switch must bite within a minute, not the cache's hour. */
+const FLAG_TTL_MS = 60 * 1000;
+
+/**
+ * The budget kill switch (backend spec §11; runbook): the flipper sets the
+ * extraction feature flag to 'false' at the kill threshold, and this is the
+ * function that spends, so this is where the flag is honoured. A missing
+ * flag parameter reads as enabled: Foundation creates it defaulted true,
+ * and the extraction function predating the parameter must not brick.
+ */
+export async function extractionEnabled(
+  readParameter: (name: string) => Promise<string> = (name) =>
+    getCachedParameter(name, Date.now, FLAG_TTL_MS)
+): Promise<boolean> {
+  const parameterName = process.env['EXTRACTION_FLAG_PARAMETER'];
+  if (!parameterName) return true;
+  try {
+    return (await readParameter(parameterName)) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
 async function buildInvalidator(): Promise<AsxIngestDeps['invalidateEdge']> {
   const parameterName = process.env['DISTRIBUTION_ID_PARAMETER'];
   if (!parameterName) return undefined;
@@ -117,6 +140,13 @@ let deps: AsxIngestDeps | undefined;
 
 export const handler = async (event: unknown): Promise<ExtractFilingOutcome> => {
   const { ticker, mode } = eventSchema.parse(event);
+  if (!(await extractionEnabled())) {
+    const outcome = { outcome: 'disabled' as const, ticker };
+    console.log(
+      JSON.stringify({ route: 'extractFiling', ...outcome, detail: 'the extraction kill switch is off' })
+    );
+    return outcome;
+  }
   if (!(await anyCredentialConfigured())) {
     const outcome = { outcome: 'disabled' as const, ticker };
     console.log(

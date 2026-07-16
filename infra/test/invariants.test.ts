@@ -672,6 +672,10 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     expect(extractFn.Properties.Environment.Variables.CONTACT_PARAMETER).toBe(
       '/app/prod/edgar/contact',
     );
+    // The spender honours the kill switch (backend spec §11; the runbook).
+    expect(extractFn.Properties.Environment.Variables.EXTRACTION_FLAG_PARAMETER).toBe(
+      '/app/prod/features/extraction',
+    );
 
     // Writes stay inside ticker partitions; GetItem joins for the DOC# cache.
     const writes = statementsWithSid('ExtractWriteTickerPartitions');
