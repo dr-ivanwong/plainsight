@@ -478,6 +478,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 
 ### Step 9: year-range control
 
+- Deferred (2026-07-16, found at build time): every surface the range governs arrives later (the multi-year row, step 6; the table, step 10; the charts, step 11), and sparklines deliberately ignore it (§4.6), so building this first would ship a control with nothing to control. Build it alongside the first of those steps to land.
 - Add the segmented control to the dashboard chrome.
 - Thread the selected range through the card history, table, and chart rendering.
 - Render only when more than 5 fiscal years exist.
