@@ -106,12 +106,52 @@ export const body = style({
 
 export const bodySerif = style([body, { fontFamily: fontStackSerif }]);
 
+export const saveRow = style({
+  display: 'flex',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  gap: space[16],
+  marginTop: space[48]
+});
+
+export const attachRow = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: space[12],
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary
+});
+
 export const footer = style({
   display: 'flex',
   alignItems: 'center',
   gap: space[12],
-  marginTop: space[48],
+  marginTop: space[24],
   fontSize: fontSize.caption1,
   letterSpacing: tracking.caption,
   color: colour.textSecondary
+});
+
+export const footerSpacer = style({
+  flex: 1
+});
+
+export const historyLink = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: touchTarget,
+  padding: `0 ${space[8]}`,
+  border: 'none',
+  backgroundColor: 'transparent',
+  borderRadius: radius.medium,
+  color: colour.accent,
+  fontFamily: fontStack,
+  fontSize: fontSize.subhead,
+  fontWeight: fontWeight.semibold,
+  cursor: 'pointer',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: focusRing.offset
+  }
 });
