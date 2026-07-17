@@ -23,8 +23,8 @@ const queryClient = new QueryClient({
   }
 });
 
-/** Screens that render in the wider column (frontend spec §7): the dashboard now, compare later. */
-const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/'];
+/** Screens that render in the wider column (frontend spec §7): the dashboard and compare. */
+const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/', '/compare'];
 
 /**
  * Ask the browser to keep this origin's data, once per launch. Browsers

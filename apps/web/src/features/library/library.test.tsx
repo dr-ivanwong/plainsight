@@ -60,6 +60,16 @@ describe('the library', () => {
     expect(labels).toEqual(['Wesfarmers, updated today', 'Woolworths, updated today']);
   });
 
+  it('offers compare from the toolbar once two companies exist', async () => {
+    await createCompany(db, { name: 'Wesfarmers', ticker: 'WES', currency: 'AUD' });
+    renderLibrary();
+    await screen.findByRole('link', { name: 'Wesfarmers, updated today' });
+    expect(screen.queryByRole('link', { name: 'Compare' })).not.toBeInTheDocument();
+
+    await createCompany(db, { name: 'Woolworths', ticker: 'WOW', currency: 'AUD' });
+    expect(await screen.findByRole('link', { name: 'Compare' })).toBeVisible();
+  });
+
   it('marks sample companies with a quiet chip', async () => {
     await db.companies.put(company({ id: 'sample-apple', name: 'Apple Inc.', sample: true }));
     renderLibrary();
