@@ -205,6 +205,16 @@ describe('the company dashboard', () => {
     expect(link.getAttribute('href')).toBe(`/company/${company.id}/entry`);
   });
 
+  it('offers the thesis doorway beneath the cards', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+
+    const doorway = await screen.findByRole('link', { name: /Thesis/ });
+    expect(doorway.getAttribute('href')).toBe(`/company/${company.id}/thesis`);
+  });
+
   it('draws sparklines and the five-year delta once the history supports them', async () => {
     const company = await seedCompany();
     // Six labelled years: the delta chip compares the latest against five labels prior.

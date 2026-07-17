@@ -245,7 +245,8 @@ export const metaRecordSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('educationLayerOff'), value: z.boolean() }),
   z.object({ key: z.literal('schemaVersion'), value: z.number().int().positive() }),
   z.object({ key: z.literal('sampleBannerDismissed'), value: z.boolean() }),
-  z.object({ key: z.literal('iosInstallDismissed'), value: z.boolean() })
+  z.object({ key: z.literal('iosInstallDismissed'), value: z.boolean() }),
+  z.object({ key: z.literal('thesisSerif'), value: z.boolean() })
 ]);
 
 export type MetaRecord = z.infer<typeof metaRecordSchema>;

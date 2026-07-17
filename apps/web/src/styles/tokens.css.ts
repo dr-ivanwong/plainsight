@@ -98,6 +98,10 @@ globalStyle(':root[data-theme="dark"]', {
 export const fontStack =
   "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
+/** The thesis editor's optional serif body (frontend spec §3); ui-serif is New York on Apple platforms. */
+export const fontStackSerif =
+  "ui-serif, 'Iowan Old Style', Palatino, 'Palatino Linotype', Georgia, 'Times New Roman', serif";
+
 /** The full type scale. No sizes exist outside these eight steps. */
 export const fontSize = {
   caption2: '11px',
