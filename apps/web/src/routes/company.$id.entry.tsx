@@ -20,7 +20,7 @@ export const Route = createFileRoute('/company/$id/entry')({
 
 function EntryRoute(): ReactElement | null {
   const { id } = Route.useParams();
-  const { stmt, fy, focus } = Route.useSearch();
+  const { stmt, fy, focus, job } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const company = useCompany(id);
   const statements = useStatements(id);
@@ -46,7 +46,19 @@ function EntryRoute(): ReactElement | null {
       statements={statements}
       statement={statement}
       focusTarget={focusTarget}
-      onStatementChange={(next) => void navigate({ search: { stmt: next }, replace: true })}
+      onStatementChange={(next) =>
+        void navigate({ search: (previous) => ({ ...previous, stmt: next }), replace: true })
+      }
+      jobId={job}
+      onJobOpen={(jobId) =>
+        void navigate({ search: (previous) => ({ ...previous, job: jobId }) })
+      }
+      onJobDismiss={() =>
+        void navigate({
+          search: ({ job: _finished, ...rest }) => rest,
+          replace: true
+        })
+      }
     />
   );
 }

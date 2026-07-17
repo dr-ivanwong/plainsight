@@ -39,7 +39,9 @@ export type DashboardSearch = z.infer<typeof dashboardSearchSchema>;
 export const entrySearchSchema = z.object({
   stmt: statementParam.optional().catch(undefined),
   fy: fyParam.optional().catch(undefined),
-  focus: lineItemParam.optional().catch(undefined)
+  focus: lineItemParam.optional().catch(undefined),
+  /** An in-page extraction job (frontend spec §3): review mode takes the entry layout over while it exists. */
+  job: z.string().optional().catch(undefined)
 });
 
 export type EntrySearch = z.infer<typeof entrySearchSchema>;
