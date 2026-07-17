@@ -13,6 +13,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as SettingsProvidersRouteImport } from './routes/settings.providers'
 import { Route as SettingsDataRouteImport } from './routes/settings.data'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as CompanyIdThesisRouteImport } from './routes/company.$id.thesis'
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsProvidersRoute = SettingsProvidersRouteImport.update({
+  id: '/settings/providers',
+  path: '/settings/providers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsDataRoute = SettingsDataRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
   '/settings/data': typeof SettingsDataRoute
+  '/settings/providers': typeof SettingsProvidersRoute
   '/settings/': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
   '/company/$id/thesis': typeof CompanyIdThesisRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
   '/settings/data': typeof SettingsDataRoute
+  '/settings/providers': typeof SettingsProvidersRoute
   '/settings': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
   '/company/$id/thesis': typeof CompanyIdThesisRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
   '/settings/data': typeof SettingsDataRoute
+  '/settings/providers': typeof SettingsProvidersRoute
   '/settings/': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
   '/company/$id/thesis': typeof CompanyIdThesisRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/onboarding'
     | '/settings/data'
+    | '/settings/providers'
     | '/settings/'
     | '/company/$id/entry'
     | '/company/$id/thesis'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/onboarding'
     | '/settings/data'
+    | '/settings/providers'
     | '/settings'
     | '/company/$id/entry'
     | '/company/$id/thesis'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/onboarding'
     | '/settings/data'
+    | '/settings/providers'
     | '/settings/'
     | '/company/$id/entry'
     | '/company/$id/thesis'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   OnboardingRoute: typeof OnboardingRoute
   SettingsDataRoute: typeof SettingsDataRoute
+  SettingsProvidersRoute: typeof SettingsProvidersRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   CompanyIdEntryRoute: typeof CompanyIdEntryRoute
   CompanyIdThesisRoute: typeof CompanyIdThesisRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/providers': {
+      id: '/settings/providers'
+      path: '/settings/providers'
+      fullPath: '/settings/providers'
+      preLoaderRoute: typeof SettingsProvidersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/data': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   OnboardingRoute: OnboardingRoute,
   SettingsDataRoute: SettingsDataRoute,
+  SettingsProvidersRoute: SettingsProvidersRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   CompanyIdEntryRoute: CompanyIdEntryRoute,
   CompanyIdThesisRoute: CompanyIdThesisRoute,

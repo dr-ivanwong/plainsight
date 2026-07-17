@@ -16,10 +16,10 @@ const THEME_OPTIONS = [
 ] as const;
 
 /**
- * The settings root (frontend spec §3): appearance now, the providers group
- * in its own phase, data and storage behind its row, and about. Both
- * appearance settings live in meta and apply live: the theme through the
- * shell's data-theme attribute, the Owner's lens through every detail sheet.
+ * The settings root (frontend spec §3): appearance, providers, data and
+ * storage, and about, each behind its row. Both appearance settings live in
+ * meta and apply live: the theme through the shell's data-theme attribute,
+ * the Owner's lens through every detail sheet.
  */
 export function SettingsScreen(): ReactElement {
   // Raw reads keep the queriers pure; a malformed row reads as the default.
@@ -66,6 +66,15 @@ export function SettingsScreen(): ReactElement {
             onChange={(on) => void setMeta(db, 'educationLayerOff', !on)}
           />
         </div>
+      </section>
+
+      <section className={styles.group} aria-label="Providers">
+        <Link to="/settings/providers" className={styles.rowLink}>
+          <span className={styles.rowLabel}>Providers</span>
+          <span className={styles.chevron} aria-hidden="true">
+            ›
+          </span>
+        </Link>
       </section>
 
       <section className={styles.group} aria-label="Data">

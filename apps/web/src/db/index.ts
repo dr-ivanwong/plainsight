@@ -15,6 +15,7 @@ export {
 export { listStatements, upsertStatement, type StatementWrite } from './statements';
 export { getPrice, putPrice, type PriceWrite } from './prices';
 export { getThesis, putThesisDraft, saveThesisVersion, type ThesisVersionWrite } from './theses';
+export { deleteCredential, putCredential, type CredentialWrite } from './credentials';
 export { getMeta, setMeta, type MetaValue } from './meta';
 export { assembleFinancials } from './financials';
 export {
