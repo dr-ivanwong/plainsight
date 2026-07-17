@@ -31,6 +31,10 @@ const contractShape: Record<keyof ThemePalette, null> = {
   healthy: null,
   investigate: null,
   flag: null,
+  chartSeries1: null,
+  chartSeries2: null,
+  chartSeries3: null,
+  chartSeries4: null,
 };
 
 /** Theme-aware colour variables. Values come from palette.ts per theme. */

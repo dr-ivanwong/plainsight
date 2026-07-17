@@ -10,7 +10,8 @@ import { colour } from '../styles/tokens.css';
 import type { SparkPoint } from './Sparkline';
 import * as styles from './trendChart.css';
 
-const tickFor = (kind: MetricFormat) => (value: number) => {
+/** Axis-tick text per metric format; money ticks stay empty (compact values belong to the tooltip). */
+export const tickFor = (kind: MetricFormat) => (value: number) => {
   if (kind === 'percent') return `${Math.round(value * 100)}%`;
   if (kind === 'coverage') return `${Math.round(value)}×`;
   if (kind === 'money') return '';

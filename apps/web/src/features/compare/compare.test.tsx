@@ -50,6 +50,19 @@ async function seedCompany(
   return company;
 }
 
+/** A prior year, so the trend has two points to speak about. */
+async function seedPriorYear(companyId: string, netIncomeMinor: number): Promise<void> {
+  await upsertStatement(db, {
+    companyId,
+    fy: 'FY2023',
+    statement: 'income',
+    endDate: '2023-06-30',
+    entryScale: 'ones',
+    values: { revenue: e(100_000), netIncome: e(netIncomeMinor) },
+    provenance: MANUAL
+  });
+}
+
 function renderAt(path: string) {
   const router = createRouter({
     routeTree,
@@ -142,6 +155,78 @@ describe('the compare screen', () => {
     const table = await screen.findByRole('table');
     // The measure column plus the two real companies; the ghost never lands.
     expect(within(table).getAllByRole('columnheader')).toHaveLength(3);
+  });
+
+  it('keeps the trend quiet until two years exist to trend', async () => {
+    const apple = await seedCompany('Apple Inc.', 'USD', 20_000);
+    const costco = await seedCompany('Costco', 'USD', 10_000);
+    renderAt(`/compare?ids=${apple.id},${costco.id}`);
+
+    await screen.findByRole('table');
+    expect(screen.queryByRole('radiogroup', { name: 'Trend measure' })).not.toBeInTheDocument();
+  });
+
+  it('offers the trend measures below the grid, defaulting to ROE', async () => {
+    const apple = await seedCompany('Apple Inc.', 'USD', 20_000);
+    const costco = await seedCompany('Costco', 'USD', 10_000);
+    await seedPriorYear(apple.id, 15_000);
+    await seedPriorYear(costco.id, 12_000);
+    renderAt(`/compare?ids=${apple.id},${costco.id}`);
+
+    const group = await screen.findByRole('radiogroup', { name: 'Trend measure' });
+    expect(within(group).getAllByRole('radio')).toHaveLength(12);
+    expect(within(group).getByRole('radio', { name: 'ROE' })).toBeChecked();
+  });
+
+  it('moves the trend measure into the address', async () => {
+    const apple = await seedCompany('Apple Inc.', 'USD', 20_000);
+    const costco = await seedCompany('Costco', 'USD', 10_000);
+    await seedPriorYear(apple.id, 15_000);
+    await seedPriorYear(costco.id, 12_000);
+    const router = renderAt(`/compare?ids=${apple.id},${costco.id}`);
+
+    const group = await screen.findByRole('radiogroup', { name: 'Trend measure' });
+    fireEvent.click(within(group).getByRole('radio', { name: 'Net margin' }));
+
+    await waitFor(() =>
+      expect(within(group).getByRole('radio', { name: 'Net margin' })).toBeChecked()
+    );
+    expect(router.state.location.search).toEqual({
+      ids: `${apple.id},${costco.id}`,
+      metric: 'netMargin'
+    });
+  });
+
+  it('shows the trend as a table on demand, in the pinned words', async () => {
+    const apple = await seedCompany('Apple Inc.', 'USD', 20_000);
+    const costco = await seedCompany('Costco', 'USD', 10_000);
+    await seedPriorYear(apple.id, 15_000);
+    await seedPriorYear(costco.id, 12_000);
+    renderAt(`/compare?ids=${apple.id},${costco.id}&metric=netMargin`);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Show table' }));
+
+    const trend = await screen.findByRole('region', { name: 'Trend' });
+    const year = within(trend).getByRole('rowheader', { name: 'FY2023' });
+    const row = year.closest('tr');
+    expect(row).not.toBeNull();
+    const cells = within(row as HTMLElement).getAllByRole('cell');
+    expect(cells[0]).toHaveTextContent('15.0%');
+    expect(cells[1]).toHaveTextContent('12.0%');
+    expect(screen.getByRole('button', { name: 'Show chart' })).toBeVisible();
+  });
+
+  it('drops money measures from the trend across currencies and degrades the address', async () => {
+    const apple = await seedCompany('Apple Inc.', 'USD', 20_000);
+    const wes = await seedCompany('Wesfarmers', 'AUD', 10_000);
+    await seedPriorYear(apple.id, 15_000);
+    await seedPriorYear(wes.id, 12_000);
+    renderAt(`/compare?ids=${apple.id},${wes.id}&metric=fcf`);
+
+    const group = await screen.findByRole('radiogroup', { name: 'Trend measure' });
+    expect(within(group).queryByRole('radio', { name: 'Free cash flow' })).not.toBeInTheDocument();
+    expect(within(group).getAllByRole('radio')).toHaveLength(11);
+    expect(within(group).getByRole('radio', { name: 'ROE' })).toBeChecked();
   });
 
   it('caps the pick at four, keeping unpicking one tap away', async () => {

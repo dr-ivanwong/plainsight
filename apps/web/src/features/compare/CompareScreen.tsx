@@ -1,3 +1,4 @@
+import type { MetricId } from '@plainsight/calc-engine';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
@@ -6,23 +7,29 @@ import type { CompanyRecord } from '../../db';
 import { MAX_COMPARE, type Comparison } from '../../hooks/useComparison';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './compare.css';
+import { CompareTrend } from './CompareTrend';
 
 /**
  * The compare screen (frontend spec §3): picker state first, chips to pick
- * 2 to 4 companies, then the metric-by-company grid. The selection lives in
- * `?ids=`, so a comparison is bookmarkable and the back gesture leaves the
- * screen rather than unpicking chips one by one.
+ * 2 to 4 companies, then the metric-by-company grid, then the overlaid trend
+ * with its measure control. The selection lives in `?ids=` and the trend
+ * measure in `?metric=`, so a comparison is bookmarkable and the back
+ * gesture leaves the screen rather than unpicking chips one by one.
  */
 export function CompareScreen({
   companies,
   selectedIds,
   comparison,
-  onToggle
+  onToggle,
+  trendMetric,
+  onTrendMetricChange
 }: {
   companies: readonly CompanyRecord[];
   selectedIds: readonly string[];
   comparison: Comparison | undefined;
   onToggle: (id: string) => void;
+  trendMetric: MetricId;
+  onTrendMetricChange: (next: MetricId) => void;
 }): ReactElement {
   const atCap = selectedIds.length >= MAX_COMPARE;
   const columns =
@@ -79,17 +86,20 @@ export function CompareScreen({
             })}
           </div>
 
-          {columns.length < 2 ? null : (
+          {comparison === undefined || columns.length < 2 ? null : (
             <>
-              {comparison?.mixedCurrencies === true ? (
+              {comparison.mixedCurrencies ? (
                 <p className={styles.currencyNote}>
                   Money rows are hidden: these companies report in different currencies, and the
                   app never converts. Ratios compare freely.
                 </p>
               ) : null}
-              <ComparisonTable
-                columns={columns}
-                hideAbsolutes={comparison?.mixedCurrencies === true}
+              <ComparisonTable columns={columns} hideAbsolutes={comparison.mixedCurrencies} />
+              <CompareTrend
+                columns={comparison.columns}
+                mixedCurrencies={comparison.mixedCurrencies}
+                metricId={trendMetric}
+                onMetricChange={onTrendMetricChange}
               />
             </>
           )}

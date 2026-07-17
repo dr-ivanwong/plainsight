@@ -109,5 +109,17 @@ for (const [themeName, palette] of themes) {
     it('the label on accent-filled controls reaches 4.5:1', () => {
       expect(contrastRatio(palette.onAccent, palette.accentFill)).toBeGreaterThanOrEqual(4.5);
     });
+
+    it('each chart series colour reaches 3:1 on background and surface', () => {
+      for (const key of [
+        'chartSeries1',
+        'chartSeries2',
+        'chartSeries3',
+        'chartSeries4',
+      ] as const) {
+        expect(contrastRatio(palette[key], palette.background), key).toBeGreaterThanOrEqual(3);
+        expect(contrastRatio(palette[key], palette.surface), key).toBeGreaterThanOrEqual(3);
+      }
+    });
   });
 }

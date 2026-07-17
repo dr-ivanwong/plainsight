@@ -21,6 +21,17 @@
  * - healthy, investigate, and flag reach 3:1 on background, surface,
  *   surfaceElevated, and surfaceHover.
  * - onAccent reaches 4.5:1 on accentFill.
+ * - each chartSeries step reaches 3:1 on background and surface.
+ *
+ * The chart series ramp is a single-hue categorical set: up to four company
+ * lines on the compare trend, all drawn from the one accent family (main plan
+ * §4; distinct hues would mint new accents). Identity therefore rides on
+ * lightness, which survives colour-vision deficiency; steps are spaced for
+ * adjacent-pair separation and validated against both surfaces. Where the
+ * window ran out, the palest step keeps its chroma (a washed line reads grey
+ * for everyone) at the cost of adjacent-pair distance for the rarest CVD
+ * axis; the chart never relies on colour alone regardless: it ships a
+ * legend, line-end labels, hover values, and a table fallback.
  */
 
 export interface ThemePalette {
@@ -50,6 +61,11 @@ export interface ThemePalette {
   investigate: string;
   /** Semantic: red flag. */
   flag: string;
+  /** Compare-trend series ramp, darkest first: slot colours for up to four company lines. */
+  chartSeries1: string;
+  chartSeries2: string;
+  chartSeries3: string;
+  chartSeries4: string;
 }
 
 export const lightPalette: ThemePalette = {
@@ -66,6 +82,10 @@ export const lightPalette: ThemePalette = {
   healthy: '#248A3D',
   investigate: '#C93400',
   flag: '#D70015',
+  chartSeries1: '#082F63',
+  chartSeries2: '#0A4C96',
+  chartSeries3: '#0067D2',
+  chartSeries4: '#1489F5',
 };
 
 export const darkPalette: ThemePalette = {
@@ -82,4 +102,8 @@ export const darkPalette: ThemePalette = {
   healthy: '#30DB5B',
   investigate: '#FFB340',
   flag: '#FF6961',
+  chartSeries1: '#2E77CE',
+  chartSeries2: '#4E97E8',
+  chartSeries3: '#74AFF6',
+  chartSeries4: '#8FC3FF',
 };
