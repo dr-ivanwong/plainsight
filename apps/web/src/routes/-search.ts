@@ -46,12 +46,16 @@ export type EntrySearch = z.infer<typeof entrySearchSchema>;
 
 /**
  * The compare screen's selection: `?ids=a,b,c`, comma-separated company ids
- * (frontend spec §1.1). The shape is all the schema can know; which ids exist
- * is the library's business, so unknown ones drop at render time and a stale
- * bookmark degrades to the picker instead of an error.
+ * (frontend spec §1.1), plus the trend chart's `?metric=`. The shape is all
+ * the schema can know; which ids exist is the library's business, so unknown
+ * ones drop at render time and a stale bookmark degrades to the picker
+ * instead of an error. A metric the trend cannot show (hidden money row in a
+ * mixed-currency comparison) degrades to the default at render time the same
+ * way.
  */
 export const compareSearchSchema = z.object({
-  ids: z.string().optional().catch(undefined)
+  ids: z.string().optional().catch(undefined),
+  metric: metricParam.optional().catch(undefined)
 });
 
 export type CompareSearch = z.infer<typeof compareSearchSchema>;

@@ -18,6 +18,9 @@ export const group = style({
   borderRadius: radius.medium
 });
 
+/** The many-option variant (the compare trend's twelve measures): segments flow onto new lines. */
+export const groupWrap = style([group, { flexWrap: 'wrap' }]);
+
 export const segment = style({
   display: 'inline-flex',
   alignItems: 'center',
