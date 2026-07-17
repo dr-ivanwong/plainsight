@@ -78,6 +78,17 @@ describe('the route skeleton', () => {
     expect(await screen.findByRole('heading', { name: 'Data & storage' })).toBeVisible();
   });
 
+  it('serves compare, prompting while the library is short', async () => {
+    await renderAt('/compare');
+    expect(await screen.findByRole('heading', { name: 'Compare' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Add a company' })).toBeVisible();
+  });
+
+  it('degrades a malformed ids param instead of crashing', async () => {
+    await renderAt('/compare?ids=,,ghost,,');
+    expect(await screen.findByRole('heading', { name: 'Compare' })).toBeVisible();
+  });
+
   it('offers a way home from an address that matches nothing', async () => {
     await renderAt('/nowhere/at/all');
     expect(await screen.findByRole('heading', { name: 'Nothing at this address' })).toBeVisible();

@@ -35,7 +35,7 @@ function LibraryRow({ company }: { company: CompanyRecord }): ReactElement {
  * The library screen (frontend spec §3): the calm home. One row per company,
  * most recently updated first; the filter field stays invisible until the
  * library outgrows a screenful (progressive disclosure). Compare joins the
- * toolbar in its own phase.
+ * toolbar the moment two companies exist to set side by side, and not before.
  */
 export function Library({
   companies,
@@ -87,6 +87,11 @@ export function Library({
       <header className={styles.toolbar}>
         <h1 className={styles.title}>Library</h1>
         <div className={styles.toolbarActions}>
+          {companies.length < 2 ? null : (
+            <Link to="/compare" className={styles.toolbarLink}>
+              Compare
+            </Link>
+          )}
           <Link to="/settings" className={styles.toolbarLink}>
             Settings
           </Link>
