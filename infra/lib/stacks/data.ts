@@ -2,6 +2,7 @@ import { CfnOutput, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
+import { acknowledgeNagFinding } from '../nag';
 
 /**
  * Capacity arithmetic (spec §8): the always-free tier is 25 RCU and 25 WCU
@@ -62,6 +63,17 @@ export class DataStack extends Stack {
       // zero key cost, per the spec §8 not-list on customer-managed keys
       // (ADR 0004).
     });
+
+    if (!config.protectData) {
+      // The rehearsal copy is deployed for a day and destroyed (spec §2);
+      // backups on a disposable table would protect nothing. Prod keeps PITR
+      // through protectData, and the spec §6 invariant pins that posture.
+      acknowledgeNagFinding(
+        this.table,
+        'AwsSolutions-DDB3',
+        'Disposable rehearsal copy: torn down within a day, holds no data anyone would restore; prod pins PITR via protectData.'
+      );
+    }
 
     // The sparse watched-tickers index (backend spec §3): a profile item
     // gains watchPartition='WATCH' alongside its ticker on first successful
