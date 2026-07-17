@@ -65,6 +65,9 @@ importers:
       '@plainsight/calc-engine':
         specifier: workspace:*
         version: link:../../packages/calc-engine
+      '@plainsight/extraction-core':
+        specifier: workspace:*
+        version: link:../../packages/extraction-core
       '@tanstack/react-query':
         specifier: ^5.90.5
         version: 5.101.2(react@19.2.7)
