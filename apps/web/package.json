@@ -23,6 +23,7 @@
     "@tanstack/react-router": "^1.170.17",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
+    "pdfjs-dist": "^6.1.200",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "recharts": "^3.9.2",

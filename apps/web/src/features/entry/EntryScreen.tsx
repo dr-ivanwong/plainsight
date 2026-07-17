@@ -23,6 +23,13 @@ import {
   type StatementRecord,
   type StatementWrite
 } from '../../db';
+import { useExtractionJob } from '../../hooks/useExtractionJob';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { useProviderKeys } from '../../hooks/useProviderKeys';
+import { dismissJob, startFilingJob } from '../review/jobStore';
+import { JobStrip } from '../review/JobStrip';
+import { UploadFilingSheet } from '../review/UploadFilingSheet';
+import { keyedProviders } from '../settings/providers';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './entryScreen.css';
 
@@ -98,19 +105,60 @@ export function EntryScreen({
   statements,
   statement,
   focusTarget,
-  onStatementChange
+  onStatementChange,
+  jobId,
+  onJobOpen,
+  onJobDismiss
 }: {
   company: CompanyRecord;
   statements: readonly StatementRecord[];
   statement: StatementKind;
   focusTarget?: { id: LineItemId; fy: FyLabel };
   onStatementChange: (next: StatementKind) => void;
+  jobId?: string | undefined;
+  onJobOpen?: (id: string) => void;
+  onJobDismiss?: () => void;
 }): ReactElement {
   const [draft, setDraft] = useState<DraftYear | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [localFocus, setLocalFocus] = useState<{ id: LineItemId; fy: FyLabel } | undefined>();
   const [status, setStatus] = useState<{ ok: boolean } | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const online = useOnlineStatus();
+  const keys = useProviderKeys();
+  const job = useExtractionJob(jobId);
+
+  const credentials = useMemo(
+    () => new Map((keys ?? []).map((record) => [record.providerId, record.key])),
+    [keys]
+  );
+  const keyedUploadProviders = useMemo(
+    () => keyedProviders().filter((provider) => credentials.has(provider.id)),
+    [credentials]
+  );
+
+  // pdfjs loads with the first chosen file, never with the entry screen.
+  async function handleStartUpload(choice: {
+    file: File;
+    providerId: string;
+    confidential: boolean;
+  }): Promise<void> {
+    const bytes = new Uint8Array(await choice.file.arrayBuffer());
+    const { browserJobDeps } = await import('../review/extractionRunner');
+    const id = startFilingJob({
+      companyId: company.id,
+      fileName: choice.file.name,
+      bytes,
+      deps: browserJobDeps({
+        credentials,
+        providerId: choice.providerId,
+        confidential: choice.confidential
+      })
+    });
+    setUploadOpen(false);
+    onJobOpen?.(id);
+  }
 
   // The draft column retires the moment its first committed row arrives live.
   useEffect(() => {
@@ -224,6 +272,16 @@ export function EntryScreen({
         </p>
       </header>
 
+      {job === undefined || onJobDismiss === undefined ? null : (
+        <JobStrip
+          job={job}
+          onDismiss={() => {
+            dismissJob(job.id);
+            onJobDismiss();
+          }}
+        />
+      )}
+
       <div className={styles.toolbar}>
         <SegmentedControl
           label="Statement"
@@ -236,7 +294,28 @@ export function EntryScreen({
             Add a year
           </button>
         ) : null}
+        {/* Online-only affordance (degradation matrix, main plan §5): hidden
+            offline, with the quiet pill marking the absence (frontend §2). */}
+        {onJobOpen === undefined ? null : online ? (
+          <button type="button" className={styles.addYearButton} onClick={() => setUploadOpen(true)}>
+            Import a file
+          </button>
+        ) : (
+          <span
+            className={styles.offlinePill}
+            title="File import is available when online, or enter the figures manually."
+          >
+            Offline
+          </span>
+        )}
       </div>
+
+      <UploadFilingSheet
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        providers={keyedUploadProviders}
+        onStart={(choice) => void handleStartUpload(choice)}
+      />
 
       {hasColumns ? null : (
         <p className={styles.emptyNote}>

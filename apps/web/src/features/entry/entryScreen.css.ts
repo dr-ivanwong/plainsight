@@ -94,6 +94,17 @@ export const addYearButton = style({
   }
 });
 
+/** The quiet mark that the online-only file import is hidden (frontend spec §2). */
+export const offlinePill = style({
+  padding: `${space[4]} ${space[12]}`,
+  borderRadius: radius.full,
+  border: `${hairline} solid ${colour.border}`,
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary,
+  whiteSpace: 'nowrap'
+});
+
 export const emptyNote = style({
   fontSize: fontSize.subhead,
   lineHeight: lineHeight.body,
