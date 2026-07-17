@@ -20,7 +20,19 @@ import { useThesisVersions } from '../../hooks/useThesisVersions';
 import * as buttons from '../../styles/buttons.css';
 import { HistorySheet } from './HistorySheet';
 import * as styles from './thesis.css';
+import { localToday, thesisFileName, thesisMarkdown } from './thesisMarkdown';
 import { wordCount } from './versionWords';
+
+/** Hands a Markdown file to the browser; quietly a no-op where object URLs do not exist (tests). */
+function downloadMarkdown(text: string, filename: string): void {
+  if (typeof URL.createObjectURL !== 'function') return;
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 
 /** How long the keyboard rests before the draft commits; a blur commits at once. */
 const AUTOSAVE_REST_MS = 900;
@@ -192,6 +204,25 @@ export function ThesisScreen({
       <p className={styles.footer}>
         <button type="button" className={styles.historyLink} onClick={onHistoryOpen}>
           History
+        </button>
+        <button
+          type="button"
+          className={styles.historyLink}
+          disabled={wordCount(draft) === 0}
+          onClick={() => {
+            const on = localToday();
+            downloadMarkdown(
+              thesisMarkdown({
+                name: company.name,
+                ticker: company.ticker,
+                sections: draft,
+                exportedOn: on
+              }),
+              thesisFileName(company, on)
+            );
+          }}
+        >
+          Export Markdown
         </button>
         <span className={styles.footerSpacer} />
         Serif text

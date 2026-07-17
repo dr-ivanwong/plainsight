@@ -251,6 +251,46 @@ describe('the thesis editor', () => {
     expect(await within(sheet).findByText(/No versions yet/)).toBeVisible();
   });
 
+  it('exports the thesis as Markdown, exactly as built', async () => {
+    // jsdom ships no object URLs; capturing the blob here observes the download.
+    const captured: Blob[] = [];
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: (blob: Blob): string => {
+        captured.push(blob);
+        return 'blob:thesis';
+      }
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: (): void => undefined
+    });
+
+    const company = await createCompany(db, { name: 'Apple Inc.', ticker: 'AAPL', currency: 'USD' });
+    await db.theses.put({
+      companyId: company.id,
+      sections: words('Sells hardware people queue for.'),
+      updatedAt: '2026-07-11T09:30:00Z'
+    });
+    renderAt(`/company/${company.id}/thesis`);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Export Markdown' }));
+
+    expect(captured).toHaveLength(1);
+    const text = await captured[0]?.text();
+    expect(text).toContain('# Apple Inc. (AAPL) · Thesis');
+    expect(text).toContain('## Business');
+    expect(text).toContain('Sells hardware people queue for.');
+    expect(text).not.toContain('## Moat');
+  });
+
+  it('rests the export while the thesis is unwritten', async () => {
+    const company = await seedCompany();
+    renderAt(`/company/${company.id}/thesis`);
+
+    expect(await screen.findByRole('button', { name: 'Export Markdown' })).toBeDisabled();
+  });
+
   it('remembers the serif choice', async () => {
     const company = await seedCompany();
     renderAt(`/company/${company.id}/thesis`);

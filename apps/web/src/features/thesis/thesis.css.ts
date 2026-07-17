@@ -153,5 +153,10 @@ export const historyLink = style({
   ':focus-visible': {
     outline: `${focusRing.width} solid ${colour.accent}`,
     outlineOffset: focusRing.offset
+  },
+  // Nothing to export or list yet: the action rests rather than vanishes.
+  ':disabled': {
+    color: colour.textSecondary,
+    cursor: 'default'
   }
 });
