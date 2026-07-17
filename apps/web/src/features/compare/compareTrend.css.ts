@@ -49,7 +49,7 @@ export const frame = style({
   width: '100%'
 });
 
-/** The S4 idiom (metricSheet.css.ts): a quiet link-shaped toggle beneath the trend. */
+/** The metric sheet's idiom (metricSheet.css.ts): a quiet link-shaped toggle beneath the trend. */
 export const viewToggle = style({
   alignSelf: 'flex-start',
   minHeight: touchTarget,

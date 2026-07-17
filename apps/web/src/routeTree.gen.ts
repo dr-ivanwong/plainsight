@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as SettingsDataRouteImport } from './routes/settings.data'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
+import { Route as CompanyIdThesisRouteImport } from './routes/company.$id.thesis'
 import { Route as CompanyIdEntryRouteImport } from './routes/company.$id.entry'
 
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -47,6 +48,11 @@ const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
   path: '/company/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompanyIdThesisRoute = CompanyIdThesisRouteImport.update({
+  id: '/company/$id/thesis',
+  path: '/company/$id/thesis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompanyIdEntryRoute = CompanyIdEntryRouteImport.update({
   id: '/company/$id/entry',
   path: '/company/$id/entry',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/settings/data': typeof SettingsDataRoute
   '/settings/': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
+  '/company/$id/thesis': typeof CompanyIdThesisRoute
   '/company/$id/': typeof CompanyIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/settings/data': typeof SettingsDataRoute
   '/settings': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
+  '/company/$id/thesis': typeof CompanyIdThesisRoute
   '/company/$id': typeof CompanyIdIndexRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/settings/data': typeof SettingsDataRoute
   '/settings/': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
+  '/company/$id/thesis': typeof CompanyIdThesisRoute
   '/company/$id/': typeof CompanyIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/settings/data'
     | '/settings/'
     | '/company/$id/entry'
+    | '/company/$id/thesis'
     | '/company/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/settings/data'
     | '/settings'
     | '/company/$id/entry'
+    | '/company/$id/thesis'
     | '/company/$id'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/settings/data'
     | '/settings/'
     | '/company/$id/entry'
+    | '/company/$id/thesis'
     | '/company/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   CompanyIdEntryRoute: typeof CompanyIdEntryRoute
+  CompanyIdThesisRoute: typeof CompanyIdThesisRoute
   CompanyIdIndexRoute: typeof CompanyIdIndexRoute
 }
 
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanyIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/company/$id/thesis': {
+      id: '/company/$id/thesis'
+      path: '/company/$id/thesis'
+      fullPath: '/company/$id/thesis'
+      preLoaderRoute: typeof CompanyIdThesisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/company/$id/entry': {
       id: '/company/$id/entry'
       path: '/company/$id/entry'
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsDataRoute: SettingsDataRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   CompanyIdEntryRoute: CompanyIdEntryRoute,
+  CompanyIdThesisRoute: CompanyIdThesisRoute,
   CompanyIdIndexRoute: CompanyIdIndexRoute,
 }
 export const routeTree = rootRouteImport

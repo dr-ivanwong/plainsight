@@ -78,6 +78,13 @@ describe('the route skeleton', () => {
     expect(await screen.findByRole('heading', { name: 'Data & storage' })).toBeVisible();
   });
 
+  it('serves the thesis editor, with a way home when the company does not exist', async () => {
+    await renderAt('/company/ghost/thesis');
+    expect(
+      await screen.findByRole('heading', { name: 'No company at this address' })
+    ).toBeVisible();
+  });
+
   it('serves compare, prompting while the library is short', async () => {
     await renderAt('/compare');
     expect(await screen.findByRole('heading', { name: 'Compare' })).toBeVisible();

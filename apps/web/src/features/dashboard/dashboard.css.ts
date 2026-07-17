@@ -222,3 +222,32 @@ export const dismissedToggle = style({
     outlineOffset: 0
   }
 });
+
+/** The quiet doorway to the thesis editor, styled as one more card at the dashboard's end. */
+export const thesisRow = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: space[4],
+  padding: space[16],
+  marginTop: space[32],
+  backgroundColor: colour.surface,
+  borderRadius: radius.large,
+  border: `${hairline} solid ${colour.border}`,
+  textDecoration: 'none',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: focusRing.offset
+  }
+});
+
+export const thesisTitle = style({
+  fontSize: fontSize.subhead,
+  fontWeight: fontWeight.semibold,
+  color: colour.textPrimary
+});
+
+export const thesisHint = style({
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary
+});

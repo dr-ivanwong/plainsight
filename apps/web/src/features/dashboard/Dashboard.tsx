@@ -281,6 +281,13 @@ export function Dashboard({
               ) : null}
             </section>
           ) : null}
+
+          <Link to="/company/$id/thesis" params={{ id: company.id }} className={styles.thesisRow}>
+            <span className={styles.thesisTitle}>Thesis</span>
+            <span className={styles.thesisHint}>
+              Business, moat, valuation, what kills it: in your own words.
+            </span>
+          </Link>
         </>
       )}
 
