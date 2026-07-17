@@ -4,14 +4,23 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactElement } fr
 
 import { ToggleSwitch } from '../../components/ToggleSwitch';
 import {
+  assembleFinancials,
   db,
+  financialsSnapshotSchema,
   putThesisDraft,
+  saveThesisVersion,
   setMeta,
   type CompanyRecord,
   type ThesisRecord,
   type ThesisSections
 } from '../../db';
+import { usePrice } from '../../hooks/usePrice';
+import { useStatements } from '../../hooks/useStatements';
+import { useThesisVersions } from '../../hooks/useThesisVersions';
+import * as buttons from '../../styles/buttons.css';
+import { HistorySheet } from './HistorySheet';
 import * as styles from './thesis.css';
+import { wordCount } from './versionWords';
 
 /** How long the keyboard rests before the draft commits; a blur commits at once. */
 const AUTOSAVE_REST_MS = 900;
@@ -47,25 +56,44 @@ const SECTIONS: ReadonlyArray<{ key: keyof ThesisSections; label: string; prompt
   }
 ];
 
+/** The ticker's whole vocabulary; one quiet channel for both kinds of save. */
+const TICKER_TEXT = {
+  draft: { ok: 'Saved · just now', failed: 'Could not save. The text is not stored.' },
+  version: { ok: 'Version saved · just now', failed: 'Could not save the version.' }
+} as const;
+
 /**
  * The thesis editor (frontend spec §3): four structured sections,
  * distraction-free, an optional serif body. Keystrokes stay local; the draft
  * commits after a short rest and on every blur, with the quiet ticker the
- * only feedback (frontend spec §2). Versioned snapshots and their history
- * sheet arrive with the next slice.
+ * only feedback (frontend spec §2). A version is an explicit act: saving one
+ * appends to the immutable history, carrying the financials snapshot when
+ * the toggle is on, and `?history=1` opens the list.
  */
 export function ThesisScreen({
   company,
-  thesis
+  thesis,
+  historyOpen,
+  onHistoryOpen,
+  onHistoryClose
 }: {
   company: CompanyRecord;
   thesis: ThesisRecord | null;
+  historyOpen: boolean;
+  onHistoryOpen: () => void;
+  onHistoryClose: () => void;
 }): ReactElement {
   const baseId = useId();
   const [draft, setDraft] = useState<ThesisSections>(() => thesis?.sections ?? EMPTY_SECTIONS);
-  const [status, setStatus] = useState<{ ok: boolean } | null>(null);
+  const [status, setStatus] = useState<{ kind: keyof typeof TICKER_TEXT; ok: boolean } | null>(
+    null
+  );
+  const [attach, setAttach] = useState(true);
   const lastSaved = useRef(JSON.stringify(thesis?.sections ?? EMPTY_SECTIONS));
   const serif = useLiveQuery(() => db.meta.get('thesisSerif'), [])?.value === true;
+  const statements = useStatements(company.id);
+  const price = usePrice(company.id);
+  const versions = useThesisVersions(company.id);
 
   const commit = useCallback(
     async (sections: ThesisSections) => {
@@ -74,9 +102,9 @@ export function ThesisScreen({
       try {
         await putThesisDraft(db, company.id, sections);
         lastSaved.current = fingerprint;
-        setStatus({ ok: true });
+        setStatus({ kind: 'draft', ok: true });
       } catch {
-        setStatus({ ok: false });
+        setStatus({ kind: 'draft', ok: false });
       }
     },
     [company.id]
@@ -87,6 +115,30 @@ export function ThesisScreen({
     return () => clearTimeout(timer);
   }, [draft, commit]);
 
+  // The snapshot is the engine's own input, assembled from what is stored
+  // right now; with no years there is nothing to attach and the toggle rests.
+  const loaded = statements !== undefined && price !== undefined;
+  const assembled = loaded ? assembleFinancials(company, statements, price) : null;
+  const canAttach = assembled !== null && assembled.years.length > 0;
+
+  async function handleSaveVersion(): Promise<void> {
+    try {
+      const financialsSnapshot =
+        attach && canAttach && assembled !== null
+          ? financialsSnapshotSchema.parse(assembled)
+          : undefined;
+      await saveThesisVersion(db, {
+        companyId: company.id,
+        sections: draft,
+        ...(financialsSnapshot === undefined ? {} : { financialsSnapshot })
+      });
+      lastSaved.current = JSON.stringify(draft);
+      setStatus({ kind: 'version', ok: true });
+    } catch {
+      setStatus({ kind: 'version', ok: false });
+    }
+  }
+
   return (
     <>
       <header className={styles.chrome}>
@@ -95,7 +147,7 @@ export function ThesisScreen({
         </Link>
         <h1 className={styles.title}>Thesis</h1>
         <p role="status" className={status !== null && !status.ok ? styles.tickerError : styles.ticker}>
-          {status === null ? '' : status.ok ? 'Saved · just now' : 'Could not save. The text is not stored.'}
+          {status === null ? '' : TICKER_TEXT[status.kind][status.ok ? 'ok' : 'failed']}
         </p>
       </header>
 
@@ -120,7 +172,28 @@ export function ThesisScreen({
         ))}
       </div>
 
+      <div className={styles.saveRow}>
+        <button
+          type="button"
+          className={buttons.secondaryAction}
+          disabled={!loaded || wordCount(draft) === 0}
+          onClick={() => void handleSaveVersion()}
+        >
+          Save a version
+        </button>
+        {canAttach ? (
+          <span className={styles.attachRow}>
+            Attach today&apos;s financials
+            <ToggleSwitch label="Attach today's financials" checked={attach} onChange={setAttach} />
+          </span>
+        ) : null}
+      </div>
+
       <p className={styles.footer}>
+        <button type="button" className={styles.historyLink} onClick={onHistoryOpen}>
+          History
+        </button>
+        <span className={styles.footerSpacer} />
         Serif text
         <ToggleSwitch
           label="Serif text"
@@ -128,6 +201,8 @@ export function ThesisScreen({
           onChange={(next) => void setMeta(db, 'thesisSerif', next)}
         />
       </p>
+
+      <HistorySheet open={historyOpen} onClose={onHistoryClose} versions={versions} serif={serif} />
     </>
   );
 }

@@ -44,6 +44,13 @@ export const entrySearchSchema = z.object({
 
 export type EntrySearch = z.infer<typeof entrySearchSchema>;
 
+/** The thesis editor's history sheet encodes in `?history=1` (frontend spec §1.1). */
+export const thesisSearchSchema = z.object({
+  history: z.literal(1).optional().catch(undefined)
+});
+
+export type ThesisSearch = z.infer<typeof thesisSearchSchema>;
+
 /**
  * The compare screen's selection: `?ids=a,b,c`, comma-separated company ids
  * (frontend spec §1.1), plus the trend chart's `?metric=`. The shape is all
