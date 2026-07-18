@@ -104,9 +104,10 @@ export class SyncScheduler {
       this.clearDrain();
       return;
     }
-    // While the server is unreachable the retry timer owns the cadence;
-    // fresh writes join the queue and ride the next retry.
-    if (this.failures > 0 || this.drainTimer !== null) return;
+    // An armed retry already owns the cadence while the server is
+    // unreachable. Otherwise a fresh write drains soon, past failures or
+    // not: the attempt is cheap, and failing hands the queue to the backoff.
+    if (this.retryTimer !== null || this.drainTimer !== null) return;
     this.drainTimer = this.deps.setTimer(() => {
       this.drainTimer = null;
       this.attempt();

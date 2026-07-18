@@ -116,6 +116,25 @@ describe('the sync scheduler', () => {
     await harness.settle('ok');
   });
 
+  it('a write landing after an unrelated failure still drains promptly', async () => {
+    const harness = new Harness();
+    const scheduler = new SyncScheduler(harness.deps);
+
+    // A read-side failure with an empty queue arms nothing.
+    scheduler.notePending(0, true);
+    scheduler.revalidate('launch');
+    await harness.settle('failed');
+    expect(harness.armedTimers).toBe(0);
+
+    // The write that follows must not wait for the fallback interval.
+    scheduler.notePending(1, true);
+    harness.advance(DRAIN_DEBOUNCE_MS);
+    expect(harness.runs).toBe(2);
+    await harness.settle('failed');
+    // Now the queue is non-empty and failing, so the backoff owns it.
+    expect(harness.armedTimers).toBe(1);
+  });
+
   it('reconnecting retries now and forgets the backoff', async () => {
     const harness = new Harness();
     const scheduler = new SyncScheduler(harness.deps);
