@@ -41,9 +41,18 @@ async function walkJourneyA(page: Page): Promise<void> {
   await cost.fill('30,356');
   await cost.press('Enter');
   await expect(page.getByRole('status')).toHaveText('Saved · just now');
+  // The ticker already read Saved after the first commit, so it cannot order
+  // the second one; the core-items count can, because it derives from the
+  // stored row. Navigating before this line raced the cost commit.
+  await expect(page.getByText('2 of 8 core items')).toBeVisible();
 
-  // The dashboard computes: (44,189 - 30,356) / 44,189 = 31.3%.
-  await page.getByRole('link', { name: '‹ Wesfarmers' }).click();
+  // The dashboard computes: (44,189 - 30,356) / 44,189 = 31.3%. At the e2e
+  // viewport (1280, past the rail breakpoint) the section rail owns the way
+  // there; the entry back affordance is chrome the rail retired.
+  await page
+    .getByRole('navigation', { name: 'Company sections' })
+    .getByRole('link', { name: 'Dashboard' })
+    .click();
   const gross = page.getByRole('article', { name: 'Gross margin', exact: true });
   await expect(gross).toContainText('31.3%');
 
