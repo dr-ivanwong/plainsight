@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 
-// The reconciler against a faithful in-memory server (backend spec §4):
-// last-write-wins convergence across two real Dexie databases, which is the
-// Phase 3 exit criterion in miniature.
+// The reconciler against a faithful in-memory server (backend spec §4 wire):
+// server-wins convergence across two real Dexie databases (main plan §12.9).
+// The server's accepted copy is the truth on every device; a local edit is
+// pending until the server accepts it, and never outlives a newer server copy.
 import 'fake-indexeddb/auto';
 import type { SyncServerRecord } from '@plainsight/api-contract';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createCompany, getMeta, putThesisDraft } from '../db';
+import { createCompany, getMeta, putThesisDraft, setMeta } from '../db';
 import { PlainsightDb } from '../db/db';
 import { runSync, type SyncDeps } from './engine';
 
@@ -77,7 +78,7 @@ beforeEach(async () => {
   server = new FakeServer();
 });
 
-describe('two devices converge (the Phase 3 exit criterion)', () => {
+describe('two devices converge on the server\'s copy', () => {
   it('carries a company from one device to the other', async () => {
     const company = await createCompany(deviceA, {
       name: 'Apple Inc.',
@@ -92,7 +93,7 @@ describe('two devices converge (the Phase 3 exit criterion)', () => {
     expect((await deviceB.companies.get(company.id))?.name).toBe('Apple Inc.');
   });
 
-  it('offline edits on both sides settle on the later writer everywhere', async () => {
+  it('offline edits on both sides settle on the copy the server accepted first', async () => {
     const company = await createCompany(deviceA, {
       name: 'Apple Inc.',
       currency: 'USD',
@@ -101,19 +102,77 @@ describe('two devices converge (the Phase 3 exit criterion)', () => {
     await runSync(deviceDeps(deviceA, server, 'a'));
     await runSync(deviceDeps(deviceB, server, 'b'));
 
-    // Both edit the same thesis while apart.
+    // Both edit the same thesis while apart; A reaches the server first.
     await putThesisDraft(deviceA, company.id, { business: 'Version from A', moat: '', valuation: '', kills: '' });
     await putThesisDraft(deviceB, company.id, { business: 'Version from B', moat: '', valuation: '', kills: '' });
-
     await runSync(deviceDeps(deviceA, server, 'a'));
-    // B pulls A's copy but holds its own dirty edit, then pushes it above.
-    await runSync(deviceDeps(deviceB, server, 'b'));
+
+    // B pulls A's copy and it beats B's dirty edit: the pending version
+    // from B is discarded, not pushed above the server's truth.
+    const bRun = await runSync(deviceDeps(deviceB, server, 'b'));
+    expect(bRun).toMatchObject({ outcome: 'ok', pushed: 0, pulled: 1 });
     await runSync(deviceDeps(deviceA, server, 'a'));
 
     const onA = await deviceA.theses.get(company.id);
     const onB = await deviceB.theses.get(company.id);
-    expect(onA?.sections.business).toBe('Version from B');
+    expect(onA?.sections.business).toBe('Version from A');
     expect(onA?.sections).toEqual(onB?.sections);
+    const onServer = server.records.get(`thesis#${company.id}`)?.payload as {
+      sections: { business: string };
+    };
+    expect(onServer.sections.business).toBe('Version from A');
+  });
+
+  it('a pulled tombstone beats a dirty local edit', async () => {
+    const company = await createCompany(deviceA, {
+      name: 'Apple Inc.',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    await runSync(deviceDeps(deviceA, server, 'a'));
+    await runSync(deviceDeps(deviceB, server, 'b'));
+
+    // B edits while A deletes; A's deletion reaches the server first.
+    const onB = await deviceB.companies.get(company.id);
+    await deviceB.companies.put({
+      ...onB!,
+      name: 'Edited on B',
+      updatedAt: '2026-07-18T11:00:00.000Z'
+    });
+    await deviceA.companies.delete(company.id);
+    await runSync(deviceDeps(deviceA, server, 'a'));
+
+    const bRun = await runSync(deviceDeps(deviceB, server, 'b'));
+    expect(bRun).toMatchObject({ outcome: 'ok', pushed: 0 });
+    expect(await deviceB.companies.get(company.id)).toBeUndefined();
+    expect(server.records.get(`company#${company.id}`)?.deleted).toBe(true);
+  });
+
+  it('a replayed record does not beat the pending edit built on it', async () => {
+    const company = await createCompany(deviceA, {
+      name: 'Apple Inc.',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    await runSync(deviceDeps(deviceA, server, 'a'));
+    await runSync(deviceDeps(deviceB, server, 'b'));
+
+    // B edits, then its next pull replays the very record the edit was
+    // built on (a rewound checkpoint, as a full resync would). The server
+    // has not moved past B's base, so the pending edit stands and pushes.
+    const onB = await deviceB.companies.get(company.id);
+    await deviceB.companies.put({
+      ...onB!,
+      name: 'Edited on B',
+      updatedAt: '2026-07-18T11:00:00.000Z'
+    });
+    await setMeta(deviceB, 'syncCheckpoint', 0);
+
+    const bRun = await runSync(deviceDeps(deviceB, server, 'b'));
+    expect(bRun).toMatchObject({ outcome: 'ok', pushed: 1 });
+    expect((await deviceB.companies.get(company.id))?.name).toBe('Edited on B');
+    const onServer = server.records.get(`company#${company.id}`)?.payload as { name: string };
+    expect(onServer.name).toBe('Edited on B');
   });
 
   it('a deletion travels as a tombstone', async () => {

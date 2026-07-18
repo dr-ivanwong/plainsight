@@ -1,14 +1,14 @@
 /**
- * The Dexie-side reconciler (backend spec §4; main plan §5: sync is an
- * optional overlay, silent and retried, and the UI never blocks on it).
+ * The Dexie-side reconciler. The wire is backend spec §4 unchanged; the
+ * policy is main plan §12.9: the backend is the source of truth, and the
+ * client holds a synchronised working copy.
  *
- * The engine is additive by design: no existing write path knows it exists.
- * It diffs each table's own change stamps against the sync shadow to find
- * dirty records and deletions, stamps outgoing records from the device's
- * Lamport clock at push time (a pending local edit therefore always outranks
- * everything this device has seen, which is exactly last-write-wins from the
- * owner's point of view), and applies pulled records unless the local copy
- * is dirty, in which case the local edit wins now and pushes next.
+ * Pull first: every server record newer than its shadow applies locally, and
+ * a pulled server copy beats a dirty local edit. Then push: whatever still
+ * differs from its shadow is a pending local write (pending.ts, the one
+ * definition the settings surface shares), stamped from the device's Lamport
+ * clock and retried run after run until the server accepts it. The UI never
+ * blocks on a run.
  */
 import {
   syncPullResponseSchema,
@@ -27,6 +27,7 @@ import {
   thesisVersionRecordSchema
 } from '../db/records';
 import { getMeta, setMeta } from '../db/meta';
+import { collectPendingWrites, recordKeyOf } from './pending';
 
 export interface SyncDeps {
   db: PlainsightDb;
@@ -42,62 +43,7 @@ export type SyncOutcome =
   | { outcome: 'failed' }
   | { outcome: 'ok'; pushed: number; pulled: number };
 
-const PAGE_LIMIT = 40;
 const PUSH_BATCH = 100;
-
-interface LocalRecord {
-  recordType: SyncEnvelope['recordType'];
-  recordId: string;
-  payload: unknown;
-  fingerprint: string;
-}
-
-const keyOf = (recordType: string, recordId: string): string => `${recordType}#${recordId}`;
-
-/** Every syncable row, keyed the way the wire names it. */
-async function collectLocal(db: PlainsightDb): Promise<Map<string, LocalRecord>> {
-  const map = new Map<string, LocalRecord>();
-  const put = (record: LocalRecord): void => {
-    map.set(keyOf(record.recordType, record.recordId), record);
-  };
-  for (const row of await db.companies.toArray()) {
-    put({ recordType: 'company', recordId: row.id, payload: row, fingerprint: row.updatedAt });
-  }
-  for (const row of await db.statements.toArray()) {
-    put({
-      recordType: 'statement',
-      recordId: `${row.companyId}|${row.fy}|${row.statement}`,
-      payload: row,
-      fingerprint: row.updatedAt
-    });
-  }
-  for (const row of await db.prices.toArray()) {
-    put({ recordType: 'price', recordId: row.companyId, payload: row, fingerprint: row.updatedAt });
-  }
-  for (const row of await db.theses.toArray()) {
-    put({ recordType: 'thesis', recordId: row.companyId, payload: row, fingerprint: row.updatedAt });
-  }
-  for (const row of await db.thesisVersions.toArray()) {
-    // Versions are append-only; identity is the company plus the moment
-    // saved, never the device-local auto-increment id.
-    const { id: _localId, ...portable } = row;
-    put({
-      recordType: 'thesis',
-      recordId: `${row.companyId}|v|${row.savedAt}`,
-      payload: portable,
-      fingerprint: row.savedAt
-    });
-  }
-  for (const row of await db.flagDismissals.toArray()) {
-    put({
-      recordType: 'flagDismissal',
-      recordId: `${row.companyId}|${row.ruleId}`,
-      payload: row,
-      fingerprint: row.dismissedAt
-    });
-  }
-  return map;
-}
 
 /** Applies one server record locally; the schemas hold the boundary. */
 async function applyRecord(db: PlainsightDb, record: SyncServerRecord): Promise<void> {
@@ -163,8 +109,7 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
     let clock = (await getMeta(db, 'lamportClock')) ?? 0;
     let checkpoint = (await getMeta(db, 'syncCheckpoint')) ?? 0;
 
-    const local = await collectLocal(db);
-    const state = new Map(
+    const shadows = new Map(
       (await db.syncState.toArray()).map((row) => [row.recordKey, row] as const)
     );
 
@@ -186,29 +131,26 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
       }
       for (const record of body.records) {
         clock = Math.max(clock, record.lamport);
-        const recordKey = keyOf(record.recordType, record.recordId);
-        const shadow = state.get(recordKey);
-        const localRecord = local.get(recordKey);
-        const locallyDirty =
-          localRecord !== undefined && localRecord.fingerprint !== shadow?.fingerprint;
+        const recordKey = recordKeyOf(record.recordType, record.recordId);
+        const shadow = shadows.get(recordKey);
+        // The only guard is ordering: a replay of the copy this device
+        // already holds (its own echo, a full resync) must not clobber a
+        // pending edit built on it. Anything the server has moved past that
+        // applies, dirty local edit or not: the server's copy wins, and the
+        // beaten edit simply never pushes.
         if (shadow !== undefined && record.lamport <= shadow.lastLamport) continue;
-        if (locallyDirty) continue; // the local edit wins now and pushes below
         await applyRecord(db, record);
-        const fingerprint = record.deleted ? '' : fingerprintOf(record);
         if (record.deleted) {
-          local.delete(recordKey);
-          state.delete(recordKey);
+          shadows.delete(recordKey);
           await db.syncState.delete(recordKey);
         } else {
-          const row = { recordKey, lastLamport: record.lamport, fingerprint };
-          state.set(recordKey, row);
+          const row = {
+            recordKey,
+            lastLamport: record.lamport,
+            fingerprint: fingerprintOf(record)
+          };
+          shadows.set(recordKey, row);
           await db.syncState.put(row);
-          local.set(recordKey, {
-            recordType: record.recordType,
-            recordId: record.recordId,
-            payload: record.payload,
-            fingerprint
-          });
         }
         pulled += 1;
       }
@@ -216,11 +158,11 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
       if (!body.hasMore) break;
     }
 
-    // Dirty records and local deletions, stamped now, above everything seen.
+    // Whatever still differs from its shadow after the pull is a pending
+    // local write, stamped now, above everything seen.
+    const pending = await collectPendingWrites(db);
     const outgoing: Array<{ envelope: SyncEnvelope; fingerprint: string }> = [];
-    for (const [recordKey, record] of local) {
-      const shadow = state.get(recordKey);
-      if (shadow !== undefined && shadow.fingerprint === record.fingerprint) continue;
+    for (const record of pending.upserts) {
       clock += 1;
       outgoing.push({
         envelope: {
@@ -235,15 +177,12 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
         fingerprint: record.fingerprint
       });
     }
-    for (const [recordKey, shadow] of state) {
-      if (local.has(recordKey)) continue;
+    for (const recordKey of pending.deletions) {
       const [recordType, recordId] = recordKey.split('#', 2) as [
         SyncEnvelope['recordType'],
         string
       ];
-      if (recordType === 'thesis' && recordId.includes('|v|')) continue;
       clock += 1;
-      void shadow;
       outgoing.push({
         envelope: {
           recordType,
@@ -270,12 +209,14 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
       });
       if (!response.ok) return { outcome: 'failed' };
       const verdict = syncPushResponseSchema.parse(await response.json());
-      const byKey = new Map(batch.map((entry) => [keyOf(entry.envelope.recordType, entry.envelope.recordId), entry] as const));
+      const byKey = new Map(
+        batch.map((entry) => [recordKeyOf(entry.envelope.recordType, entry.envelope.recordId), entry] as const)
+      );
       for (const accepted of verdict.accepted) {
-        const entry = byKey.get(keyOf(accepted.recordType, accepted.recordId));
+        const entry = byKey.get(recordKeyOf(accepted.recordType, accepted.recordId));
         if (entry === undefined) continue;
         pushed += 1;
-        const recordKey = keyOf(accepted.recordType, accepted.recordId);
+        const recordKey = recordKeyOf(accepted.recordType, accepted.recordId);
         if (entry.envelope.deleted) {
           await deps.db.syncState.delete(recordKey);
         } else {
@@ -289,7 +230,7 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
       for (const superseded of verdict.superseded) {
         // Another device out-wrote this one mid-run; its copy is the truth.
         await applyRecord(deps.db, superseded);
-        const recordKey = keyOf(superseded.recordType, superseded.recordId);
+        const recordKey = recordKeyOf(superseded.recordType, superseded.recordId);
         if (superseded.deleted) {
           await deps.db.syncState.delete(recordKey);
         } else {
@@ -310,5 +251,3 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
     return { outcome: 'failed' };
   }
 }
-
-export { PAGE_LIMIT };
