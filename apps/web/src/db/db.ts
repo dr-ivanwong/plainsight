@@ -16,6 +16,7 @@ import type {
   PriceRecord,
   ProviderCredentialRecord,
   QuarantineRecord,
+  SyncStateRecord,
   StatementRecord,
   ThesisRecord,
   ThesisVersionRecord
@@ -30,7 +31,8 @@ export const TABLE_NAMES = [
   'flagDismissals',
   'providerCredentials',
   'quarantine',
-  'meta'
+  'meta',
+  'syncState'
 ] as const;
 
 export type TableName = (typeof TABLE_NAMES)[number];
@@ -45,6 +47,7 @@ export class PlainsightDb extends Dexie {
   declare providerCredentials: Table<ProviderCredentialRecord, string>;
   declare quarantine: EntityTable<QuarantineRecord, 'id'>;
   declare meta: Table<MetaRecord, string>;
+  declare syncState: Table<SyncStateRecord, string>;
 
   constructor(name = 'plainsight') {
     super(name);
@@ -58,6 +61,13 @@ export class PlainsightDb extends Dexie {
       providerCredentials: 'providerId',
       quarantine: '++id, table',
       meta: 'key'
+    });
+    // The sync shadow (backend spec §4, client side): per synced record, the
+    // last lamport this device pushed or applied and the fingerprint it had
+    // then. Purely additive: the engine diffs against it, and no existing
+    // write path knows it exists.
+    this.version(2).stores({
+      syncState: 'recordKey'
     });
   }
 }

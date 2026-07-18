@@ -13,8 +13,8 @@ afterEach(async () => {
   await db.delete();
 });
 
-describe('the version 1 schema', () => {
-  it('creates exactly the nine pinned tables', () => {
+describe('the pinned schema', () => {
+  it('creates exactly the ten pinned tables', () => {
     expect(db.tables.map((table) => table.name).sort()).toEqual([...TABLE_NAMES].sort());
   });
 
