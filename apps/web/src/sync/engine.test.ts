@@ -175,6 +175,105 @@ describe('two devices converge on the server\'s copy', () => {
     expect(onServer.name).toBe('Edited on B');
   });
 
+  it('an equal-Lamport copy another device won at the server applies on pull', async () => {
+    const company = await createCompany(deviceA, {
+      name: 'Apple Inc.',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    await runSync(deviceDeps(deviceA, server, 'a'));
+
+    // The mid-air crossing: another device pushes the same record at the
+    // same Lamport value before ever seeing A's copy. The server's
+    // lexicographic deviceId tiebreak accepts it as the newer write.
+    await server.fetchImpl('/v1/sync/push', {
+      method: 'POST',
+      body: JSON.stringify({
+        records: [
+          {
+            recordType: 'company',
+            recordId: company.id,
+            payload: { ...company, name: 'Crossed from B', updatedAt: '2026-07-18T11:00:00.000Z' },
+            schemaVersion: 1,
+            lamport: 1,
+            deviceId: 'b-crossing',
+            deleted: false
+          }
+        ]
+      })
+    });
+
+    const run = await runSync(deviceDeps(deviceA, server, 'a'));
+    expect(run).toMatchObject({ outcome: 'ok', pushed: 0, pulled: 1 });
+    expect((await deviceA.companies.get(company.id))?.name).toBe('Crossed from B');
+  });
+
+  it('the tiebreak loser never re-beats: replays of both copies stay settled', async () => {
+    const company = await createCompany(deviceA, {
+      name: 'Apple Inc.',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    await runSync(deviceDeps(deviceA, server, 'a'));
+    await server.fetchImpl('/v1/sync/push', {
+      method: 'POST',
+      body: JSON.stringify({
+        records: [
+          {
+            recordType: 'company',
+            recordId: company.id,
+            payload: { ...company, name: 'Crossed from B', updatedAt: '2026-07-18T11:00:00.000Z' },
+            schemaVersion: 1,
+            lamport: 1,
+            deviceId: 'b-crossing',
+            deleted: false
+          }
+        ]
+      })
+    });
+    await runSync(deviceDeps(deviceA, server, 'a'));
+
+    // A full resync replays both the loser's own old copy and the winner;
+    // neither exceeds the shadow's pair, so nothing moves.
+    await setMeta(deviceA, 'syncCheckpoint', 0);
+    const replay = await runSync(deviceDeps(deviceA, server, 'a'));
+    expect(replay).toMatchObject({ outcome: 'ok', pushed: 0, pulled: 0 });
+    expect((await deviceA.companies.get(company.id))?.name).toBe('Crossed from B');
+  });
+
+  it('an old shadow without a device recorded keeps replays off a pending edit', async () => {
+    const company = await createCompany(deviceA, {
+      name: 'Apple Inc.',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    await runSync(deviceDeps(deviceA, server, 'a'));
+
+    // A shadow from before the tiebreak landed: no device recorded.
+    const recordKey = `company#${company.id}`;
+    const shadow = await deviceA.syncState.get(recordKey);
+    await deviceA.syncState.put({
+      recordKey,
+      lastLamport: shadow!.lastLamport,
+      fingerprint: shadow!.fingerprint
+    });
+
+    // An offline edit sits on that base when a full resync replays it.
+    const row = await deviceA.companies.get(company.id);
+    await deviceA.companies.put({
+      ...row!,
+      name: 'Edited offline',
+      updatedAt: '2026-07-18T12:00:00.000Z'
+    });
+    await setMeta(deviceA, 'syncCheckpoint', 0);
+
+    const run = await runSync(deviceDeps(deviceA, server, 'a'));
+    expect(run).toMatchObject({ outcome: 'ok', pushed: 1, pulled: 0 });
+    expect((await deviceA.companies.get(company.id))?.name).toBe('Edited offline');
+    const onServer = server.records.get(recordKey)?.payload as { name: string };
+    expect(onServer.name).toBe('Edited offline');
+  });
+
   it('a deletion travels as a tombstone', async () => {
     const company = await createCompany(deviceA, {
       name: 'Apple Inc.',

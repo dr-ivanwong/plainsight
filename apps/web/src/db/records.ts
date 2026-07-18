@@ -240,11 +240,15 @@ export type QuarantineRecord = z.infer<typeof quarantineRecordSchema>;
 /**
  * The sync shadow row (backend spec §4, client side): what this device last
  * pushed or applied for one record. The fingerprint is the record's own
- * change stamp; a mismatch is the definition of locally dirty.
+ * change stamp; a mismatch is the definition of locally dirty. The device id
+ * completes the spec's (lamport, deviceId) pair, which the pull comparison
+ * needs for the equal-Lamport tiebreak; it is absent on shadows written
+ * before the tiebreak landed, and equal Lamport then reads as already-seen.
  */
 export interface SyncStateRecord {
   recordKey: string;
   lastLamport: number;
+  lastDeviceId?: string;
   fingerprint: string;
 }
 

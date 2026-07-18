@@ -24,7 +24,8 @@ import {
   priceRecordSchema,
   statementRecordSchema,
   thesisRecordSchema,
-  thesisVersionRecordSchema
+  thesisVersionRecordSchema,
+  type SyncStateRecord
 } from '../db/records';
 import { getMeta, setMeta } from '../db/meta';
 import { collectPendingWrites, recordKeyOf } from './pending';
@@ -94,6 +95,22 @@ const fingerprintOf = (record: SyncServerRecord): string => {
   return typeof stamp === 'string' ? stamp : `lamport:${record.lamport}`;
 };
 
+/**
+ * The spec §4 comparison, client side, the same pair the server's
+ * conditional write uses: a pulled copy applies when its (lamport, deviceId)
+ * exceeds the shadow's, with the lexicographic deviceId tiebreak deciding
+ * equal Lamport values. A replay of the copy this device already holds (its
+ * own echo, a full resync) therefore never clobbers a pending edit built on
+ * it, while an equal-Lamport copy another device won at the server does
+ * apply. A shadow written before the tiebreak landed has no device recorded;
+ * equal then reads as already-seen, the pre-tiebreak behaviour, so migration
+ * cannot turn a replay into a beat.
+ */
+const pullWins = (record: SyncServerRecord, shadow: SyncStateRecord): boolean => {
+  if (record.lamport !== shadow.lastLamport) return record.lamport > shadow.lastLamport;
+  return shadow.lastDeviceId !== undefined && record.deviceId > shadow.lastDeviceId;
+};
+
 export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
   try {
     const token = await deps.accessToken();
@@ -133,12 +150,10 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
         clock = Math.max(clock, record.lamport);
         const recordKey = recordKeyOf(record.recordType, record.recordId);
         const shadow = shadows.get(recordKey);
-        // The only guard is ordering: a replay of the copy this device
-        // already holds (its own echo, a full resync) must not clobber a
-        // pending edit built on it. Anything the server has moved past that
-        // applies, dirty local edit or not: the server's copy wins, and the
-        // beaten edit simply never pushes.
-        if (shadow !== undefined && record.lamport <= shadow.lastLamport) continue;
+        // The only guard is the pair comparison (pullWins): anything the
+        // server has moved past the shadow applies, dirty local edit or
+        // not. The server's copy wins, and the beaten edit never pushes.
+        if (shadow !== undefined && !pullWins(record, shadow)) continue;
         await applyRecord(db, record);
         if (record.deleted) {
           shadows.delete(recordKey);
@@ -147,6 +162,7 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
           const row = {
             recordKey,
             lastLamport: record.lamport,
+            lastDeviceId: record.deviceId,
             fingerprint: fingerprintOf(record)
           };
           shadows.set(recordKey, row);
@@ -223,6 +239,7 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
           await deps.db.syncState.put({
             recordKey,
             lastLamport: entry.envelope.lamport,
+            lastDeviceId: entry.envelope.deviceId,
             fingerprint: entry.fingerprint
           });
         }
@@ -237,6 +254,7 @@ export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
           await deps.db.syncState.put({
             recordKey,
             lastLamport: superseded.lamport,
+            lastDeviceId: superseded.deviceId,
             fingerprint: fingerprintOf(superseded)
           });
         }
