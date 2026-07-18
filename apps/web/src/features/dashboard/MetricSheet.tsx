@@ -49,6 +49,7 @@ interface InputRow {
   label: string;
   text: string;
   source?: string;
+  filingUrl?: string;
   derived: boolean;
 }
 
@@ -122,12 +123,24 @@ export function MetricSheet({
         : resolved !== null
           ? amountText(itemId, resolved.minor)
           : 'not entered';
+    // The chip names the filing itself where one is recorded (the by-hand
+    // reproducibility contract reaches the source document), and links out
+    // when the filing carries a URL.
+    const filing = row?.provenance.filing;
     return {
       id: itemId,
       label: LINE_ITEMS[itemId].label,
       text,
       derived: resolved?.derived ?? false,
-      ...(row === undefined ? {} : { source: SOURCE_WORD[row.provenance.source] })
+      ...(row === undefined
+        ? {}
+        : {
+            source:
+              filing === undefined
+                ? SOURCE_WORD[row.provenance.source]
+                : `${SOURCE_WORD[row.provenance.source]} ${filing.documentId}`
+          }),
+      ...(filing?.url === undefined ? {} : { filingUrl: filing.url })
     };
   });
   if (USES_PRICE.has(metricId)) {
@@ -238,8 +251,17 @@ export function MetricSheet({
                     {row.derived ? ' (derived)' : ''}
                   </span>
                   <span className={styles.inputValue}>{row.text}</span>
-                  {row.source === undefined ? null : (
+                  {row.source === undefined ? null : row.filingUrl === undefined ? (
                     <span className={styles.sourceChip}>{row.source}</span>
+                  ) : (
+                    <a
+                      className={styles.sourceLink}
+                      href={row.filingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {row.source}
+                    </a>
                   )}
                 </li>
               ))}

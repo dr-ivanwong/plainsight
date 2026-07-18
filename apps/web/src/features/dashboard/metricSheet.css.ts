@@ -189,6 +189,20 @@ export const sourceChip = style({
   whiteSpace: 'nowrap'
 });
 
+// The chip that carries a filing URL: same quiet shape, accent text as the
+// one navigation signal.
+export const sourceLink = style([
+  sourceChip,
+  {
+    color: colour.accent,
+    textDecoration: 'none',
+    ':focus-visible': {
+      outline: `${focusRing.width} solid ${colour.accent}`,
+      outlineOffset: focusRing.offset
+    }
+  }
+]);
+
 export const prose = style({
   fontSize: fontSize.subhead,
   lineHeight: lineHeight.body,

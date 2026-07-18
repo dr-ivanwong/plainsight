@@ -332,6 +332,41 @@ describe('the company dashboard', () => {
     expect(screen.getByRole('heading', { name: 'Apple Inc.' })).toBeVisible();
   });
 
+  it('names the source filing on an imported input and links out to it', async () => {
+    const company = await seedCompany();
+    await upsertStatement(db, {
+      ...yearWrite(company.id, 'income', {
+        revenue: e(100_000),
+        costOfRevenue: e(60_000),
+        grossProfit: e(40_000)
+      }),
+      provenance: {
+        source: 'edgar',
+        recordedAt: '2026-07-18T06:05:30Z',
+        filing: {
+          system: 'EDGAR',
+          documentId: '0000320193-25-000079',
+          url: 'https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/'
+        }
+      }
+    });
+
+    renderAt(`/company/${company.id}?metric=grossMargin`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'Gross margin' });
+    const chips = within(sheet).getAllByRole('link', {
+      name: 'EDGAR filing 0000320193-25-000079'
+    });
+    expect(chips.length).toBeGreaterThan(0);
+    for (const chip of chips) {
+      expect(chip).toHaveAttribute(
+        'href',
+        'https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/'
+      );
+      expect(chip).toHaveAttribute('target', '_blank');
+    }
+  });
+
   it('answers the address directly and offers the table fallback', async () => {
     const company = await seedCompany();
     await seedFullYear(company.id);
