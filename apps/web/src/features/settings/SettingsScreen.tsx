@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactElement } from 'react';
 
+import { beginSignIn, signOut } from '../../auth/session';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { ToggleSwitch } from '../../components/ToggleSwitch';
 import { db, setMeta, type MetaValue } from '../../db';
@@ -25,11 +26,20 @@ export function SettingsScreen(): ReactElement {
   // Raw reads keep the queriers pure; a malformed row reads as the default.
   const themeRow = useLiveQuery(() => db.meta.get('theme'), []);
   const educationRow = useLiveQuery(() => db.meta.get('educationLayerOff'), []);
+  const sessionRow = useLiveQuery(() => db.meta.get('authSession'), []);
 
   const themeValue = themeRow?.value;
   const theme: ThemeSetting =
     themeValue === 'light' || themeValue === 'dark' ? themeValue : 'auto';
   const lensOn = educationRow?.value !== true;
+  const sessionEmail =
+    sessionRow !== undefined &&
+    typeof sessionRow.value === 'object' &&
+    sessionRow.value !== null &&
+    'email' in sessionRow.value &&
+    typeof sessionRow.value.email === 'string'
+      ? sessionRow.value.email
+      : null;
 
   return (
     <>
@@ -84,6 +94,46 @@ export function SettingsScreen(): ReactElement {
             ›
           </span>
         </Link>
+      </section>
+
+      <section className={styles.group} aria-label="Sync">
+        <h2 className={styles.groupTitle}>Sync</h2>
+        {sessionEmail === null ? (
+          <div className={styles.row}>
+            <div className={styles.rowText}>
+              <span className={styles.rowLabel}>Sign in</span>
+              <span className={styles.rowNote}>
+                Everything works on this device without it; signing in lets your devices keep
+                each other in step.
+              </span>
+            </div>
+            {navigator.onLine ? (
+              <button
+                type="button"
+                className={styles.actionButton}
+                onClick={() => void beginSignIn()}
+              >
+                Sign in
+              </button>
+            ) : (
+              <span className={styles.rowNote}>Available when online.</span>
+            )}
+          </div>
+        ) : (
+          <div className={styles.row}>
+            <div className={styles.rowText}>
+              <span className={styles.rowLabel}>Signed in</span>
+              <span className={styles.rowNote}>{sessionEmail}</span>
+            </div>
+            <button
+              type="button"
+              className={styles.actionButton}
+              onClick={() => void signOut()}
+            >
+              Sign out
+            </button>
+          </div>
+        )}
       </section>
 
       <section className={styles.group} aria-label="About">

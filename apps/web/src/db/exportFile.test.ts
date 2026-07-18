@@ -45,6 +45,15 @@ async function populateEverything(): Promise<void> {
 describe('buildExport', () => {
   it('enumerates exactly the allowlist and never key material', async () => {
     await populateEverything();
+    // The device's auth session lives in meta but sits outside the settings
+    // allowlist; an export must never carry a token.
+    await setMeta(db, 'authSession', {
+      idToken: 'AUTH-SENTINEL.id',
+      accessToken: 'AUTH-SENTINEL.access',
+      refreshToken: 'AUTH-SENTINEL.refresh',
+      expiresAt: 1,
+      email: 'owner@example.com'
+    });
     const file = await buildExport(db, '0.0.0');
 
     expect(Object.keys(file.data).sort()).toEqual([
@@ -58,6 +67,7 @@ describe('buildExport', () => {
     ]);
     const text = JSON.stringify(file);
     expect(text).not.toContain('SENTINEL');
+    expect(text).not.toContain('AUTH-SENTINEL');
     expect(text).not.toContain('quarantined-raw-payload');
     expect(file.data.settings.theme).toBe('dark');
     expect(file.data.companies[0]?.sample).toBe(false);
