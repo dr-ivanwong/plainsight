@@ -47,10 +47,10 @@ async function walkJourneyA(page: Page): Promise<void> {
   await expect(page.getByText('2 of 8 core items')).toBeVisible();
 
   // The dashboard computes: (44,189 - 30,356) / 44,189 = 31.3%. At the e2e
-  // viewport (1280, past the rail breakpoint) the section rail owns the way
-  // there; the entry back affordance is chrome the rail retired.
+  // viewport (1280, past the rail breakpoint) the navigation rail owns the
+  // way there; the entry back affordance is chrome the rail retired.
   await page
-    .getByRole('navigation', { name: 'Company sections' })
+    .getByRole('navigation', { name: 'Main' })
     .getByRole('link', { name: 'Dashboard' })
     .click();
   const gross = page.getByRole('article', { name: 'Gross margin', exact: true });

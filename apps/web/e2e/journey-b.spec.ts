@@ -102,12 +102,16 @@ test('ticker to pre-filled model, through the ingesting wait', async ({ page }) 
   await expect(sheet).toContainText('EDGAR filing');
   await sheet.getByRole('button', { name: 'Close' }).click();
 
-  // Re-importing resolves to the same company rather than a twin.
-  await page.getByRole('link', { name: '‹ Library' }).click();
+  // Re-importing resolves to the same company rather than a twin. At the
+  // e2e viewport the navigation rail is the way home.
+  const railLibrary = page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Library' });
+  await railLibrary.click();
   await page.getByRole('button', { name: 'Import', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search by ticker or company name' }).fill('apple');
   await page.getByRole('button', { name: /AAPL/ }).click();
   await expect(page.getByRole('heading', { name: 'Apple Inc.' })).toBeVisible();
-  await page.getByRole('link', { name: '‹ Library' }).click();
-  await expect(page.getByRole('list').getByRole('link')).toHaveCount(1);
+  await railLibrary.click();
+  // One Apple row, not a twin; named precisely because the rail adds lists
+  // of its own to every screen.
+  await expect(page.getByRole('link', { name: /Apple Inc\./ })).toHaveCount(1);
 });
