@@ -8,7 +8,7 @@
 ## 1. Scope and principles
 
 1. **The API is a product for the client, not a mirror of storage.** Resource-oriented, standard methods, boring on purpose (main plan §6). Additive changes never bump the version; breaking changes get `/v2` with a parallel run.
-2. **Everything is an optional enhancement.** Every endpoint's failure mode is "the client behaves as if offline", which is a fully specified, first-class state (frontend §2). There is no endpoint whose outage needs paging anyone.
+2. **Everything is an optional enhancement.** Every endpoint's failure mode is "the client behaves as if offline", which is a fully specified, first-class state (frontend §2). There is no endpoint whose outage needs paging anyone. *(Amended 2026-07-18, main plan §12.9: the sync pair is no longer optional, it is the source-of-truth wire and a standing obligation. Its outage still pages no one, because the client's catch-up mode is that same first-class offline state: reads serve the last-synced copy and writes queue with backoff until the pair returns.)*
 3. **Single user shapes the design.** Quotas are global-ish, abuse controls protect the wallet and the keys (cdk §8 threat model), and capacity maths is done against the provisioned 25 RCU/WCU free-tier ceiling.
 4. **Uploads never touch the canonical store.** User-upload extraction results return to the requesting client and live in that device's library; only the EDGAR/MAP pipeline, behind validation gates and the review queue, writes canonical data (main plan §6, private-library isolation).
 
