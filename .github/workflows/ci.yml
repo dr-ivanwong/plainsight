@@ -52,9 +52,12 @@ jobs:
   # year; index.html, the service worker script, and the manifest are never
   # cached, so updates land on the next visit. Requires the repository
   # variables AWS_SITE_DEPLOY_ROLE_ARN, SITE_BUCKET, and DISTRIBUTION_ID from
-  # the StaticSite stack outputs.
+  # the StaticSite stack outputs. Deploy waits for the unit gate and the
+  # journeys both: the pinned pipeline order (main plan section 7) puts the
+  # Playwright run before prod, and on 2026-07-18 two commits with a failing
+  # journey shipped because only the unit gate held the door.
   deploy-web:
-    needs: ci
+    needs: [ci, e2e]
     if: github.event_name == 'push' && vars.AWS_SITE_DEPLOY_ROLE_ARN != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
