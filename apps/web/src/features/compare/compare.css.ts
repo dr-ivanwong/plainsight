@@ -12,6 +12,7 @@ import {
   motion,
   press,
   radius,
+  railMedia,
   space,
   touchTarget,
   tracking
@@ -26,6 +27,9 @@ export const chrome = style({
 });
 
 export const back = style({
+  // At the rail breakpoint the rail owns wayfinding; this back affordance
+  // duplicates one of its destinations, so it recedes.
+  '@media': { [railMedia]: { display: 'none' } },
   display: 'inline-flex',
   alignItems: 'center',
   minHeight: touchTarget,

@@ -9,6 +9,7 @@ import {
   hairline,
   lineHeight,
   radius,
+  railMedia,
   space,
   touchTarget,
   tracking
@@ -56,7 +57,16 @@ const toolbarControl = style({
   }
 });
 
-export const toolbarLink = toolbarControl;
+// At the rail breakpoint the rail carries Compare and Settings; the toolbar
+// keeps its actions (Import, add) and hands navigation to the rail.
+export const toolbarLink = style([
+  toolbarControl,
+  {
+    '@media': {
+      [railMedia]: { display: 'none' }
+    }
+  }
+]);
 export const addButton = toolbarControl;
 
 /** The quiet offline marker (frontend spec §2): shown only where an online-only affordance was hidden. */
