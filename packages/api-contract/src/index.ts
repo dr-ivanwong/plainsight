@@ -13,6 +13,21 @@ export {
   type IngestingBody
 } from './envelope.js';
 export {
+  SYNC_PUSH_MAX_RECORDS,
+  SYNC_RECORD_TYPES,
+  syncEnvelopeSchema,
+  syncPullResponseSchema,
+  syncPushRequestSchema,
+  syncPushResponseSchema,
+  syncServerRecordSchema,
+  type SyncEnvelope,
+  type SyncPullResponse,
+  type SyncPushRequest,
+  type SyncPushResponse,
+  type SyncRecordType,
+  type SyncServerRecord
+} from './sync.js';
+export {
   companyProfileSchema,
   extractionFieldRefSchema,
   extractionRefSchema,

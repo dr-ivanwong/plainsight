@@ -83,6 +83,11 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
           ...(ingestion === undefined
             ? {}
             : { ingestFunction: ingestion.ingestFunction, indexBucket: ingestion.indexBucket }),
+          // The sync routes are Cognito-gated by contract; the Api stack
+          // refuses features.sync without this wiring.
+          ...(auth === undefined
+            ? {}
+            : { auth: { userPool: auth.userPool, webClient: auth.webClient } }),
         })
       : undefined;
 

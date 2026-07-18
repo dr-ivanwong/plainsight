@@ -24,11 +24,11 @@ export const prod: EnvConfig = {
   csp: { providerOrigins: [] },
 
   // Synth-time gates: a stack that is off does not exist (spec §1.2).
-  // api and ingestion flipped on 2026-07-12 (Phase 2 go-live); auth flipped
-  // 2026-07-18 (the Phase 3 arrival); extraction joins in Phase 2.5, sync
-  // when its routes land. Distinct from the runtime SSM flags the Foundation
-  // stack creates, which gate behaviour of already-deployed compute.
-  features: { api: true, ingestion: true, extraction: false, sync: false, auth: true },
+  // api and ingestion flipped on 2026-07-12 (Phase 2 go-live); auth and sync
+  // flipped 2026-07-18 (the Phase 3 arrival); extraction joins in Phase 2.5.
+  // Distinct from the runtime SSM flags the Foundation stack creates, which
+  // gate behaviour of already-deployed compute.
+  features: { api: true, ingestion: true, extraction: false, sync: true, auth: true },
 
   protectData: true,
 
