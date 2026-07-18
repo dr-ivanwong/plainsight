@@ -5,6 +5,10 @@ export interface EnvConfig {
   account: string;
   region: 'ap-southeast-2';
   domain: { zoneName: string; siteHost: string } | null; // null = *.cloudfront.net (see spec §3 one-way door)
+  // The deployed origin, once known (null before the first deploy mints it).
+  // Data, not a lookup: the hosted UI's OAuth redirects need a concrete URL
+  // at synth time, and StaticSite deploys after Auth by dependency order.
+  siteOrigin: string | null;
   csp: { providerOrigins: string[] }; // BYOK connect-src allowlist (main plan §6)
   features: { api: boolean; ingestion: boolean; extraction: boolean; sync: boolean; auth: boolean };
   protectData: boolean; // prod: true = RETAIN + PITR + deletionProtection; rehearsal: false

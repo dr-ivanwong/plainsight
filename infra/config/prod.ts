@@ -14,16 +14,21 @@ export const prod: EnvConfig = {
   // Route 53 never deploy while this is null; there is no code path for them.
   domain: null,
 
+  // The origin the first deploy minted (2026-07-18). The Auth stack pins its
+  // OAuth redirects to it; a rehearsal copy inherits it harmlessly (rehearsal
+  // verifies infra shape, nobody signs in to it).
+  siteOrigin: 'https://doqe2dc30jwq8.cloudfront.net',
+
   // BYOK provider origins joined into the CSP connect-src (spec §6 pins the
   // equality invariant). Empty until a provider is actually configured.
   csp: { providerOrigins: [] },
 
   // Synth-time gates: a stack that is off does not exist (spec §1.2).
-  // api and ingestion flipped on 2026-07-12 (Phase 2 go-live); extraction
-  // joins in Phase 2.5, sync and auth in Phase 3. Distinct from the runtime
-  // SSM flags the Foundation stack creates, which gate behaviour of
-  // already-deployed compute.
-  features: { api: true, ingestion: true, extraction: false, sync: false, auth: false },
+  // api and ingestion flipped on 2026-07-12 (Phase 2 go-live); auth flipped
+  // 2026-07-18 (the Phase 3 arrival); extraction joins in Phase 2.5, sync
+  // when its routes land. Distinct from the runtime SSM flags the Foundation
+  // stack creates, which gate behaviour of already-deployed compute.
+  features: { api: true, ingestion: true, extraction: false, sync: false, auth: true },
 
   protectData: true,
 

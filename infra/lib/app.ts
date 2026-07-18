@@ -1,6 +1,7 @@
 import { Tags, type App } from 'aws-cdk-lib';
 import type { EnvConfig } from '../config/types';
 import { ApiStack } from './stacks/api';
+import { AuthStack } from './stacks/auth';
 import { DataStack } from './stacks/data';
 import { FoundationStack } from './stacks/foundation';
 import { GithubOidcStack } from './stacks/github-oidc';
@@ -18,6 +19,8 @@ export interface PlainsightStacks {
   ingestion: IngestionStack | undefined;
   /** Absent until features.api flips (spec §1.2). */
   api: ApiStack | undefined;
+  /** Absent until features.auth flips (spec §1.2); Phase 3. */
+  auth: AuthStack | undefined;
 }
 
 /**
@@ -61,6 +64,12 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
         })
       : undefined;
 
+  // Phase 3 (spec §3): the user pool precedes the Api in the dependency
+  // graph; the authoriser attaches to routes when the sync slice flags them.
+  const auth = config.features.auth
+    ? new AuthStack(app, `${prefix}Auth`, { env, config })
+    : undefined;
+
   const api =
     config.features.api && data !== undefined
       ? new ApiStack(app, `${prefix}Api`, {
@@ -90,5 +99,5 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
     ...(api === undefined ? {} : { apiDomainName: api.apiDomainName }),
   });
 
-  return { foundation, githubOidc, staticSite, data, ingestion, api };
+  return { foundation, githubOidc, staticSite, data, ingestion, api, auth };
 }

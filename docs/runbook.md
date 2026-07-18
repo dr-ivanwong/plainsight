@@ -88,6 +88,24 @@ Two quarantine layers exist for ASX (both under the ticker partition, never serv
 
 The extraction function's errors alarm on the Foundation topic is the symptom surface (its delegation is asynchronous, so the sweep DLQ never sees it fail); its log group carries the per-document trail.
 
+## Phase 3 go-live (auth)
+
+The user pool deployed with `features.auth` (flipped 2026-07-18) through the stateful-stack gate. What turns it into a working sign-in is the one account, created from the CLI so no signup surface ever exists. Values in angle brackets come from the Auth stack outputs.
+
+1. **Protect the stateful environment** (one-time): repository Settings → Environments → `stateful` → add yourself as a required reviewer. The first gated run auto-creates the environment unprotected; until a reviewer is set, the gate deploys without asking.
+2. **Create the owner account** (the pool enforces 12 characters minimum with all four character classes; a leading space keeps the second command out of zsh history):
+
+   ```sh
+   aws cognito-idp admin-create-user --user-pool-id <UserPoolId> \
+     --username you@example.com \
+     --user-attributes Name=email,Value=you@example.com Name=email_verified,Value=true \
+     --message-action SUPPRESS
+    aws cognito-idp admin-set-user-password --user-pool-id <UserPoolId> \
+     --username you@example.com --password '...' --permanent
+   ```
+
+3. **Sign-in lives at** `<HostedUiBaseUrl>`; nothing in the app links to it yet. The client wiring and the sync routes are the next slices, and the Cognito authoriser attaches to routes as they arrive (backend spec §2 route table).
+
 ## Rebuild from zero (the drill)
 
 Everything is IaC plus exactly two out-of-band artefacts: the CDK bootstrap and the contact parameter. From an empty account, run go-live steps 2 to 7. Canonical data needs no restore: any ticker re-ingests on demand and the weekly sweep refreshes the watched set. The owner's research lives on the owner's devices (and from Phase 3, the table's user partitions restore via point-in-time recovery). Exercise the drill on a rehearsal overlay when an infra change deserves it (`--context env=rehearsal`; see the infra README).

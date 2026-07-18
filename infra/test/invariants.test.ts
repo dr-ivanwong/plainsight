@@ -12,13 +12,17 @@ import { AUD_TO_USD_BUDGET_RATE, FEATURE_FLAGS } from '../lib/stacks/foundation'
 // The tests construct the app directly from the typed prod config (account
 // placeholder included): no credentials, no lookups, no CLI. What CI asserts
 // here is exactly what `cdk synth` produces, because both call buildApp.
-// Prod carries the Phase 2 flags since go-live (2026-07-12), so the real
-// prod build is the six stacks.
+// Prod carries the Phase 2 flags since go-live (2026-07-12) and the auth
+// flag since the Phase 3 arrival (2026-07-18), so the real prod build is the
+// seven stacks.
 const app = testApp();
 const stacks = buildApp(app, prod);
 if (!stacks.githubOidc) throw new Error('prod must synthesise the GithubOidc stack');
 if (!stacks.data || !stacks.ingestion || !stacks.api) {
   throw new Error('prod must synthesise the Phase 2 stacks: the flags flipped at go-live');
+}
+if (!stacks.auth) {
+  throw new Error('prod must synthesise the Auth stack: the flag flipped with Phase 3');
 }
 const templates: Record<string, Template> = {
   Foundation: Template.fromStack(stacks.foundation),
@@ -27,6 +31,7 @@ const templates: Record<string, Template> = {
   Data: Template.fromStack(stacks.data),
   Ingestion: Template.fromStack(stacks.ingestion),
   Api: Template.fromStack(stacks.api),
+  Auth: Template.fromStack(stacks.auth),
 };
 const foundation = templates['Foundation'] as Template;
 const githubOidc = templates['GithubOidc'] as Template;
@@ -34,6 +39,7 @@ const staticSite = templates['StaticSite'] as Template;
 const data = templates['Data'] as Template;
 const ingestion = templates['Ingestion'] as Template;
 const api = templates['Api'] as Template;
+const auth = templates['Auth'] as Template;
 
 // The Phase 0/1 posture (every feature off) stays under test: it is the
 // rollback target, and the zero-compute promise belongs to it.
@@ -544,6 +550,80 @@ describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
     expect(rehearsalTable.Properties.PointInTimeRecoverySpecification).toEqual({
       PointInTimeRecoveryEnabled: false,
     });
+  });
+});
+
+describe('Auth stack (spec §3: single admin-created user, no signup, hosted UI)', () => {
+  const pool: any = only(auth.findResources('AWS::Cognito::UserPool'));
+  const client: any = only(auth.findResources('AWS::Cognito::UserPoolClient'));
+
+  it('prod: signup off, email sign-in, retained and protected on delete', () => {
+    expect(pool.Properties.AdminCreateUserConfig).toEqual(
+      expect.objectContaining({ AllowAdminCreateUserOnly: true }),
+    );
+    expect(pool.Properties.UsernameAttributes).toEqual(['email']);
+    expect(pool.Properties.DeletionProtection).toBe('ACTIVE');
+    expect(pool.DeletionPolicy).toBe('Retain');
+    expect(pool.UpdateReplacePolicy).toBe('Retain');
+  });
+
+  it('stays on the free feature plan with a deliberate password policy', () => {
+    expect(pool.Properties.UserPoolTier).toBe('LITE');
+    expect(pool.Properties.Policies.PasswordPolicy).toEqual(
+      expect.objectContaining({
+        MinimumLength: 12,
+        RequireLowercase: true,
+        RequireUppercase: true,
+        RequireNumbers: true,
+        RequireSymbols: true,
+      }),
+    );
+    expect(pool.Properties.MfaConfiguration).toBe('OPTIONAL');
+  });
+
+  it('hosts sign-in on the deterministic Cognito domain', () => {
+    const domain: any = only(auth.findResources('AWS::Cognito::UserPoolDomain'));
+    expect(domain.Properties.Domain).toBe('plainsight-prod-679345828813');
+  });
+
+  it('the web client is public, code-flow only, redirecting to the pinned origins', () => {
+    expect(client.Properties.GenerateSecret).toBeUndefined();
+    expect(client.Properties.AllowedOAuthFlows).toEqual(['code']);
+    expect(client.Properties.AllowedOAuthFlowsUserPoolClient).toBe(true);
+    expect(client.Properties.AllowedOAuthScopes).toEqual(
+      expect.arrayContaining(['openid', 'email']),
+    );
+    expect(client.Properties.CallbackURLs).toEqual([
+      'https://doqe2dc30jwq8.cloudfront.net',
+      'http://localhost:5173',
+    ]);
+    expect(client.Properties.LogoutURLs).toEqual(client.Properties.CallbackURLs);
+    expect(client.Properties.PreventUserExistenceErrors).toBe('ENABLED');
+  });
+
+  it('adds no compute and no custom resources (identity, not behaviour)', () => {
+    expect(Object.keys(auth.findResources('AWS::Lambda::Function'))).toEqual([]);
+    const resources: Record<string, { Type: string }> = auth.toJSON().Resources ?? {};
+    const customTypes = Object.values(resources)
+      .map((resource) => resource.Type)
+      .filter((type) => type.startsWith('Custom::') || type === 'AWS::CloudFormation::CustomResource');
+    expect(customTypes).toEqual([]);
+  });
+
+  it('does not exist while the feature is off (spec §1.2), and a rehearsal copy is disposable', () => {
+    expect(offStacks.auth).toBeUndefined();
+    const rehearsal = buildApp(testApp(), rehearsalFrom(prod));
+    if (!rehearsal.auth) throw new Error('a rehearsal build must synthesise Auth');
+    expect(rehearsal.auth.stackName).toBe('RehearsalAuth');
+    const rehearsalPool: any = only(
+      Template.fromStack(rehearsal.auth).findResources('AWS::Cognito::UserPool'),
+    );
+    expect(rehearsalPool.DeletionPolicy).toBe('Delete');
+    expect(rehearsalPool.Properties.DeletionProtection).toBe('INACTIVE');
+    const rehearsalDomain: any = only(
+      Template.fromStack(rehearsal.auth).findResources('AWS::Cognito::UserPoolDomain'),
+    );
+    expect(rehearsalDomain.Properties.Domain).toBe('plainsight-rehearsal-679345828813');
   });
 });
 
