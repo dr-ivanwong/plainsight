@@ -237,6 +237,17 @@ export const quarantineRecordSchema = z.object({
 
 export type QuarantineRecord = z.infer<typeof quarantineRecordSchema>;
 
+/**
+ * The sync shadow row (backend spec §4, client side): what this device last
+ * pushed or applied for one record. The fingerprint is the record's own
+ * change stamp; a mismatch is the definition of locally dirty.
+ */
+export interface SyncStateRecord {
+  recordKey: string;
+  lastLamport: number;
+  fingerprint: string;
+}
+
 /** Small app-level settings, one row per pinned key; a typed union keeps every value shape legal by construction. */
 export const metaRecordSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('onboardingDone'), value: z.boolean() }),
@@ -247,6 +258,13 @@ export const metaRecordSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('sampleBannerDismissed'), value: z.boolean() }),
   z.object({ key: z.literal('iosInstallDismissed'), value: z.boolean() }),
   z.object({ key: z.literal('thesisSerif'), value: z.boolean() }),
+  // The sync engine's device-local facts (backend spec §4): the device id,
+  // the Lamport clock, the pull checkpoint, and the quiet status line. None
+  // sit in the export allowlist; they describe this device, not the library.
+  z.object({ key: z.literal('deviceId'), value: z.string().min(1) }),
+  z.object({ key: z.literal('lamportClock'), value: z.number().int().nonnegative() }),
+  z.object({ key: z.literal('syncCheckpoint'), value: z.number().int().nonnegative() }),
+  z.object({ key: z.literal('lastSyncedAt'), value: isoDateTime }),
   // The device's hosted-UI session (auth module). Device-local by
   // construction: not in the export allowlist, never a sync record type.
   z.object({

@@ -32,6 +32,11 @@ export function SettingsScreen(): ReactElement {
   const theme: ThemeSetting =
     themeValue === 'light' || themeValue === 'dark' ? themeValue : 'auto';
   const lensOn = educationRow?.value !== true;
+  const lastSyncedRow = useLiveQuery(() => db.meta.get('lastSyncedAt'), []);
+  const lastSyncedAt =
+    typeof lastSyncedRow?.value === 'string'
+      ? new Date(lastSyncedRow.value).toLocaleTimeString()
+      : null;
   const sessionEmail =
     sessionRow !== undefined &&
     typeof sessionRow.value === 'object' &&
@@ -123,7 +128,10 @@ export function SettingsScreen(): ReactElement {
           <div className={styles.row}>
             <div className={styles.rowText}>
               <span className={styles.rowLabel}>Signed in</span>
-              <span className={styles.rowNote}>{sessionEmail}</span>
+              <span className={styles.rowNote}>
+                {sessionEmail}
+                {lastSyncedAt === null ? '' : ` · synced ${lastSyncedAt}`}
+              </span>
             </div>
             <button
               type="button"

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, type ReactElement } from 'react';
 
 import { completeSignIn } from '../auth/session';
+import { useSyncRunner } from '../sync/useSync';
 import { Placeholder } from '../components/Placeholder';
 import * as placeholderStyles from '../components/placeholder.css';
 import { db } from '../db';
@@ -79,6 +80,7 @@ function useAppliedTheme(): void {
 function RootShell(): ReactElement {
   useRequestPersistence();
   useCompleteSignIn();
+  useSyncRunner();
   useAppliedTheme();
   const wide = useRouterState({
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),
