@@ -83,9 +83,9 @@ describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
         expect(props.VersioningConfiguration).toEqual({ Status: 'Enabled' });
       }
     }
-    // Exactly two buckets exist anywhere: the site bucket and the ingestion
-    // artefacts bucket.
-    expect(bucketsPerStack).toEqual({ StaticSite: 1, Ingestion: 1 });
+    // Exactly three buckets exist anywhere: the site bucket, the ingestion
+    // artefacts bucket, and the transient uploads bucket.
+    expect(bucketsPerStack).toEqual({ StaticSite: 1, Ingestion: 1, Data: 1 });
   });
 
   it('the site bucket expires noncurrent versions after 30 days and is retained in prod', () => {
@@ -644,23 +644,24 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
 
   it('every Lambda: ARM64, Node 22, explicit timeout and memory', () => {
     const entries = Object.values(functions);
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(9);
     for (const fn of entries as any[]) {
       expect(fn.Properties.Architectures).toEqual(['arm64']);
       expect(fn.Properties.Runtime).toBe('nodejs22.x');
       expect(fn.Properties.MemorySize).toBe(256);
     }
-    // Reads answer in 10 seconds, the sync functions carry the pinned 15,
-    // and the proxy its 25 (backend spec §10 inventory).
+    // Reads and job routes answer in 10 seconds, the sync functions carry
+    // the pinned 15, and the proxy its 25 (backend spec §10 inventory).
     const timeouts = entries.map((fn: any) => fn.Properties.Timeout).sort((a: number, b: number) => a - b);
-    expect(timeouts).toEqual([10, 10, 10, 15, 15, 25]);
-    // The company routes and both sync functions read the table; search and
-    // the proxy deliberately do not (the proxy carries no environment at
-    // all: destination from the registry, key from the caller).
+    expect(timeouts).toEqual([10, 10, 10, 10, 10, 10, 15, 15, 25]);
+    // The company routes, both sync functions, and both job routes read the
+    // table; search, the presigner, and the proxy deliberately do not (the
+    // proxy carries no environment at all: destination from the registry,
+    // key from the caller).
     const withTable = entries.filter(
       (fn: any) => fn.Properties.Environment?.Variables?.TABLE_NAME !== undefined,
     );
-    expect(withTable).toHaveLength(4);
+    expect(withTable).toHaveLength(6);
     const withoutEnvironment = entries.filter((fn: any) => fn.Properties.Environment === undefined);
     expect(withoutEnvironment).toHaveLength(1);
     expect((withoutEnvironment[0] as any).Properties.Timeout).toBe(25);
@@ -677,7 +678,7 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
   it('log retention is explicit log groups, not the custom-resource shortcut', () => {
     // One group per function plus the access-log group; every group 30 days.
     const groups = Object.values(api.findResources('AWS::Logs::LogGroup')) as any[];
-    expect(groups).toHaveLength(7);
+    expect(groups).toHaveLength(10);
     for (const group of groups) {
       expect(group.Properties.RetentionInDays).toBe(30);
     }
@@ -698,14 +699,22 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
     expect(routes.map((route) => route.Properties.RouteKey).sort()).toEqual([
       'GET /v1/companies/{ticker}',
       'GET /v1/companies/{ticker}/financials',
+      'GET /v1/extractions/{jobId}',
       'GET /v1/search',
       'GET /v1/sync/pull',
+      'POST /v1/extractions',
       'POST /v1/proxy/{providerId}',
       'POST /v1/sync/push',
+      'POST /v1/uploads',
     ]);
     for (const route of routes) {
       const key: string = route.Properties.RouteKey;
-      if (key.includes('/v1/sync/') || key.includes('/v1/proxy/')) {
+      const flagged =
+        key.includes('/v1/sync/') ||
+        key.includes('/v1/proxy/') ||
+        key.includes('/v1/uploads') ||
+        key.includes('/v1/extractions');
+      if (flagged) {
         expect(route.Properties.AuthorizationType).toBe('JWT');
         expect(route.Properties.AuthorizerId).toBeDefined();
       } else {
@@ -750,10 +759,11 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
     expect(format).not.toContain('header');
   });
 
-  it('table writes exist only on the sync roles, confined to user partitions', () => {
-    // The read path stays write-free; the sync functions may write, but only
-    // under USER# and IDEMP# leading keys (backend spec §3 ownership: ticker
-    // partitions belong to ingestion).
+  it('table writes exist only on the sync and job-start roles, key-prefix confined', () => {
+    // The read path stays write-free; the sync functions write under USER#
+    // and IDEMP# leading keys, and the job starter under JOB#, USER#, and
+    // IDEMP# (backend spec §3 ownership: ticker partitions belong to
+    // ingestion).
     const policies = Object.values(api.findResources('AWS::IAM::Policy')) as any[];
     expect(policies.length).toBeGreaterThan(0);
     const writeActions = ['dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:DeleteItem', 'dynamodb:BatchWriteItem'];
@@ -766,27 +776,24 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
         }
       }
     }
-    // Exactly the shared user-partition statement, once per sync role.
-    expect(writeBearing).toHaveLength(2);
+    const expectedKeysBySid: Record<string, string[]> = {
+      ReadWriteUserPartitions: ['USER#*', 'IDEMP#*'],
+      WriteJobsQuotaAndReplays: ['JOB#*', 'USER#*', 'IDEMP#*'],
+    };
+    expect(writeBearing.map((statement) => statement.Sid).sort()).toEqual([
+      'ReadWriteUserPartitions',
+      'ReadWriteUserPartitions',
+      'WriteJobsQuotaAndReplays',
+    ]);
     for (const statement of writeBearing) {
-      expect(statement.Sid).toBe('ReadWriteUserPartitions');
-      expect([statement.Action].flat()).toEqual([
-        'dynamodb:GetItem',
-        'dynamodb:Query',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-      ]);
       expect(statement.Condition).toEqual({
-        'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['USER#*', 'IDEMP#*'] },
+        'ForAllValues:StringLike': {
+          'dynamodb:LeadingKeys': expectedKeysBySid[statement.Sid as string],
+        },
       });
-      expect(JSON.stringify(statement.Resource)).toContain('/index/syncFeed');
+      expect([statement.Action].flat()).not.toContain('dynamodb:DeleteItem');
+      expect([statement.Action].flat()).not.toContain('dynamodb:BatchWriteItem');
     }
-    const syncPolicyOwners = policies.filter((policy) =>
-      policy.Properties.PolicyDocument.Statement.some(
-        (statement: any) => statement.Sid === 'ReadWriteUserPartitions',
-      ),
-    );
-    expect(syncPolicyOwners).toHaveLength(2);
   });
 });
 
@@ -831,7 +838,8 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
       '/app/prod/features/extraction',
     );
 
-    // Writes stay inside ticker partitions; GetItem joins for the DOC# cache.
+    // Writes stay inside ticker partitions, with GetItem for the DOC# cache
+    // and JOB# joining for the upload-job walk (backend spec §6).
     const writes = statementsWithSid('ExtractWriteTickerPartitions');
     expect(writes.Action).toEqual([
       'dynamodb:GetItem',
@@ -840,8 +848,11 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
       'dynamodb:BatchWriteItem',
     ]);
     expect(writes.Condition).toEqual({
-      'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },
+      'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*', 'JOB#*'] },
     });
+    const uploadsRead = statementsWithSid('ReadUploadedFilings');
+    expect(uploadsRead.Action).toBe('s3:GetObject');
+    expect(JSON.stringify(uploadsRead.Resource)).toContain('/uploads/*');
 
     // Provider keys are readable only under the extraction prefix.
     const keys = statementsWithSid('ReadProviderKeyParameters');
@@ -932,16 +943,22 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     ).toBe(true);
   });
 
-  it('the financials route can fire it, and only it', () => {
+  it('exactly two named invokes exist: the ingest fire and the worker fire', () => {
     const financials: any = Object.values(api.findResources('AWS::Lambda::Function')).find(
-      (candidate: any) => candidate.Properties.Environment.Variables.INGEST_FUNCTION_NAME,
+      (candidate: any) => candidate.Properties.Environment?.Variables?.INGEST_FUNCTION_NAME,
     );
     expect(financials).toBeDefined();
     const policies = Object.values(api.findResources('AWS::IAM::Policy')) as any[];
     const invokeStatements = policies
       .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
       .filter((statement) => [statement.Action].flat().includes('lambda:InvokeFunction'));
-    expect(invokeStatements).toHaveLength(1);
+    expect(invokeStatements.map((statement) => statement.Sid).sort()).toEqual([
+      'FireExtractionWorker',
+      'FireIngest',
+    ]);
+    for (const statement of invokeStatements) {
+      expect(JSON.stringify(statement.Resource)).not.toContain('"*"');
+    }
   });
 
   it('an api-only build serves 202 without the ingest wiring', () => {

@@ -21,18 +21,31 @@ import {
 import { preprocessPdf } from '@plainsight/extraction-core/pdf';
 import { z } from 'zod';
 
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+
 import { DocumentCache } from '../asx/documents.js';
 import { MapClient } from '../asx/client.js';
 import { getCachedParameter } from '../aws/ssmParam.js';
+import { TableJobStore } from '../db/jobStore.js';
 import { TableStore } from '../db/table.js';
 import { runAsxIngest, type AsxIngestDeps, type AsxIngestOutcome } from '../ingest/asxCore.js';
+import { runUploadJob, type UploadJobDeps, type UploadJobOutcome } from '../ingest/uploadJob.js';
 
-const eventSchema = z.object({
-  ticker: tickerSchema,
-  mode: z.enum(['on_demand', 'sweep']).optional()
-});
+const eventSchema = z.union([
+  z.object({
+    ticker: tickerSchema,
+    mode: z.enum(['on_demand', 'sweep']).optional()
+  }),
+  // The upload-job fire (backend spec §6): createExtraction invokes this
+  // function asynchronously with the job id; everything else about the job
+  // lives on its JOB# item.
+  z.object({ uploadJobId: z.string().min(1) })
+]);
 
-export type ExtractFilingOutcome = AsxIngestOutcome | { outcome: 'disabled'; ticker: string };
+export type ExtractFilingOutcome =
+  | AsxIngestOutcome
+  | { outcome: 'disabled'; ticker: string }
+  | UploadJobOutcome;
 
 /** A missing key parameter skips the rung; the ladder walks what exists. */
 async function credentialFor(parameterName: string): Promise<string | undefined> {
@@ -137,9 +150,47 @@ async function anyCredentialConfigured(): Promise<boolean> {
 }
 
 let deps: AsxIngestDeps | undefined;
+let uploadDeps: UploadJobDeps | undefined;
+
+/**
+ * The upload path shares the ladder machinery but reads its document from
+ * the uploads bucket and answers onto the JOB# item. The ladder honours the
+ * confidential flag (paid, no-training rungs only, main plan §6 sensitivity
+ * routing); the kill switch is checked inside the run so a disabled job
+ * fails visibly rather than vanishing.
+ */
+function buildUploadDeps(): UploadJobDeps {
+  const bucket = process.env['UPLOADS_BUCKET'];
+  if (!bucket) throw new Error('UPLOADS_BUCKET is not set');
+  const s3 = new S3Client({});
+  return {
+    jobs: TableJobStore.fromEnv(),
+    getObject: async (objectKey) => {
+      const object = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: objectKey }));
+      if (object.Body === undefined) throw new Error('empty object');
+      return new Uint8Array(await object.Body.transformToByteArray());
+    },
+    preprocess: (bytes) => preprocessPdf(bytes),
+    extract: (document, confidential) =>
+      runExtraction({
+        document,
+        ladder: ladderFor({ needsVision: false, confidential }),
+        credentialFor: (entry) => credentialFor(entry.credentialParameter),
+        adapterConfig: { timeoutMs: 100_000 }
+      }),
+    extractionEnabled: () => extractionEnabled()
+  };
+}
 
 export const handler = async (event: unknown): Promise<ExtractFilingOutcome> => {
-  const { ticker, mode } = eventSchema.parse(event);
+  const parsed = eventSchema.parse(event);
+  if ('uploadJobId' in parsed) {
+    uploadDeps ??= buildUploadDeps();
+    const outcome = await runUploadJob(uploadDeps, parsed.uploadJobId);
+    console.log(JSON.stringify({ route: 'extractFiling', ...outcome }));
+    return outcome;
+  }
+  const { ticker, mode } = parsed;
   if (!(await extractionEnabled())) {
     const outcome = { outcome: 'disabled' as const, ticker };
     console.log(

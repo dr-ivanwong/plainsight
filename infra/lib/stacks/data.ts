@@ -1,5 +1,6 @@
-import { CfnOutput, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
+import { Aws, CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
 import { acknowledgeNagFinding } from '../nag';
@@ -21,6 +22,24 @@ export const WATCHED_TICKERS_INDEX = 'watchedTickers';
 /** Attribute names here must match the api workspace's sync store, which writes them. */
 export const SYNC_FEED_INDEX = 'syncFeed';
 
+/**
+ * The uploads bucket's physical name is deterministic (account-suffixed for
+ * global uniqueness, environment-prefixed so a rehearsal copy never
+ * collides), so consuming stacks can write literal policy ARNs and literal
+ * cdk-nag acknowledgements instead of cross-stack tokens whose flattening
+ * differs between the test and synth gates.
+ */
+export const uploadsBucketName = (config: EnvConfig): string =>
+  `plainsight-${config.envName}-uploads-${config.account}`;
+
+/** The uploads keyspace as a policy resource; PARTITION stays a token. */
+export const uploadsObjectsArn = (config: EnvConfig): string =>
+  `arn:${Aws.PARTITION}:s3:::${uploadsBucketName(config)}/uploads/*`;
+
+/** The same ARN as cdk-nag flattens it, for acknowledgement ids. */
+export const uploadsObjectsFindingArn = (config: EnvConfig): string =>
+  `arn:<AWS::Partition>:s3:::${uploadsBucketName(config)}/uploads/*`;
+
 export interface DataStackProps extends StackProps {
   config: EnvConfig;
 }
@@ -35,6 +54,8 @@ export interface DataStackProps extends StackProps {
  */
 export class DataStack extends Stack {
   readonly table: dynamodb.Table;
+  /** Present once the Phase 3 authenticated surface is on (spec §3 Data row). */
+  readonly uploadsBucket: s3.Bucket | undefined;
 
   constructor(scope: Construct, id: string, props: DataStackProps) {
     super(scope, id, props);
@@ -106,6 +127,50 @@ export class DataStack extends Stack {
       readCapacity: SYNC_INDEX_CAPACITY,
       writeCapacity: SYNC_INDEX_CAPACITY,
     });
+
+    // The uploads bucket (spec §3 Data row, Phase 3): filings on their way
+    // to the extraction worker, presign-PUT from the app origin, everything
+    // expiring in seven days so an abandoned upload costs nothing. Arrives
+    // with the Phase 3 authenticated surface, which this repo gates behind
+    // features.sync.
+    if (config.features.sync) {
+      const corsOrigins = [config.siteOrigin, 'http://localhost:5173'].filter(
+        (origin): origin is string => origin !== null,
+      );
+      this.uploadsBucket = new s3.Bucket(this, 'UploadsBucket', {
+        bucketName: uploadsBucketName(config),
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        encryption: s3.BucketEncryption.S3_MANAGED,
+        enforceSSL: true,
+        versioned: true,
+        lifecycleRules: [
+          {
+            expiration: Duration.days(7),
+            noncurrentVersionExpiration: Duration.days(1),
+            abortIncompleteMultipartUploadAfter: Duration.days(1),
+          },
+        ],
+        cors: [
+          {
+            allowedMethods: [s3.HttpMethods.PUT],
+            allowedOrigins: corsOrigins,
+            allowedHeaders: ['content-type'],
+          },
+        ],
+        removalPolicy: config.protectData ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      });
+      acknowledgeNagFinding(
+        this.uploadsBucket,
+        'AwsSolutions-S1',
+        'No server access logging: spec §8 not-list (ADR 0004). The bucket holds transient ' +
+          'uploads for at most seven days, PUT only by the owner through presigned URLs; an ' +
+          'access-log bucket would outlive everything it watched.',
+      );
+      new CfnOutput(this, 'UploadsBucketName', {
+        value: this.uploadsBucket.bucketName,
+        description: 'Transient filing uploads (backend spec §6); seven-day lifecycle.',
+      });
+    }
 
     new CfnOutput(this, 'TableName', {
       value: this.table.tableName,

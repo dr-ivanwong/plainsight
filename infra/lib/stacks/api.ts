@@ -14,7 +14,7 @@ import type { EnvConfig } from '../../config/types';
 import { ASX_DIRECTORY_OBJECT_KEY, edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
-import { SYNC_FEED_INDEX } from './data';
+import { SYNC_FEED_INDEX, uploadsObjectsArn, uploadsObjectsFindingArn } from './data';
 
 /** ~10 rps steady, 20 burst (backend spec §2): the throttles are the WAF and the scraper cost-cap (spec §8 not-list). */
 export const ROUTE_RATE_LIMIT = 10;
@@ -29,6 +29,10 @@ export interface ApiStackProps extends StackProps {
   indexBucket?: s3.IBucket;
   /** The user pool behind the authenticated routes; required once features.sync is on. */
   auth?: { userPool: cognito.IUserPool; webClient: cognito.IUserPoolClient };
+  /** The Data stack's uploads bucket; required once features.sync is on. */
+  uploadsBucket?: s3.IBucket;
+  /** The Ingestion stack's extraction worker; absent, jobs fail visibly at start. */
+  extractFunction?: lambda.IFunction;
 }
 
 /**
@@ -45,7 +49,8 @@ export class ApiStack extends Stack {
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
-    const { config, table, ingestFunction, indexBucket, auth } = props;
+    const { config, table, ingestFunction, indexBucket, auth, uploadsBucket, extractFunction } =
+      props;
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `plainsight-${config.envName}-api`,
@@ -237,6 +242,129 @@ export class ApiStack extends Stack {
         path: '/v1/sync/pull',
         methods: [apigwv2.HttpMethod.GET],
         integration: new HttpLambdaIntegration('SyncPullIntegration', syncPull.fn),
+        authorizer,
+      });
+
+      // The upload and extraction-job routes (backend spec §6). The presign
+      // function can only place objects under uploads/; the job starter reads
+      // upload heads and magic bytes, owns the JOB#, USER# quota, and IDEMP#
+      // writes, honours the kill-switch flag, and fires the Ingestion
+      // worker; the status route only ever reads jobs.
+      if (uploadsBucket === undefined) {
+        throw new Error('features.sync requires the uploads bucket: the Data stack builds it');
+      }
+      const createUpload = new AppFunction(this, 'CreateUpload', {
+        entry: handlerEntry('createUpload'),
+        description:
+          'POST /v1/uploads: a presigned fifteen-minute PUT for one filing (backend spec §6).',
+        timeout: Duration.seconds(10),
+        environment: { UPLOADS_BUCKET: uploadsBucket.bucketName },
+      });
+      createUpload.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'SignUploadPuts',
+          actions: ['s3:PutObject'],
+          resources: [uploadsObjectsArn(config)],
+        }),
+      );
+      acknowledgeNagFinding(
+        createUpload,
+        `AwsSolutions-IAM5[Resource::${uploadsObjectsFindingArn(config)}]`,
+        'The presigner mints keys server-side under uploads/ with the caller prefix; the ' +
+          'wildcard is the transient uploads keyspace, expiring in seven days.',
+      );
+
+      const extractionFlagParameter = `/app/${config.envName}/features/extraction`;
+      const createExtraction = new AppFunction(this, 'CreateExtraction', {
+        entry: handlerEntry('createExtraction'),
+        description:
+          'POST /v1/extractions: validates the upload, spends quota, lands the queued job, fires the worker (backend spec §6).',
+        timeout: Duration.seconds(10),
+        environment: {
+          ...environment,
+          UPLOADS_BUCKET: uploadsBucket.bucketName,
+          EXTRACTION_FLAG_PARAMETER: extractionFlagParameter,
+          ...(extractFunction === undefined
+            ? {}
+            : { EXTRACT_FUNCTION_NAME: extractFunction.functionName }),
+        },
+      });
+      createExtraction.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadUploadHeads',
+          actions: ['s3:GetObject'],
+          resources: [uploadsObjectsArn(config)],
+        }),
+      );
+      acknowledgeNagFinding(
+        createExtraction,
+        `AwsSolutions-IAM5[Resource::${uploadsObjectsFindingArn(config)}]`,
+        'Head and magic-byte reads over the transient uploads keyspace only; keys are minted ' +
+          'server-side under uploads/ with the caller prefix.',
+      );
+      createExtraction.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'WriteJobsQuotaAndReplays',
+          actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem'],
+          resources: [table.tableArn],
+          conditions: {
+            'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['JOB#*', 'USER#*', 'IDEMP#*'] },
+          },
+        }),
+      );
+      createExtraction.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadExtractionFlag',
+          actions: ['ssm:GetParameter'],
+          resources: [
+            this.formatArn({ service: 'ssm', resource: `parameter${extractionFlagParameter}` }),
+          ],
+        }),
+      );
+      if (extractFunction !== undefined) {
+        createExtraction.fn.addToRolePolicy(
+          new iam.PolicyStatement({
+            sid: 'FireExtractionWorker',
+            actions: ['lambda:InvokeFunction'],
+            resources: [extractFunction.functionArn],
+          }),
+        );
+      }
+
+      const getExtraction = new AppFunction(this, 'GetExtraction', {
+        entry: handlerEntry('getExtraction'),
+        description:
+          'GET /v1/extractions/{jobId}: the job as it stands, in the review screen shape (backend spec §6).',
+        timeout: Duration.seconds(10),
+        environment,
+      });
+      getExtraction.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadJobs',
+          actions: ['dynamodb:GetItem'],
+          resources: [table.tableArn],
+          conditions: {
+            'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['JOB#*'] },
+          },
+        }),
+      );
+
+      this.httpApi.addRoutes({
+        path: '/v1/uploads',
+        methods: [apigwv2.HttpMethod.POST],
+        integration: new HttpLambdaIntegration('CreateUploadIntegration', createUpload.fn),
+        authorizer,
+      });
+      this.httpApi.addRoutes({
+        path: '/v1/extractions',
+        methods: [apigwv2.HttpMethod.POST],
+        integration: new HttpLambdaIntegration('CreateExtractionIntegration', createExtraction.fn),
+        authorizer,
+      });
+      this.httpApi.addRoutes({
+        path: '/v1/extractions/{jobId}',
+        methods: [apigwv2.HttpMethod.GET],
+        integration: new HttpLambdaIntegration('GetExtractionIntegration', getExtraction.fn),
         authorizer,
       });
 

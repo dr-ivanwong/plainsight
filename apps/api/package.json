@@ -22,9 +22,10 @@
     "@aws-sdk/client-sns": "^3.899.0",
     "@aws-sdk/client-ssm": "^3.899.0",
     "@aws-sdk/lib-dynamodb": "^3.899.0",
+    "@aws-sdk/s3-request-presigner": "3.1085.0",
     "@plainsight/api-contract": "workspace:*",
-    "@plainsight/extraction-core": "workspace:*",
     "@plainsight/calc-engine": "workspace:*",
+    "@plainsight/extraction-core": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -22,6 +22,14 @@ exports[`Data template matches the reviewed snapshot 1`] = `
         "Ref": "TableCD117FA1",
       },
     },
+    "ExportsOutputRefUploadsBucket5E5E9B64F2F56CC2": {
+      "Export": {
+        "Name": "Data:ExportsOutputRefUploadsBucket5E5E9B64F2F56CC2",
+      },
+      "Value": {
+        "Ref": "UploadsBucket5E5E9B64",
+      },
+    },
     "TableArn": {
       "Description": "Table ARN, for the runbook and for wiring checks.",
       "Value": {
@@ -35,6 +43,12 @@ exports[`Data template matches the reviewed snapshot 1`] = `
       "Description": "The single Plainsight table (backend spec §3 key design).",
       "Value": {
         "Ref": "TableCD117FA1",
+      },
+    },
+    "UploadsBucketName": {
+      "Description": "Transient filing uploads (backend spec §6); seven-day lifecycle.",
+      "Value": {
+        "Ref": "UploadsBucket5E5E9B64",
       },
     },
   },
@@ -156,6 +170,123 @@ exports[`Data template matches the reviewed snapshot 1`] = `
       },
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Retain",
+    },
+    "UploadsBucket5E5E9B64": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": "plainsight-prod-uploads-679345828813",
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "content-type",
+              ],
+              "AllowedMethods": [
+                "PUT",
+              ],
+              "AllowedOrigins": [
+                "https://doqe2dc30jwq8.cloudfront.net",
+                "http://localhost:5173",
+              ],
+            },
+          ],
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 7,
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1,
+              },
+              "Status": "Enabled",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "owner",
+            "Value": "ivan",
+          },
+          {
+            "Key": "project",
+            "Value": "plainsight",
+          },
+        ],
+        "VersioningConfiguration": {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "UploadsBucketPolicy34A32B0B": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "UploadsBucket5E5E9B64",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "UploadsBucket5E5E9B64",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "UploadsBucket5E5E9B64",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
     },
   },
   "Rules": {

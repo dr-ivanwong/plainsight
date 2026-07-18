@@ -13,6 +13,22 @@ export {
   type IngestingBody
 } from './envelope.js';
 export {
+  EXTRACTION_JOB_STATES,
+  UPLOAD_CONTENT_TYPES,
+  UPLOAD_MAX_BYTES,
+  createExtractionRequestSchema,
+  extractionAttemptSchema,
+  extractionJobSchema,
+  uploadRequestSchema,
+  uploadResponseSchema,
+  type CreateExtractionRequest,
+  type ExtractionAttempt,
+  type ExtractionJob,
+  type ExtractionJobState,
+  type UploadRequest,
+  type UploadResponse
+} from './extractions.js';
+export {
   SYNC_PUSH_MAX_RECORDS,
   SYNC_RECORD_TYPES,
   syncEnvelopeSchema,

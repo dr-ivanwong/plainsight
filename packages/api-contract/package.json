@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@plainsight/calc-engine": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@plainsight/extraction-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22",

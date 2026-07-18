@@ -15,14 +15,13 @@ import {
   UpdateCommand
 } from '@aws-sdk/lib-dynamodb';
 import { syncServerRecordSchema, type SyncServerRecord } from '@plainsight/api-contract';
+import { getStoredResponse, storeResponse } from './idempotency.js';
 
 export const userPartition = (userId: string): string => `USER#${userId}`;
 export const recordSortKey = (recordType: string, recordId: string): string =>
   `REC#${recordType}#${recordId}`;
 export const SEQ_SORT_KEY = 'SEQ';
 export const checkpointSortKey = (deviceId: string): string => `CKPT#${deviceId}`;
-export const idempotencyPartition = (key: string): string => `IDEMP#${key}`;
-export const IDEMPOTENCY_SORT_KEY = 'RESP';
 export const thesisVersionSortKey = (recordId: string, lamport: number): string =>
   `THESISV#${recordId}#${lamport}`;
 
@@ -280,16 +279,7 @@ export class TableSyncStore implements SyncStore {
   }
 
   async getStoredResponse(idempotencyKey: string, userId: string): Promise<string | undefined> {
-    const result = await this.client.send(
-      new GetCommand({
-        TableName: this.tableName,
-        Key: { PK: idempotencyPartition(idempotencyKey), SK: IDEMPOTENCY_SORT_KEY }
-      })
-    );
-    const item = result.Item;
-    // A key is scoped to the user who minted it; a stranger's key computes fresh.
-    if (item === undefined || item['userId'] !== userId) return undefined;
-    return typeof item['body'] === 'string' ? item['body'] : undefined;
+    return getStoredResponse(this.client, this.tableName, idempotencyKey, userId);
   }
 
   async storeResponse(
@@ -298,17 +288,6 @@ export class TableSyncStore implements SyncStore {
     body: string,
     expiresAt: number
   ): Promise<void> {
-    await this.client.send(
-      new PutCommand({
-        TableName: this.tableName,
-        Item: {
-          PK: idempotencyPartition(idempotencyKey),
-          SK: IDEMPOTENCY_SORT_KEY,
-          userId,
-          body,
-          expiresAt
-        }
-      })
-    );
+    return storeResponse(this.client, this.tableName, idempotencyKey, userId, body, expiresAt);
   }
 }
