@@ -239,6 +239,23 @@ export class ApiStack extends Stack {
         integration: new HttpLambdaIntegration('SyncPullIntegration', syncPull.fn),
         authorizer,
       });
+
+      // The BYOK proxy (backend spec §7) arrives with the other Phase 3
+      // authenticated routes (spec §3 Api row bundles them). Deliberately
+      // grantless beyond its logs: the key is the caller's, the destination
+      // is the registry's, and nothing touches the table or SSM.
+      const byokProxy = new AppFunction(this, 'ByokProxy', {
+        entry: handlerEntry('byokProxy'),
+        description:
+          'POST /v1/proxy/{providerId}: BYOK pass-through for providers without browser CORS (backend spec §7).',
+        timeout: Duration.seconds(25),
+      });
+      this.httpApi.addRoutes({
+        path: '/v1/proxy/{providerId}',
+        methods: [apigwv2.HttpMethod.POST],
+        integration: new HttpLambdaIntegration('ByokProxyIntegration', byokProxy.fn),
+        authorizer,
+      });
     }
 
     // The Phase 2 read routes are deliberately unauthenticated: they serve
