@@ -40,7 +40,7 @@ Decisions in the plans (see §12 decision log) are **resolved**; do not relitiga
 
 ## The binding constraint
 
-**Every core feature works offline with zero backend dependency.** IndexedDB (via Dexie) is the source of truth, not a cache. The backend and AI are optional enhancements that degrade gracefully; nothing in the client serving path may ever call a model, and a total backend outage must leave the app fully functional. Every networked feature needs a no-network story (degradation matrix, main plan §5).
+**The backend is the source of truth (decision §12.9 of the main plan, 2026-07-18, superseding the original local-first constraint).** The authoritative library lives in DynamoDB; the client holds a synchronised working copy in IndexedDB and retries every write until the server accepts it. Offline is a catch-up mode: reads serve the last-synced copy, writes queue and retry, and pending state is surfaced, never silently equal. The migration is landing in slices (server-wins reconciliation first, then reads behind the API with IndexedDB as cache-and-queue, then the documentation pass); until a slice lands, the code it governs still behaves local-first, and older passages in the plans describe that history. What survives unchanged: nothing in the client serving path may ever call a model, and AI features must degrade to a working app.
 
 ## Architecture (decided, not up for debate)
 
