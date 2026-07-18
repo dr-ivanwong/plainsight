@@ -24,13 +24,15 @@ import {
 } from '../constants';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
 import { acknowledgeNagFinding } from '../nag';
-import { WATCHED_TICKERS_INDEX } from './data';
+import { uploadsObjectsArn, uploadsObjectsFindingArn, WATCHED_TICKERS_INDEX } from './data';
 
 export interface IngestionStackProps extends StackProps {
   config: EnvConfig;
   table: dynamodb.ITable;
   /** Foundation's alert topic; the DLQ-depth and sweep-failure alarms publish to it. */
   alertTopic: sns.ITopic;
+  /** The Data stack's uploads bucket; wired when the Phase 3 surface is on. */
+  uploadsBucket?: s3.IBucket;
 }
 
 /**
@@ -41,12 +43,14 @@ export interface IngestionStackProps extends StackProps {
  */
 export class IngestionStack extends Stack {
   readonly ingestFunction: lambda.IFunction;
+  /** The extraction worker; the upload-job route fires it (backend spec §6). */
+  readonly extractFunction: lambda.IFunction;
   /** The pipeline's derived artefacts (the search index copy); rebuildable, never precious. */
   readonly indexBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props: IngestionStackProps) {
     super(scope, id, props);
-    const { config, table, alertTopic } = props;
+    const { config, table, alertTopic, uploadsBucket } = props;
 
     const contactParameter = edgarContactParameterName(config.envName);
 
@@ -188,6 +192,7 @@ export class IngestionStack extends Stack {
         EXTRACTION_FLAG_PARAMETER: `/app/${config.envName}/features/extraction`,
       },
     });
+    this.extractFunction = extract.fn;
     ingest.fn.addEnvironment('EXTRACT_FUNCTION_NAME', extract.fn.functionName);
     extract.fn.grantInvoke(ingest.fn);
     acknowledgeNagFinding(
@@ -197,16 +202,37 @@ export class IngestionStack extends Stack {
         'the router delegates .AX tickers to; nothing broader is reachable.',
     );
 
+    // JOB# joins for the upload-job walk (backend spec §6): the worker reads
+    // the job it was fired for and writes its stages and terminal state.
     extract.fn.addToRolePolicy(
       new iam.PolicyStatement({
         sid: 'ExtractWriteTickerPartitions',
         actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:BatchWriteItem'],
         resources: [table.tableArn],
         conditions: {
-          'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },
+          'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*', 'JOB#*'] },
         },
       }),
     );
+    if (uploadsBucket !== undefined) {
+      extract.fn.addEnvironment('UPLOADS_BUCKET', uploadsBucket.bucketName);
+      // A literal ARN, not the bucket token: the bucket's physical name is
+      // deterministic, and the literal keeps the cdk-nag finding id one
+      // computable string across the test and synth gates.
+      extract.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadUploadedFilings',
+          actions: ['s3:GetObject'],
+          resources: [uploadsObjectsArn(config)],
+        }),
+      );
+      acknowledgeNagFinding(
+        extract,
+        `AwsSolutions-IAM5[Resource::${uploadsObjectsFindingArn(config)}]`,
+        'Read access to the transient uploads keyspace only: every key is minted server-side ' +
+          'under uploads/ with the caller prefix, and the bucket expires everything in seven days.',
+      );
+    }
     const extractionKeysArn = this.formatArn({
       service: 'ssm',
       resource: `parameter${extractionParameterPrefix(config.envName)}*`,

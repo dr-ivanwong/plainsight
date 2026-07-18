@@ -61,6 +61,9 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
           config,
           table: data.table,
           alertTopic: foundation.alertTopic,
+          // The extraction worker reads uploaded filings when the Phase 3
+          // surface is on (backend spec §6).
+          ...(data.uploadsBucket === undefined ? {} : { uploadsBucket: data.uploadsBucket }),
         })
       : undefined;
 
@@ -88,6 +91,8 @@ export function buildApp(app: App, config: EnvConfig): PlainsightStacks {
           ...(auth === undefined
             ? {}
             : { auth: { userPool: auth.userPool, webClient: auth.webClient } }),
+          ...(data.uploadsBucket === undefined ? {} : { uploadsBucket: data.uploadsBucket }),
+          ...(ingestion === undefined ? {} : { extractFunction: ingestion.extractFunction }),
         })
       : undefined;
 
