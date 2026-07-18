@@ -34,7 +34,8 @@ if (app.node.tryGetContext('features') === 'all') {
 //   Phase 2:   DataStack (stateful, RETAIN + gate), ApiStack   <- features.api
 //              IngestionStack                                  <- features.ingestion
 //   Phase 2.5: extraction resources inside Ingestion           <- features.extraction
-//   Phase 3:   AuthStack (stateful, RETAIN + gate), sync routes <- features.auth, features.sync
+//   Phase 3:   AuthStack (stateful, RETAIN + gate); sync routes and the
+//              BYOK proxy                           <- features.auth, features.sync
 // EdgeCert (us-east-1) never deploys: config.domain is null by decision
 // (spec §3, the recorded one-way door on the *.cloudfront.net origin).
 buildApp(app, config);

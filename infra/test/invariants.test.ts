@@ -644,22 +644,26 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
 
   it('every Lambda: ARM64, Node 22, explicit timeout and memory', () => {
     const entries = Object.values(functions);
-    expect(entries).toHaveLength(5);
+    expect(entries).toHaveLength(6);
     for (const fn of entries as any[]) {
       expect(fn.Properties.Architectures).toEqual(['arm64']);
       expect(fn.Properties.Runtime).toBe('nodejs22.x');
       expect(fn.Properties.MemorySize).toBe(256);
     }
-    // Reads answer in 10 seconds; the two sync functions carry the pinned 15
-    // (backend spec §10 inventory).
-    const timeouts = entries.map((fn: any) => fn.Properties.Timeout).sort();
-    expect(timeouts).toEqual([10, 10, 10, 15, 15]);
-    // The company routes and both sync functions read the table; search
-    // deliberately does not.
+    // Reads answer in 10 seconds, the sync functions carry the pinned 15,
+    // and the proxy its 25 (backend spec §10 inventory).
+    const timeouts = entries.map((fn: any) => fn.Properties.Timeout).sort((a: number, b: number) => a - b);
+    expect(timeouts).toEqual([10, 10, 10, 15, 15, 25]);
+    // The company routes and both sync functions read the table; search and
+    // the proxy deliberately do not (the proxy carries no environment at
+    // all: destination from the registry, key from the caller).
     const withTable = entries.filter(
-      (fn: any) => fn.Properties.Environment.Variables.TABLE_NAME !== undefined,
+      (fn: any) => fn.Properties.Environment?.Variables?.TABLE_NAME !== undefined,
     );
     expect(withTable).toHaveLength(4);
+    const withoutEnvironment = entries.filter((fn: any) => fn.Properties.Environment === undefined);
+    expect(withoutEnvironment).toHaveLength(1);
+    expect((withoutEnvironment[0] as any).Properties.Timeout).toBe(25);
     const search: any = entries.find(
       (fn: any) => fn.Properties.Environment.Variables.INDEX_BUCKET !== undefined,
     );
@@ -673,7 +677,7 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
   it('log retention is explicit log groups, not the custom-resource shortcut', () => {
     // One group per function plus the access-log group; every group 30 days.
     const groups = Object.values(api.findResources('AWS::Logs::LogGroup')) as any[];
-    expect(groups).toHaveLength(6);
+    expect(groups).toHaveLength(7);
     for (const group of groups) {
       expect(group.Properties.RetentionInDays).toBe(30);
     }
@@ -696,11 +700,12 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
       'GET /v1/companies/{ticker}/financials',
       'GET /v1/search',
       'GET /v1/sync/pull',
+      'POST /v1/proxy/{providerId}',
       'POST /v1/sync/push',
     ]);
     for (const route of routes) {
       const key: string = route.Properties.RouteKey;
-      if (key.includes('/v1/sync/')) {
+      if (key.includes('/v1/sync/') || key.includes('/v1/proxy/')) {
         expect(route.Properties.AuthorizationType).toBe('JWT');
         expect(route.Properties.AuthorizerId).toBeDefined();
       } else {

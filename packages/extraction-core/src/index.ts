@@ -9,6 +9,7 @@ export {
   type LadderOptions,
   type RegistryEntry
 } from './registry.js';
+export { proxyTargetFor, type ProxyTarget } from './proxy.js';
 export {
   extractedEpsSchema,
   extractedFieldSchema,
