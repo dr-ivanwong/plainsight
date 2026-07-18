@@ -71,23 +71,23 @@ export function ReviewMode({
   const [discardArmed, setDiscardArmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
-  const [peekPage, setPeekPage] = useState<number | null>(null);
+  const [peek, setPeek] = useState<{ id: LineItemId; page: number } | null>(null);
   const [peekState, setPeekState] = useState<SourcePeekState>({ kind: 'loading' });
 
   // The peek renders from the job's retained bytes, first ask only; a
   // closed-and-reopened page answers from the job's cache.
   useEffect(() => {
-    if (peekPage === null) return;
+    if (peek === null) return;
     let stale = false;
     setPeekState({ kind: 'loading' });
-    void sourcePageImage(job.id, peekPage).then((image) => {
+    void sourcePageImage(job.id, peek.page).then((image) => {
       if (stale) return;
       setPeekState(image === null ? { kind: 'unavailable' } : { kind: 'ready', image });
     });
     return () => {
       stale = true;
     };
-  }, [job.id, peekPage]);
+  }, [job.id, peek]);
 
   const gates = useMemo(() => gatesFor(model, edits), [model, edits]);
   const pending = useMemo(
@@ -179,7 +179,7 @@ export function ReviewMode({
           type="button"
           className={styles.pageRef}
           aria-label={`Show source page ${field.page} for ${LINE_ITEMS[id].label}, ${fy}`}
-          onClick={() => setPeekPage(field.page as number)}
+          onClick={() => setPeek({ id, page: field.page as number })}
         >
           p. {field.page}
         </button>
@@ -264,14 +264,16 @@ export function ReviewMode({
         )}
       </div>
 
-      <div className={peekPage === null ? styles.layout : styles.layoutWithPeek}>
-        {peekPage === null ? null : (
+      <div className={peek === null ? styles.layout : styles.layoutWithPeek}>
+        {peek === null ? null : (
+          // Wide screens: the source page beside the grid. Narrow ones get
+          // the per-field row below instead; the media split picks one.
           <div className={styles.peekPane}>
             <SourcePeek
               fileName={job.fileName}
-              page={peekPage}
+              page={peek.page}
               state={peekState}
-              onClose={() => setPeekPage(null)}
+              onClose={() => setPeek(null)}
             />
           </div>
         )}
@@ -282,6 +284,18 @@ export function ReviewMode({
           onCommit={handleCommit}
           cellTone={cellTone}
           renderCellExtra={renderCellExtra}
+          rowExtra={(id) =>
+            peek === null || peek.id !== id ? null : (
+              <div className={styles.peekRow}>
+                <SourcePeek
+                  fileName={job.fileName}
+                  page={peek.page}
+                  state={peekState}
+                  onClose={() => setPeek(null)}
+                />
+              </div>
+            )
+          }
         />
       </div>
 

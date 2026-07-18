@@ -131,3 +131,8 @@ export const cellBreached = style([
     borderRadius: radius.small
   }
 ]);
+
+/** A spanning row beneath a line item (review's per-field source peek): attached, not separated. */
+export const extraCell = style({
+  padding: `0 0 ${space[12]}`
+});
