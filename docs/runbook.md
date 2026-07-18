@@ -22,6 +22,7 @@ The one-time sequence, which is also the first run of the rebuild drill below. T
 5. **Set the GitHub repository variables** from the outputs so the pipelines activate (details in the [infra README](../infra/README.md)): `AWS_DEPLOY_ROLE_ARN`, `AWS_SITE_DEPLOY_ROLE_ARN`, `SITE_BUCKET`, `DISTRIBUTION_ID`, and optionally `SITE_ORIGIN`.
 6. **Ship the app shell**: push to main (or re-run the app workflow); from here on, infra changes ride `infra.yml` with the one-click environment gate on the stateful stacks.
 7. **Subscribe an email** to the `AlertTopicArn` output; the DLQ, sweep, budget, and anomaly alarms all land there.
+8. **Activate the cost-allocation tag** once the first tagged spend appears in Billing (the key only becomes activatable after it first lands, and activation reaches filters within a day): `aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=project,Status=Active`. The budget and the anomaly monitor are tag-scoped on the shared account (ADR 0001 amendment) and measure nothing until this runs.
 
 ### The exit-criteria smoke (main plan §8, Phase 2 row)
 

@@ -376,14 +376,16 @@ describe('site deploy role (main plan §7: the app pipeline ships assets, nothin
 describe('budget (spec §8: staged alerts on the converted AUD figure)', () => {
   const budget: any = only(foundation.findResources('AWS::Budgets::Budget'));
 
-  it('notifies at 50, 80, and 100 percent to the alert topic, plus the kill threshold', () => {
+  it('stages the thresholds once each, one SNS subscriber apiece', () => {
+    // Two Budgets service rules, enforced only at deploy time: thresholds
+    // are unique per budget, and each notification carries at most one SNS
+    // subscriber. The kill threshold therefore owns its notification (the
+    // flipper relays the event to the alert topic in words).
     const notifications: any[] = budget.Properties.NotificationsWithSubscribers;
-    expect(notifications.map((entry) => entry.Notification.Threshold)).toEqual([
-      50,
-      80,
-      100,
-      prod.budgets.killSwitchAt,
-    ]);
+    const thresholds = notifications.map((entry) => entry.Notification.Threshold);
+    expect(thresholds).toEqual(
+      [...new Set([50, 80, 100, prod.budgets.killSwitchAt])].sort((a, b) => a - b),
+    );
     for (const entry of notifications) {
       expect(entry.Notification.NotificationType).toBe('ACTUAL');
       expect(entry.Notification.ThresholdType).toBe('PERCENTAGE');
@@ -393,13 +395,21 @@ describe('budget (spec §8: staged alerts on the converted AUD figure)', () => {
       expect(entry.Subscribers[0].Address).toHaveProperty('Ref');
     }
     // With every feature off (the Phase 0/1 posture) the kill notification
-    // does not exist: nothing deployed can spend.
+    // does not exist: nothing deployed can spend, and every stage notifies
+    // the alert topic.
     const offBudget: any = only(foundationOff.findResources('AWS::Budgets::Budget'));
-    expect(
-      offBudget.Properties.NotificationsWithSubscribers.map(
-        (entry: any) => entry.Notification.Threshold,
-      ),
-    ).toEqual([50, 80, 100]);
+    const offNotifications: any[] = offBudget.Properties.NotificationsWithSubscribers;
+    expect(offNotifications.map((entry) => entry.Notification.Threshold)).toEqual([50, 80, 100]);
+    const offAddresses = new Set(
+      offNotifications.map((entry) => JSON.stringify(entry.Subscribers[0].Address)),
+    );
+    expect(offAddresses.size).toBe(1);
+  });
+
+  it('counts only the project tag on the shared account (ADR 0001 amendment)', () => {
+    expect(budget.Properties.Budget.FilterExpression).toEqual({
+      Tags: { Key: 'user:project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
+    });
   });
 
   it('is denominated in USD via the pinned conservative conversion', () => {
@@ -895,16 +905,25 @@ describe('the budget kill switch (cdk spec §8; backend spec §10)', () => {
 
     const budget: any = only(foundation.findResources('AWS::Budgets::Budget'));
     const notifications: any[] = budget.Properties.NotificationsWithSubscribers;
-    expect(notifications).toHaveLength(4);
-    // The kill notification publishes to a different topic than the alerts.
+    // The kill threshold's notification publishes to the flipper's own
+    // topic, not the alert topic (one SNS subscriber per notification is a
+    // Budgets service rule); the flipper's relay keeps the owner informed.
+    const killEntry = notifications.find(
+      (entry) => entry.Notification.Threshold === prod.budgets.killSwitchAt,
+    );
     const alertAddress = JSON.stringify(notifications[0].Subscribers[0].Address);
-    const killAddress = JSON.stringify(notifications[3].Subscribers[0].Address);
-    expect(killAddress).not.toBe(alertAddress);
-
+    expect(JSON.stringify(killEntry.Subscribers[0].Address)).not.toBe(alertAddress);
+    // The relay's wiring: the flipper knows the alert topic and may publish to it.
+    expect(flipper.Properties.Environment.Variables.ALERT_TOPIC_ARN).toHaveProperty('Ref');
     const policies = Object.values(foundation.findResources('AWS::IAM::Policy')) as any[];
-    const flip = policies
-      .flatMap((policy) => policy.Properties.PolicyDocument.Statement as any[])
-      .find((statement) => statement.Sid === 'FlipExtractionFlag');
+    const statements = policies.flatMap(
+      (policy) => policy.Properties.PolicyDocument.Statement as any[],
+    );
+    expect(
+      statements.some((statement) => JSON.stringify(statement.Action).includes('sns:Publish')),
+    ).toBe(true);
+
+    const flip = statements.find((statement) => statement.Sid === 'FlipExtractionFlag');
     expect(flip.Action).toBe('ssm:PutParameter');
     expect(JSON.stringify(flip.Resource)).toContain('parameter/app/prod/features/extraction');
   });
@@ -940,11 +959,18 @@ describe('rehearsal overlay (spec §2: same code, prefixed names, disposable dat
     });
   });
 
-  it('does not duplicate the account-level anomaly monitor (one per account)', () => {
+  it('watches its own project tag, and a rehearsal copy adds no second monitor', () => {
     const rehearsalFoundation = Template.fromStack(rehearsal.foundation);
     expect(Object.keys(rehearsalFoundation.findResources('AWS::CE::AnomalyMonitor'))).toEqual([]);
-    // The prod Foundation carries it.
-    expect(Object.keys(foundation.findResources('AWS::CE::AnomalyMonitor'))).toHaveLength(1);
+    // The prod Foundation carries it, CUSTOM and tag-scoped: the shared
+    // account's one DIMENSIONAL slot belongs to the account's existing
+    // monitor (ADR 0001 amendment), and rehearsal spend wears the same
+    // project tag, so it already lands inside this scope.
+    const monitor: any = only(foundation.findResources('AWS::CE::AnomalyMonitor'));
+    expect(monitor.Properties.MonitorType).toBe('CUSTOM');
+    expect(JSON.parse(monitor.Properties.MonitorSpecification)).toEqual({
+      Tags: { Key: 'user:project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
+    });
     expect(Object.keys(foundation.findResources('AWS::CE::AnomalySubscription'))).toHaveLength(1);
   });
 });

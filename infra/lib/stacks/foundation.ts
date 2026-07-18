@@ -132,7 +132,13 @@ export class FoundationStack extends Stack {
           'Flips the runtime extraction flag to false at the budget kill threshold (cdk spec §8).',
         timeout: Duration.seconds(30),
         memorySize: 128,
-        environment: { EXTRACTION_FLAG_PARAMETER: extractionFlagParameter },
+        environment: {
+          EXTRACTION_FLAG_PARAMETER: extractionFlagParameter,
+          // The flipper relays the kill event to the alert topic in words:
+          // Budgets allows one SNS subscriber per notification, so the kill
+          // threshold cannot also notify the alert topic directly.
+          ALERT_TOPIC_ARN: this.alertTopic.topicArn,
+        },
       });
       flipper.fn.addToRolePolicy(
         new iam.PolicyStatement({
@@ -143,6 +149,7 @@ export class FoundationStack extends Stack {
           ],
         }),
       );
+      this.alertTopic.grantPublish(flipper.fn);
       killSwitchTopic.addSubscription(new snsSubscriptions.LambdaSubscription(flipper.fn));
     }
 
@@ -151,28 +158,31 @@ export class FoundationStack extends Stack {
     // L1 only where no L2 exists).
     const monthlyUsd = Math.round(config.budgets.monthlyAud * AUD_TO_USD_BUDGET_RATE * 100) / 100;
     // Staged notifications at 50/80/100% of actual spend to the alert topic
-    // (spec §8), plus the kill-switch notification at killSwitchAt percent to
-    // its own topic once anything can spend.
-    const notificationsWithSubscribers = [50, 80, 100].map((threshold) => ({
-      notification: {
-        notificationType: 'ACTUAL',
-        comparisonOperator: 'GREATER_THAN',
-        threshold,
-        thresholdType: 'PERCENTAGE',
-      },
-      subscribers: [{ subscriptionType: 'SNS', address: this.alertTopic.topicArn }],
-    }));
+    // (spec §8), plus the kill switch at killSwitchAt percent once anything
+    // can spend. Two service rules shape the wiring, both invisible to
+    // template tests and enforced only at deploy: Budgets keys a
+    // notification by its threshold alone (a duplicate threshold is
+    // rejected), and each notification carries at most one SNS subscriber.
+    // So the kill threshold's notification goes to the kill topic alone,
+    // taking its threshold's slot; the flipper relays the event to the
+    // alert topic in words, which is how the owner still hears about it.
+    const topicByThreshold = new Map<number, string>(
+      [50, 80, 100].map((threshold) => [threshold, this.alertTopic.topicArn]),
+    );
     if (killSwitchTopic !== undefined) {
-      notificationsWithSubscribers.push({
+      topicByThreshold.set(config.budgets.killSwitchAt, killSwitchTopic.topicArn);
+    }
+    const notificationsWithSubscribers = [...topicByThreshold.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([threshold, address]) => ({
         notification: {
           notificationType: 'ACTUAL',
           comparisonOperator: 'GREATER_THAN',
-          threshold: config.budgets.killSwitchAt,
+          threshold,
           thresholdType: 'PERCENTAGE',
         },
-        subscribers: [{ subscriptionType: 'SNS', address: killSwitchTopic.topicArn }],
-      });
-    }
+        subscribers: [{ subscriptionType: 'SNS', address }],
+      }));
     const monthlyBudget = new budgets.CfnBudget(this, 'MonthlyCostBudget', {
       budget: {
         budgetName: `plainsight-${config.envName}-monthly`,
@@ -181,6 +191,13 @@ export class FoundationStack extends Stack {
         // See AUD_TO_USD_BUDGET_RATE above: the conversion deliberately trips
         // early, never late.
         budgetLimit: { amount: monthlyUsd, unit: 'USD' },
+        // The account is shared with the owner's other project tenants
+        // (ADR 0001, amendment 2026-07-18): the budget counts this project's
+        // tagged spend, never theirs. The scoping bites once the
+        // cost-allocation tag is activated (runbook, go-live step 8).
+        filterExpression: {
+          tags: { key: 'user:project', values: ['plainsight'], matchOptions: ['EQUALS'] },
+        },
       },
       notificationsWithSubscribers,
     });
@@ -190,15 +207,19 @@ export class FoundationStack extends Stack {
 
     // --- Cost anomaly detection (spec §8) ----------------------------------
     // L1s: aws-cdk-lib ships no L2 for Cost Explorer anomaly detection.
-    // Prod only: AWS allows exactly one DIMENSIONAL anomaly monitor per
-    // account, so a rehearsal copy must not attempt a second; the prod
-    // monitor keeps watching while a rehearsal copy exists. This is a hard
-    // service quota, not an environment branch by preference.
+    // CUSTOM and tag-scoped, not account-wide: the account is shared with
+    // the owner's other project tenants (ADR 0001, amendment 2026-07-18),
+    // the one-per-account DIMENSIONAL slot already belongs to the account's
+    // existing monitor, and every tenant here watches its own project tag.
+    // Prod only: a rehearsal copy's resources carry the same project tag, so
+    // its spend already lands inside this monitor's scope.
     if (config.envName === 'prod') {
       const anomalyMonitor = new ce.CfnAnomalyMonitor(this, 'CostAnomalyMonitor', {
-        monitorName: 'plainsight-account-services',
-        monitorType: 'DIMENSIONAL',
-        monitorDimension: 'SERVICE',
+        monitorName: 'plainsight-project-costs',
+        monitorType: 'CUSTOM',
+        monitorSpecification: JSON.stringify({
+          Tags: { Key: 'user:project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
+        }),
       });
       const anomalySubscription = new ce.CfnAnomalySubscription(this, 'CostAnomalySubscription', {
         subscriptionName: 'plainsight-anomaly-alerts',
