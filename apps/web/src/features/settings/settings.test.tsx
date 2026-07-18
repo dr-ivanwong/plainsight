@@ -7,7 +7,7 @@ import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/rea
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { db, getMeta, setMeta } from '../../db';
+import { createCompany, db, getMeta, setMeta } from '../../db';
 import { routeTree } from '../../routeTree.gen';
 
 beforeEach(async () => {
@@ -65,6 +65,39 @@ describe('the settings root', () => {
       expect(await getMeta(db, 'authSession')).toBeUndefined();
     });
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeVisible();
+  });
+
+  it('surfaces writes waiting to sync on the signed-in row', async () => {
+    await setMeta(db, 'authSession', {
+      idToken: 'x.y.z',
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+      expiresAt: Date.now() + 60 * 60 * 1000,
+      email: 'ivan@example.com'
+    });
+    const first = await createCompany(db, {
+      name: 'Apple Inc.',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    renderAt('/settings');
+    expect(await screen.findByText(/1 change waiting to sync/)).toBeVisible();
+
+    const second = await createCompany(db, {
+      name: 'Microsoft Corporation',
+      currency: 'USD',
+      sector: 'Technology'
+    });
+    expect(await screen.findByText(/2 changes waiting to sync/)).toBeVisible();
+
+    // The server accepts both (their shadows match); the row goes quiet.
+    await db.syncState.bulkPut([
+      { recordKey: `company#${first.id}`, lastLamport: 1, fingerprint: first.updatedAt },
+      { recordKey: `company#${second.id}`, lastLamport: 2, fingerprint: second.updatedAt }
+    ]);
+    await waitFor(() => {
+      expect(screen.queryByText(/waiting to sync/)).toBeNull();
+    });
   });
 
   it('persists a theme choice and stamps the document, and auto hands back to the system', async () => {

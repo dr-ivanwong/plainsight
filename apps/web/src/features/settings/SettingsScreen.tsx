@@ -6,6 +6,7 @@ import { beginSignIn, signOut } from '../../auth/session';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { ToggleSwitch } from '../../components/ToggleSwitch';
 import { db, setMeta, type MetaValue } from '../../db';
+import { countPendingWrites } from '../../sync/pending';
 import * as styles from './settings.css';
 
 type ThemeSetting = MetaValue<'theme'>;
@@ -37,6 +38,9 @@ export function SettingsScreen(): ReactElement {
     typeof lastSyncedRow?.value === 'string'
       ? new Date(lastSyncedRow.value).toLocaleTimeString()
       : null;
+  // Pending is surfaced, never silently equal (main plan §12.9): the live
+  // count of local writes the server has not accepted yet.
+  const pendingWrites = useLiveQuery(() => countPendingWrites(db), [], 0);
   const sessionEmail =
     sessionRow !== undefined &&
     typeof sessionRow.value === 'object' &&
@@ -130,7 +134,11 @@ export function SettingsScreen(): ReactElement {
               <span className={styles.rowLabel}>Signed in</span>
               <span className={styles.rowNote}>
                 {sessionEmail}
-                {lastSyncedAt === null ? '' : ` · synced ${lastSyncedAt}`}
+                {pendingWrites > 0
+                  ? ` · ${pendingWrites} ${pendingWrites === 1 ? 'change' : 'changes'} waiting to sync`
+                  : lastSyncedAt === null
+                    ? ''
+                    : ` · synced ${lastSyncedAt}`}
               </span>
             </div>
             <button
