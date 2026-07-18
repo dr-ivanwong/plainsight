@@ -6,18 +6,20 @@ import { acknowledgeNagFinding } from '../nag';
 
 /**
  * Capacity arithmetic (spec §8): the always-free tier is 25 RCU and 25 WCU
- * account-wide, counted across tables AND their global secondary indexes. The
- * table takes 20/20 and the watched-tickers index 5/5, so the allocation sums
- * to exactly the free ceiling and the table costs $0 forever at this scale.
- * When the sync-feed index arrives (Phase 3, backend spec §3), it is carved
- * out of the table's share (15/15 + 5/5 + 5/5), never added on top; the
- * invariant test pins the sum.
+ * account-wide, counted across tables AND their global secondary indexes.
+ * With the sync-feed index (Phase 3, backend spec §3) the allocation is the
+ * planned carve-out, never an addition: table 15/15, watched tickers 5/5,
+ * sync feed 5/5, summing to exactly the free ceiling so the table costs $0
+ * forever at this scale. The invariant test pins the sum.
  */
-export const TABLE_READ_CAPACITY = 20;
-export const TABLE_WRITE_CAPACITY = 20;
+export const TABLE_READ_CAPACITY = 15;
+export const TABLE_WRITE_CAPACITY = 15;
 export const WATCH_INDEX_CAPACITY = 5;
+export const SYNC_INDEX_CAPACITY = 5;
 
 export const WATCHED_TICKERS_INDEX = 'watchedTickers';
+/** Attribute names here must match the api workspace's sync store, which writes them. */
+export const SYNC_FEED_INDEX = 'syncFeed';
 
 export interface DataStackProps extends StackProps {
   config: EnvConfig;
@@ -89,6 +91,20 @@ export class DataStack extends Stack {
       projectionType: dynamodb.ProjectionType.ALL,
       readCapacity: WATCH_INDEX_CAPACITY,
       writeCapacity: WATCH_INDEX_CAPACITY,
+    });
+
+    // The sync feed (backend spec §3): sparse over the record envelopes,
+    // whose sync attributes carry the user partition and the zero-padded
+    // sequence, so a pull is one Query for everything above a checkpoint.
+    // Projecting everything: the pull serves whole envelopes, and user
+    // records are small and few for a single-user product.
+    this.table.addGlobalSecondaryIndex({
+      indexName: SYNC_FEED_INDEX,
+      partitionKey: { name: 'syncUser', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'syncSeq', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+      readCapacity: SYNC_INDEX_CAPACITY,
+      writeCapacity: SYNC_INDEX_CAPACITY,
     });
 
     new CfnOutput(this, 'TableName', {

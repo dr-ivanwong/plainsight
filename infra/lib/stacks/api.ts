@@ -1,7 +1,9 @@
 import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import type * as cognito from 'aws-cdk-lib/aws-cognito';
 import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import type * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -12,6 +14,7 @@ import type { EnvConfig } from '../../config/types';
 import { ASX_DIRECTORY_OBJECT_KEY, edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
+import { SYNC_FEED_INDEX } from './data';
 
 /** ~10 rps steady, 20 burst (backend spec §2): the throttles are the WAF and the scraper cost-cap (spec §8 not-list). */
 export const ROUTE_RATE_LIMIT = 10;
@@ -24,6 +27,8 @@ export interface ApiStackProps extends StackProps {
   ingestFunction?: lambda.IFunction;
   /** The artefacts bucket holding the search index copy; without it, search runs SEC-only. */
   indexBucket?: s3.IBucket;
+  /** The user pool behind the authenticated routes; required once features.sync is on. */
+  auth?: { userPool: cognito.IUserPool; webClient: cognito.IUserPoolClient };
 }
 
 /**
@@ -40,7 +45,7 @@ export class ApiStack extends Stack {
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
-    const { config, table, ingestFunction, indexBucket } = props;
+    const { config, table, ingestFunction, indexBucket, auth } = props;
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `plainsight-${config.envName}-api`,
@@ -184,16 +189,68 @@ export class ApiStack extends Stack {
       integration: new HttpLambdaIntegration('SearchIntegration', search.fn),
     });
 
+    // The sync routes (backend spec §2 route table, §4 protocol): the only
+    // authenticated surface, JWT-checked at the gateway against the single
+    // user pool. Their Lambdas read and write user partitions only, the same
+    // key-prefix discipline as every other principal on the table (spec §6).
+    if (config.features.sync) {
+      if (auth === undefined) {
+        throw new Error('features.sync requires features.auth: the sync routes are Cognito-gated');
+      }
+      const authorizer = new HttpUserPoolAuthorizer('CognitoAuthorizer', auth.userPool, {
+        userPoolClients: [auth.webClient],
+      });
+
+      const syncPush = new AppFunction(this, 'SyncPush', {
+        entry: handlerEntry('syncPush'),
+        description:
+          'POST /v1/sync/push: last-write-wins record batches under an idempotency key (backend spec §4).',
+        timeout: Duration.seconds(15),
+        environment,
+      });
+      const syncPull = new AppFunction(this, 'SyncPull', {
+        entry: handlerEntry('syncPull'),
+        description:
+          'GET /v1/sync/pull: the per-user feed above a checkpoint, one page at a time (backend spec §4).',
+        timeout: Duration.seconds(15),
+        environment,
+      });
+
+      const userPartitions = new iam.PolicyStatement({
+        sid: 'ReadWriteUserPartitions',
+        actions: ['dynamodb:GetItem', 'dynamodb:Query', 'dynamodb:PutItem', 'dynamodb:UpdateItem'],
+        resources: [table.tableArn, `${table.tableArn}/index/${SYNC_FEED_INDEX}`],
+        conditions: {
+          'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['USER#*', 'IDEMP#*'] },
+        },
+      });
+      syncPush.fn.addToRolePolicy(userPartitions);
+      syncPull.fn.addToRolePolicy(userPartitions);
+
+      this.httpApi.addRoutes({
+        path: '/v1/sync/push',
+        methods: [apigwv2.HttpMethod.POST],
+        integration: new HttpLambdaIntegration('SyncPushIntegration', syncPush.fn),
+        authorizer,
+      });
+      this.httpApi.addRoutes({
+        path: '/v1/sync/pull',
+        methods: [apigwv2.HttpMethod.GET],
+        integration: new HttpLambdaIntegration('SyncPullIntegration', syncPull.fn),
+        authorizer,
+      });
+    }
+
     // The Phase 2 read routes are deliberately unauthenticated: they serve
     // public filings data, throttled, behind the edge cache; the routes the
-    // backend spec flags auth arrive in Phase 3 with the Cognito authoriser
-    // (pinned by the route invariant).
+    // backend spec flags auth carry the Cognito authoriser above (pinned by
+    // the route invariant).
     acknowledgeNagFinding(
       this.httpApi,
       'AwsSolutions-APIG4',
       'Read routes serve public EDGAR-derived data by design (backend spec §2 route table: no ' +
         'auth flag on the read path); abuse is bounded by the stage throttles and the budget ' +
-        'kill switch (cdk spec §8). Authenticated routes arrive in Phase 3 with Cognito.',
+        'kill switch (cdk spec §8). The routes the spec flags auth carry the Cognito authoriser.',
     );
 
     new CfnOutput(this, 'ApiEndpoint', {

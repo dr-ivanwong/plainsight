@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { prod, rehearsalFrom } from '../config/prod';
 import type { EnvConfig } from '../config/types';
 import { buildApp } from '../lib/app';
-import { WATCHED_TICKERS_INDEX } from '../lib/stacks/data';
+import { SYNC_FEED_INDEX, WATCHED_TICKERS_INDEX } from '../lib/stacks/data';
 import { AUD_TO_USD_BUDGET_RATE, FEATURE_FLAGS } from '../lib/stacks/foundation';
 
 // The tests construct the app directly from the typed prod config (account
@@ -505,15 +505,27 @@ describe('Data stack (spec §6 prod posture; spec §8 cost ceiling)', () => {
     });
   });
 
-  it('carries exactly the sparse watched-tickers index', () => {
+  it('carries exactly the two sparse indexes: watched tickers and the sync feed', () => {
     const indexes: any[] = table.Properties.GlobalSecondaryIndexes;
-    expect(indexes).toHaveLength(1);
-    expect(indexes[0].IndexName).toBe(WATCHED_TICKERS_INDEX);
-    expect(indexes[0].KeySchema).toEqual([
+    expect(indexes).toHaveLength(2);
+    const watch = indexes.find((index) => index.IndexName === WATCHED_TICKERS_INDEX);
+    expect(watch.KeySchema).toEqual([
       { AttributeName: 'watchPartition', KeyType: 'HASH' },
       { AttributeName: 'ticker', KeyType: 'RANGE' },
     ]);
-    expect(indexes[0].Projection).toEqual({ ProjectionType: 'ALL' });
+    expect(watch.Projection).toEqual({ ProjectionType: 'ALL' });
+    const feed = indexes.find((index) => index.IndexName === SYNC_FEED_INDEX);
+    expect(feed.KeySchema).toEqual([
+      { AttributeName: 'syncUser', KeyType: 'HASH' },
+      { AttributeName: 'syncSeq', KeyType: 'RANGE' },
+    ]);
+    expect(feed.Projection).toEqual({ ProjectionType: 'ALL' });
+    // The carve-out, not an addition (spec §8): 15/15 + 5/5 + 5/5.
+    expect(table.Properties.ProvisionedThroughput.ReadCapacityUnits).toBe(15);
+    for (const index of indexes) {
+      expect(index.ProvisionedThroughput.ReadCapacityUnits).toBe(5);
+      expect(index.ProvisionedThroughput.WriteCapacityUnits).toBe(5);
+    }
   });
 
   it('adds no compute and no custom resources (storage, not behaviour)', () => {
@@ -632,18 +644,22 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
 
   it('every Lambda: ARM64, Node 22, explicit timeout and memory', () => {
     const entries = Object.values(functions);
-    expect(entries).toHaveLength(3);
+    expect(entries).toHaveLength(5);
     for (const fn of entries as any[]) {
       expect(fn.Properties.Architectures).toEqual(['arm64']);
       expect(fn.Properties.Runtime).toBe('nodejs22.x');
-      expect(fn.Properties.Timeout).toBe(10);
       expect(fn.Properties.MemorySize).toBe(256);
     }
-    // The two company routes read the table; search deliberately does not.
+    // Reads answer in 10 seconds; the two sync functions carry the pinned 15
+    // (backend spec §10 inventory).
+    const timeouts = entries.map((fn: any) => fn.Properties.Timeout).sort();
+    expect(timeouts).toEqual([10, 10, 10, 15, 15]);
+    // The company routes and both sync functions read the table; search
+    // deliberately does not.
     const withTable = entries.filter(
       (fn: any) => fn.Properties.Environment.Variables.TABLE_NAME !== undefined,
     );
-    expect(withTable).toHaveLength(2);
+    expect(withTable).toHaveLength(4);
     const search: any = entries.find(
       (fn: any) => fn.Properties.Environment.Variables.INDEX_BUCKET !== undefined,
     );
@@ -657,7 +673,7 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
   it('log retention is explicit log groups, not the custom-resource shortcut', () => {
     // One group per function plus the access-log group; every group 30 days.
     const groups = Object.values(api.findResources('AWS::Logs::LogGroup')) as any[];
-    expect(groups).toHaveLength(4);
+    expect(groups).toHaveLength(6);
     for (const group of groups) {
       expect(group.Properties.RetentionInDays).toBe(30);
     }
@@ -671,16 +687,34 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
     expect(customTypes).toEqual([]);
   });
 
-  it('exposes exactly the three read routes, unauthenticated as the route table flags them', () => {
+  it('exposes exactly the route table, with auth exactly where the spec flags it', () => {
+    // The spec §6 route invariant: every route the backend spec flags auth
+    // carries the Cognito authoriser, and no unflagged route does.
     const routes = Object.values(api.findResources('AWS::ApiGatewayV2::Route')) as any[];
     expect(routes.map((route) => route.Properties.RouteKey).sort()).toEqual([
       'GET /v1/companies/{ticker}',
       'GET /v1/companies/{ticker}/financials',
       'GET /v1/search',
+      'GET /v1/sync/pull',
+      'POST /v1/sync/push',
     ]);
     for (const route of routes) {
-      expect(route.Properties.AuthorizationType ?? 'NONE').toBe('NONE');
+      const key: string = route.Properties.RouteKey;
+      if (key.includes('/v1/sync/')) {
+        expect(route.Properties.AuthorizationType).toBe('JWT');
+        expect(route.Properties.AuthorizerId).toBeDefined();
+      } else {
+        expect(route.Properties.AuthorizationType ?? 'NONE').toBe('NONE');
+      }
     }
+  });
+
+  it('the one authoriser is the user pool, checked at the gateway', () => {
+    const authorizer: any = only(api.findResources('AWS::ApiGatewayV2::Authorizer'));
+    expect(authorizer.Properties.AuthorizerType).toBe('JWT');
+    expect(authorizer.Properties.IdentitySource).toEqual(['$request.header.Authorization']);
+    expect(authorizer.Properties.JwtConfiguration.Audience).toBeDefined();
+    expect(JSON.stringify(authorizer.Properties.JwtConfiguration.Issuer)).toContain('cognito-idp');
   });
 
   it('the search role touches one S3 object and no table', () => {
@@ -711,18 +745,43 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
     expect(format).not.toContain('header');
   });
 
-  it('the read path holds no write permissions on the table', () => {
+  it('table writes exist only on the sync roles, confined to user partitions', () => {
+    // The read path stays write-free; the sync functions may write, but only
+    // under USER# and IDEMP# leading keys (backend spec §3 ownership: ticker
+    // partitions belong to ingestion).
     const policies = Object.values(api.findResources('AWS::IAM::Policy')) as any[];
     expect(policies.length).toBeGreaterThan(0);
     const writeActions = ['dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:DeleteItem', 'dynamodb:BatchWriteItem'];
+    const writeBearing: any[] = [];
     for (const policy of policies) {
       for (const statement of policy.Properties.PolicyDocument.Statement) {
         const actions: string[] = [statement.Action].flat();
-        for (const action of actions) {
-          expect(writeActions, `${action} must not appear on the read path`).not.toContain(action);
+        if (actions.some((action) => writeActions.includes(action))) {
+          writeBearing.push(statement);
         }
       }
     }
+    // Exactly the shared user-partition statement, once per sync role.
+    expect(writeBearing).toHaveLength(2);
+    for (const statement of writeBearing) {
+      expect(statement.Sid).toBe('ReadWriteUserPartitions');
+      expect([statement.Action].flat()).toEqual([
+        'dynamodb:GetItem',
+        'dynamodb:Query',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+      ]);
+      expect(statement.Condition).toEqual({
+        'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['USER#*', 'IDEMP#*'] },
+      });
+      expect(JSON.stringify(statement.Resource)).toContain('/index/syncFeed');
+    }
+    const syncPolicyOwners = policies.filter((policy) =>
+      policy.Properties.PolicyDocument.Statement.some(
+        (statement: any) => statement.Sid === 'ReadWriteUserPartitions',
+      ),
+    );
+    expect(syncPolicyOwners).toHaveLength(2);
   });
 });
 
