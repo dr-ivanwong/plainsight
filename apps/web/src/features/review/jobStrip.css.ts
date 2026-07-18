@@ -10,8 +10,7 @@ import {
   lineHeight,
   radius,
   space,
-  touchTarget,
-  tracking
+  touchTarget
 } from '../../styles/tokens.css';
 
 export const strip = style({
@@ -29,12 +28,6 @@ export const line = style({
   fontSize: fontSize.subhead,
   color: colour.textPrimary,
   lineHeight: lineHeight.body
-});
-
-export const quiet = style({
-  fontSize: fontSize.caption1,
-  letterSpacing: tracking.caption,
-  color: colour.textSecondary
 });
 
 export const actions = style({

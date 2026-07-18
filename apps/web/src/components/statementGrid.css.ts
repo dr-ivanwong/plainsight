@@ -5,6 +5,7 @@ import {
   fontSize,
   fontWeight,
   hairline,
+  radius,
   space,
   tracking
 } from '../styles/tokens.css';
@@ -113,3 +114,20 @@ export const cell = style({
   padding: `${space[4]} ${space[4]}`,
   verticalAlign: 'middle'
 });
+
+/** Review caution (frontend spec §3): the amber bands, never red. */
+export const cellAmber = style([
+  cell,
+  {
+    boxShadow: `inset 2px 0 0 ${colour.investigate}`
+  }
+]);
+
+/** A failing identity gate marks its fields, not a modal (frontend spec §3). */
+export const cellBreached = style([
+  cell,
+  {
+    boxShadow: `inset 0 0 0 1px ${colour.investigate}`,
+    borderRadius: radius.small
+  }
+]);

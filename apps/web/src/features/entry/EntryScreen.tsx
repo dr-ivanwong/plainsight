@@ -28,6 +28,7 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useProviderKeys } from '../../hooks/useProviderKeys';
 import { dismissJob, startFilingJob } from '../review/jobStore';
 import { JobStrip } from '../review/JobStrip';
+import { ReviewMode } from '../review/ReviewMode';
 import { UploadFilingSheet } from '../review/UploadFilingSheet';
 import { keyedProviders } from '../settings/providers';
 import * as buttons from '../../styles/buttons.css';
@@ -259,6 +260,30 @@ export function EntryScreen({
   const hasColumns = columns.length > 0;
   const newest = columns[0];
   const showAddForm = addOpen || !hasColumns;
+
+  // Review mode takes the entry layout over while a finished job holds
+  // extracted figures (frontend spec §3); dismissal or save hands it back.
+  if (job !== undefined && job.phase === 'succeeded' && onJobDismiss !== undefined) {
+    return (
+      <>
+        <header className={styles.chrome}>
+          <Link to="/company/$id" params={{ id: company.id }} className={styles.back}>
+            ‹ {company.name}
+          </Link>
+          <h1 className={styles.title}>Data entry</h1>
+          <p role="status" className={styles.ticker} />
+        </header>
+        <ReviewMode
+          company={company}
+          job={job}
+          onDone={() => {
+            dismissJob(job.id);
+            onJobDismiss();
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <>
