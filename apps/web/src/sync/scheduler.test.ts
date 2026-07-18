@@ -170,10 +170,14 @@ describe('the sync scheduler', () => {
     await harness.settle('ok');
   });
 
-  it('focus flurries revalidate once per floor', async () => {
+  it('focus flurries revalidate once per floor, and boot counts as focus', async () => {
     const harness = new Harness();
     const scheduler = new SyncScheduler(harness.deps);
 
+    // The load-time flurry collapses into the launch run: no focus run yet.
+    scheduler.revalidate('focus');
+    expect(harness.runs).toBe(0);
+    harness.advance(FOCUS_FLOOR_MS);
     scheduler.revalidate('focus');
     expect(harness.runs).toBe(1);
     await harness.settle('ok');
@@ -183,6 +187,18 @@ describe('the sync scheduler', () => {
     scheduler.revalidate('focus');
     expect(harness.runs).toBe(2);
     await harness.settle('ok');
+  });
+
+  it('a failed run swallows its queued rerun instead of hammering', async () => {
+    const harness = new Harness();
+    const scheduler = new SyncScheduler(harness.deps);
+
+    scheduler.revalidate('launch');
+    scheduler.revalidate('interval');
+    expect(harness.runs).toBe(1);
+    await harness.settle('failed');
+    expect(harness.runs).toBe(1);
+    expect(harness.armedTimers).toBe(0);
   });
 
   it('the snapshot reports running and settled for the read gate', async () => {
