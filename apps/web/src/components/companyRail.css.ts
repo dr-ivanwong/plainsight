@@ -8,12 +8,13 @@ import {
   layout,
   lineHeight,
   radius,
+  railMedia,
   space,
   touchTarget,
   tracking
 } from '../styles/tokens.css';
 
-const desktop = 'screen and (min-width: 1200px)';
+const desktop = railMedia;
 
 /**
  * The company frame (frontend spec §1.2 amendment, ≥1200px): below the

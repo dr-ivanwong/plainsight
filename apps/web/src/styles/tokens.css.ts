@@ -163,6 +163,13 @@ export const layout = {
   proseMax: '480px',
 } as const;
 
+/**
+ * The rail breakpoint (frontend spec §7): at and above it the company
+ * section rail exists and owns wayfinding, so per-screen back affordances
+ * recede. One string so the threshold cannot drift between files.
+ */
+export const railMedia = 'screen and (min-width: 1200px)';
+
 export const radius = {
   small: '6px',
   medium: '10px',

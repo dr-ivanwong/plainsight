@@ -9,6 +9,7 @@ import {
   hairline,
   lineHeight,
   radius,
+  railMedia,
   space,
   touchTarget,
   tracking
@@ -24,7 +25,7 @@ export const chrome = style({
   gap: space[16],
   marginBottom: space[16],
   '@media': {
-    'screen and (min-width: 1200px)': { display: 'none' }
+    [railMedia]: { display: 'none' }
   }
 });
 

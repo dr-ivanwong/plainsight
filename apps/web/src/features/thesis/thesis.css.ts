@@ -9,6 +9,7 @@ import {
   fontWeight,
   lineHeight,
   radius,
+  railMedia,
   space,
   touchTarget,
   tracking
@@ -22,6 +23,8 @@ export const chrome = style({
   marginBottom: space[24]
 });
 
+// At the rail breakpoint the back affordance recedes (the rail owns the way
+// up); the title and the autosave status line stay.
 export const back = style({
   display: 'inline-flex',
   alignItems: 'center',
@@ -35,6 +38,9 @@ export const back = style({
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
+  '@media': {
+    [railMedia]: { display: 'none' }
+  },
   ':focus-visible': {
     outline: `${focusRing.width} solid ${colour.accent}`,
     outlineOffset: focusRing.offset

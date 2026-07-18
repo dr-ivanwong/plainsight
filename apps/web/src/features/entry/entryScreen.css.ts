@@ -9,22 +9,32 @@ import {
   hairline,
   lineHeight,
   radius,
+  railMedia,
   space,
   touchTarget,
   tracking
 } from '../../styles/tokens.css';
 
 /** Back affordance, centred title, quiet status: one top bar, three zones. */
+// At the rail breakpoint the back affordance recedes (the rail owns the way
+// up); the title moves to the left edge and the autosave status line keeps
+// its place at the right, because quiet feedback never hides.
 export const chrome = style({
   display: 'grid',
   gridTemplateColumns: '1fr auto 1fr',
   alignItems: 'center',
   gap: space[16],
-  marginBottom: space[16]
+  marginBottom: space[16],
+  '@media': {
+    [railMedia]: { gridTemplateColumns: 'auto 1fr' }
+  }
 });
 
 export const back = style({
   justifySelf: 'start',
+  '@media': {
+    [railMedia]: { display: 'none' }
+  },
   display: 'inline-flex',
   alignItems: 'center',
   minHeight: touchTarget,
