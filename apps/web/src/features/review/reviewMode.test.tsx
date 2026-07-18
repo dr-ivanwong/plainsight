@@ -7,7 +7,7 @@
 import 'fake-indexeddb/auto';
 import { REGISTRY, type LadderOutcome } from '@plainsight/extraction-core';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createCompany, db, setMeta, type CompanyRecord } from '../../db';
@@ -183,7 +183,7 @@ describe('extraction review mode', () => {
     expect(await screen.findByRole('button', { name: 'Add a year' })).toBeVisible();
   });
 
-  it('peeks the source page a field names, then closes it', async () => {
+  it('peeks the source page a field names, beside the grid and beneath the field', async () => {
     const company = await seedCompany();
     const { id } = await openReview(company);
 
@@ -191,11 +191,16 @@ describe('extraction review mode', () => {
       screen.getByRole('button', { name: 'Show source page 84 for Revenue, FY2024' })
     );
 
-    expect(await screen.findByRole('img', { name: 'Page 84 of AR2024.pdf' })).toBeVisible();
-    expect(screen.getByText('Page 84 · AR2024.pdf')).toBeVisible();
+    // Both renderings mount; the media split shows the side pane on wide
+    // screens and the per-field row on narrow ones.
+    expect(await screen.findAllByRole('img', { name: 'Page 84 of AR2024.pdf' })).toHaveLength(2);
+    // The per-field peek sits inside the grid, beneath the row that named it.
+    expect(
+      within(screen.getByRole('table')).getByRole('img', { name: 'Page 84 of AR2024.pdf' })
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close the source peek' }));
-    expect(screen.queryByRole('img', { name: 'Page 84 of AR2024.pdf' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Close the source peek' })[0]!);
+    expect(screen.queryAllByRole('img', { name: 'Page 84 of AR2024.pdf' })).toHaveLength(0);
     dismissJob(id);
   });
 
@@ -208,7 +213,7 @@ describe('extraction review mode', () => {
       screen.getByRole('button', { name: 'Show source page 84 for Revenue, FY2024' })
     );
 
-    expect(await screen.findByText(/could not be rendered from the PDF/)).toBeVisible();
+    expect(await screen.findAllByText(/could not be rendered from the PDF/)).toHaveLength(2);
     dismissJob(id);
   });
 

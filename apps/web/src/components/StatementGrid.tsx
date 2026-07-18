@@ -6,7 +6,14 @@ import type {
   LineItemMeta,
   Scale
 } from '@plainsight/calc-engine';
-import { useEffect, useRef, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useRef,
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode
+} from 'react';
 
 import { MoneyField, type FieldValue } from './MoneyField';
 import { unitOf } from './moneyEntry';
@@ -76,7 +83,8 @@ export function StatementGrid({
   onScaleChange,
   focusCell,
   cellTone,
-  renderCellExtra
+  renderCellExtra,
+  rowExtra
 }: {
   rows: readonly LineItemMeta[];
   years: readonly GridYear[];
@@ -90,6 +98,8 @@ export function StatementGrid({
   cellTone?: (id: LineItemId, fy: FyLabel) => 'amber' | 'breached' | undefined;
   /** Review mode's under-field adornment: the confidence badge, the edited word. */
   renderCellExtra?: (id: LineItemId, fy: FyLabel) => ReactNode;
+  /** A spanning row beneath a line item's row (the per-field source peek); null renders nothing. */
+  rowExtra?: (id: LineItemId) => ReactNode;
 }): ReactElement {
   const tableRef = useRef<HTMLTableElement>(null);
   const lastFocusTarget = useRef<string | null>(null);
@@ -173,8 +183,11 @@ export function StatementGrid({
           </tr>
         </thead>
         <tbody>
-          {rows.map((item, rowIndex) => (
-            <tr key={item.id}>
+          {rows.map((item, rowIndex) => {
+            const extra = rowExtra?.(item.id);
+            return (
+            <Fragment key={item.id}>
+            <tr>
               <th scope="row" className={styles.labelCell}>
                 <span className={styles.itemLabel}>{item.label}</span>
                 <span className={styles.hint} title={item.findItAs}>
@@ -210,7 +223,16 @@ export function StatementGrid({
                 );
               })}
             </tr>
-          ))}
+            {extra === null || extra === undefined ? null : (
+              <tr>
+                <td colSpan={years.length + 1} className={styles.extraCell}>
+                  {extra}
+                </td>
+              </tr>
+            )}
+            </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>

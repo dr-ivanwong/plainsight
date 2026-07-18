@@ -145,11 +145,24 @@ export const layoutWithPeek = style({
   }
 });
 
+/** Wide screens carry the page beside the grid; narrow ones use the per-field row instead. */
 export const peekPane = style({
+  display: 'none',
   '@media': {
     'screen and (min-width: 900px)': {
+      display: 'block',
       position: 'sticky',
       top: space[16]
+    }
+  }
+});
+
+/** The per-field collapsible peek (frontend spec §3, mobile): beneath the row that named it. */
+export const peekRow = style({
+  display: 'block',
+  '@media': {
+    'screen and (min-width: 900px)': {
+      display: 'none'
     }
   }
 });
