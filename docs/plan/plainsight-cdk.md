@@ -59,6 +59,7 @@ export interface EnvConfig {
   account: string;
   region: 'ap-southeast-2';
   domain: { zoneName: string; siteHost: string } | null;  // null = *.cloudfront.net (see §3 one-way door)
+  siteOrigin: string | null;                     // the deployed origin; the hosted UI's OAuth redirects need it at synth time (added 2026-07-18 with the Auth stack)
   csp: { providerOrigins: string[] };            // BYOK connect-src allowlist (main plan §6)
   features: { api: boolean; ingestion: boolean; extraction: boolean; sync: boolean; auth: boolean };
   protectData: boolean;                          // prod: true → RETAIN + PITR + deletionProtection; rehearsal: false

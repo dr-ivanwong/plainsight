@@ -5,10 +5,12 @@
 # on any non-empty diff. Deploy, diff, and drift jobs stay dormant until the
 # repository variable AWS_DEPLOY_ROLE_ARN is set (see infra/README.md).
 #
-# Stateful-stack gate (spec section 7): when the Data and Auth stacks arrive
-# in Phase 2/3, their deploys move to a dedicated job carrying
-# `environment: stateful` so GitHub's environment protection provides the
-# one-click approval; Phase 0 has no stateful stacks to gate.
+# Stateful-stack gate (spec section 7): Data and Auth deploy from a dedicated
+# job carrying `environment: stateful`, which runs only when a push touches
+# their stack files or the config, and before the stateless job so consumers
+# never deploy ahead of the state they reference. GitHub auto-creates the
+# environment unprotected on first use; the one-click approval starts biting
+# once the owner adds a required reviewer to it (runbook, Phase 3 section).
 name: infra
 
 on:
@@ -94,9 +96,69 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh pr comment "${{ github.event.pull_request.number }}" --body-file diff.md --edit-last --create-if-none
 
-  deploy:
-    needs: verify
+  # Decides whether this push touches the stateful stacks. Unknown ranges
+  # (force pushes, first pushes) err toward the gate.
+  changes:
     if: github.event_name == 'push' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      stateful: ${{ steps.detect.outputs.stateful }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: detect
+        run: |
+          before="${{ github.event.before }}"
+          if ! git cat-file -e "$before" 2>/dev/null; then
+            echo "stateful=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$before" "${{ github.sha }}" -- \
+              infra/lib/stacks/data.ts infra/lib/stacks/auth.ts infra/config | grep -q .; then
+            echo "stateful=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stateful=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The stateful-stack gate (spec section 7): Data and Auth deploy behind the
+  # environment's one-click approval, and before the stateless job so nothing
+  # deploys against state it cannot see yet.
+  deploy-stateful:
+    needs: [verify, changes]
+    if: >-
+      github.event_name == 'push' && vars.AWS_DEPLOY_ROLE_ARN != '' &&
+      needs.changes.outputs.stateful == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: stateful
+    concurrency:
+      group: deploy-infra
+      cancel-in-progress: false
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-southeast-2
+      - name: Deploy (stateful stacks only)
+        run: pnpm -C infra exec cdk deploy Data Auth --exclusively --require-approval never --concurrency 1
+
+  deploy:
+    needs: [verify, changes, deploy-stateful]
+    # Runs whether or not the stateful job ran; only its failure blocks.
+    if: >-
+      !cancelled() && github.event_name == 'push' && vars.AWS_DEPLOY_ROLE_ARN != '' &&
+      needs.verify.result == 'success' &&
+      (needs.deploy-stateful.result == 'success' || needs.deploy-stateful.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
@@ -117,8 +179,13 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ap-southeast-2
-      - name: Deploy (stateless Phase 0 stacks)
-        run: pnpm -C infra exec cdk deploy --all --require-approval never --concurrency 1
+      - name: Deploy (stateless stacks)
+        # Exclusively, so a stateful change can never ride in as a dependency
+        # and bypass the gate above.
+        run: >-
+          pnpm -C infra exec cdk deploy
+          Foundation GithubOidc Ingestion Api StaticSite
+          --exclusively --require-approval never --concurrency 1
       - name: Smoke check (stack status)
         # The deploy role's permission boundary allows only assuming the CDK
         # bootstrap roles (the ADR 0001 SCP stand-in), so the read rides the
@@ -130,7 +197,7 @@ jobs:
             --role-arn "$lookup" --role-session-name infra-smoke \
             --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text)"
           export AWS_ACCESS_KEY_ID="$key" AWS_SECRET_ACCESS_KEY="$secret" AWS_SESSION_TOKEN="$token"
-          for stack in Foundation GithubOidc StaticSite; do
+          for stack in Foundation GithubOidc Data Ingestion Api StaticSite Auth; do
             aws cloudformation describe-stacks --stack-name "$stack" \
               --query 'Stacks[0].StackStatus' --output text
           done
