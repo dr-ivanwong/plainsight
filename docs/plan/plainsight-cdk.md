@@ -97,7 +97,7 @@ Snapshot tests exist for `StaticSite` and `Data` only (the stacks where unnotice
 **Infra pipeline** (`infra.yml`), separate from the app pipeline per main plan §7:
 
 - **On PR:** `pnpm test` (assertions + nag) → `cdk synth` → `cdk diff` against prod, posted as a PR comment. The diff is the review.
-- **On merge to main:** stateless stacks deploy straight to prod via the OIDC role → smoke checks (site 200s, API health, table describe). Changes touching `Data` or `Auth` route through a **GitHub environment gate**: one click, the only ceremony left. When an infra change deserves rehearsal, deploy a `rehearsal` overlay copy first (§2), verify, destroy.
+- **On merge to main:** every stack deploys straight to prod via the OIDC role, dependency-ordered, then smoke checks (site 200s, API health, table describe). *(Amended 2026-07-18: the environment gate on `Data`/`Auth` was built with the Auth stack, exercised twice, and then removed by owner decision; the structural protections carry the load instead: RETAIN, deletion protection, PITR, the invariant suite, and the drift check.)* When an infra change deserves rehearsal, deploy a `rehearsal` overlay copy first (§2), verify, destroy.
 - **Weekly drift job:** scheduled `cdk diff` against prod; a non-empty diff opens an issue. Console-clicked infrastructure is technical debt from the moment it's created; this is the tripwire.
 
 Rollback: stacks are small, so rollback = redeploy the previous git ref (< 5 min). Stateful stacks change rarely and behind the approval gate; data-loss-capable operations are structurally blocked by RETAIN + deletion protection.

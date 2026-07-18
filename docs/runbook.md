@@ -92,7 +92,7 @@ The extraction function's errors alarm on the Foundation topic is the symptom su
 
 The user pool deployed with `features.auth` (flipped 2026-07-18) through the stateful-stack gate. What turns it into a working sign-in is the one account, created from the CLI so no signup surface ever exists. Values in angle brackets come from the Auth stack outputs.
 
-1. **Protect the stateful environment** (one-time): repository Settings → Environments → `stateful` → add yourself as a required reviewer. The first gated run auto-creates the environment unprotected; until a reviewer is set, the gate deploys without asking.
+1. ~~Protect the stateful environment~~ (done 2026-07-18, then removed the same day by owner decision: the approval gate is gone from the pipeline, cdk spec §7 as amended; the structural protections on Data and Auth remain).
 2. **Create the owner account** (the pool enforces 12 characters minimum with all four character classes; a leading space keeps the second command out of zsh history):
 
    ```sh
