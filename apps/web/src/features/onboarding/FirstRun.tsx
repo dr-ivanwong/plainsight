@@ -10,7 +10,9 @@ import * as styles from './firstRun.css';
  * First run (frontend spec §3): three panes, hard-capped, skippable, never
  * shown twice (the onboardingDone flag in meta gates the root redirect).
  * Pane three chooses the start and lands on the library in the corresponding
- * state. The import-a-file option stays hidden until its phase.
+ * state; the import-a-file start carries its intent through the add sheet,
+ * because a filing needs a company shell (name, currency) before it can
+ * land anywhere.
  */
 const PANES = [
   {
@@ -39,7 +41,9 @@ export function FirstRun(): ReactElement {
   const current = PANES[pane] ?? PANES[0];
   const lastPane = pane === PANES.length - 1;
 
-  async function finish(search: { add: 1 } | Record<never, never>): Promise<void> {
+  async function finish(
+    search: { add: 1 } | { add: 1; upload: 1 } | Record<never, never>
+  ): Promise<void> {
     await setMeta(db, 'onboardingDone', true);
     // Replace, so the system back gesture from the library leaves the app
     // rather than replaying the welcome.
@@ -94,6 +98,13 @@ export function FirstRun(): ReactElement {
             }
           >
             See it with sample data
+          </button>
+          <button
+            type="button"
+            className={buttons.secondaryAction}
+            onClick={() => void finish({ add: 1, upload: 1 })}
+          >
+            Import a file
           </button>
         </div>
       ) : (

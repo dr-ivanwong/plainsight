@@ -12,7 +12,9 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 const librarySearchSchema = z.object({
   add: z.literal(1).optional().catch(undefined),
-  import: z.literal(1).optional().catch(undefined)
+  import: z.literal(1).optional().catch(undefined),
+  /** Alongside `add`: the new company continues straight into the file upload (onboarding's third start). */
+  upload: z.literal(1).optional().catch(undefined)
 });
 
 // The library route (frontend spec §1.1), root of the stack. The add-company
@@ -32,7 +34,7 @@ export const Route = createFileRoute('/')({
 
 function LibraryScreen(): ReactElement | null {
   const companies = useCompanies();
-  const { add, import: importParam } = Route.useSearch();
+  const { add, import: importParam, upload } = Route.useSearch();
   const navigate = useNavigate();
   const online = useOnlineStatus();
   // Read raw: the queriers must stay pure, and a malformed row simply means
@@ -50,6 +52,7 @@ function LibraryScreen(): ReactElement | null {
     <Library
       companies={companies}
       addOpen={add === 1}
+      addThenUpload={upload === 1}
       onAddOpen={() => void navigate({ to: '/', search: { add: 1 } })}
       onAddClose={() => void navigate({ to: '/', search: {}, replace: true })}
       importOpen={importParam === 1}
