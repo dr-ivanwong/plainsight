@@ -5,7 +5,7 @@
 // in the corresponding state.
 import 'fake-indexeddb/auto';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { db, getMeta, setMeta } from '../../db';
@@ -46,6 +46,26 @@ describe('first run', () => {
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add a company' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'See it with sample data' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Import a file' })).toBeVisible();
+  });
+
+  it('choosing to import a file carries the intent through the add sheet to the upload picker', async () => {
+    renderAt('/onboarding');
+    await screen.findByRole('heading', { name: PANE_ONE });
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Import a file' }));
+
+    // A filing needs a company shell first: the add sheet opens.
+    const sheet = await screen.findByRole('dialog', { name: 'Add a company' });
+    fireEvent.change(within(sheet).getByLabelText(/Name/), {
+      target: { value: 'Wesfarmers' }
+    });
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Add company' }));
+
+    // The new company lands on data entry with the upload picker already open.
+    expect(await screen.findByRole('dialog', { name: 'Import a file' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Data entry' })).toBeVisible();
   });
 
   it('skip marks the welcome done and lands on the empty library', async () => {

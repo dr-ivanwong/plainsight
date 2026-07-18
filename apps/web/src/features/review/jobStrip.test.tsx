@@ -6,7 +6,7 @@
 import 'fake-indexeddb/auto';
 import { REGISTRY, type LadderOutcome } from '@plainsight/extraction-core';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCompany, db, setMeta, type CompanyRecord } from '../../db';
@@ -156,6 +156,18 @@ describe('the extraction job strip', () => {
     const company = await seedCompany();
     renderAt(`/company/${company.id}/entry`);
     expect(await screen.findByRole('button', { name: 'Import a file' })).toBeVisible();
+  });
+
+  it('keeps the upload sheet in the address, so closing clears it', async () => {
+    const company = await seedCompany();
+    const router = renderAt(`/company/${company.id}/entry?upload=1`);
+
+    const sheet = await screen.findByRole('dialog', { name: 'Import a file' });
+    expect(sheet).toBeVisible();
+
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(router.state.location.search).toEqual({}));
+    expect(screen.queryByRole('dialog', { name: 'Import a file' })).not.toBeInTheDocument();
   });
 
   it('hides the file import behind the pill offline', async () => {

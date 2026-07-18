@@ -41,7 +41,9 @@ export const entrySearchSchema = z.object({
   fy: fyParam.optional().catch(undefined),
   focus: lineItemParam.optional().catch(undefined),
   /** An in-page extraction job (frontend spec §3): review mode takes the entry layout over while it exists. */
-  job: z.string().optional().catch(undefined)
+  job: z.string().optional().catch(undefined),
+  /** The file-upload sheet (frontend spec §1.1 URL rules): open while present, so the back gesture closes it. */
+  upload: z.literal(1).optional().catch(undefined)
 });
 
 export type EntrySearch = z.infer<typeof entrySearchSchema>;

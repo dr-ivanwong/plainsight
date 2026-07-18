@@ -109,7 +109,10 @@ export function EntryScreen({
   onStatementChange,
   jobId,
   onJobOpen,
-  onJobDismiss
+  onJobDismiss,
+  uploadOpen,
+  onUploadOpen,
+  onUploadClose
 }: {
   company: CompanyRecord;
   statements: readonly StatementRecord[];
@@ -119,13 +122,15 @@ export function EntryScreen({
   jobId?: string | undefined;
   onJobOpen?: (id: string) => void;
   onJobDismiss?: () => void;
+  uploadOpen?: boolean;
+  onUploadOpen?: () => void;
+  onUploadClose?: () => void;
 }): ReactElement {
   const [draft, setDraft] = useState<DraftYear | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [localFocus, setLocalFocus] = useState<{ id: LineItemId; fy: FyLabel } | undefined>();
   const [status, setStatus] = useState<{ ok: boolean } | null>(null);
-  const [uploadOpen, setUploadOpen] = useState(false);
   const online = useOnlineStatus();
   const keys = useProviderKeys();
   const job = useExtractionJob(jobId);
@@ -157,7 +162,7 @@ export function EntryScreen({
         confidential: choice.confidential
       })
     });
-    setUploadOpen(false);
+    // The job replaces the upload sheet in the address (the route swaps params).
     onJobOpen?.(id);
   }
 
@@ -321,8 +326,8 @@ export function EntryScreen({
         ) : null}
         {/* Online-only affordance (degradation matrix, main plan §5): hidden
             offline, with the quiet pill marking the absence (frontend §2). */}
-        {onJobOpen === undefined ? null : online ? (
-          <button type="button" className={styles.addYearButton} onClick={() => setUploadOpen(true)}>
+        {onUploadOpen === undefined || onJobOpen === undefined ? null : online ? (
+          <button type="button" className={styles.addYearButton} onClick={onUploadOpen}>
             Import a file
           </button>
         ) : (
@@ -335,12 +340,14 @@ export function EntryScreen({
         )}
       </div>
 
-      <UploadFilingSheet
-        open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
-        providers={keyedUploadProviders}
-        onStart={(choice) => void handleStartUpload(choice)}
-      />
+      {onUploadClose === undefined ? null : (
+        <UploadFilingSheet
+          open={uploadOpen === true}
+          onClose={onUploadClose}
+          providers={keyedUploadProviders}
+          onStart={(choice) => void handleStartUpload(choice)}
+        />
+      )}
 
       {hasColumns ? null : (
         <p className={styles.emptyNote}>

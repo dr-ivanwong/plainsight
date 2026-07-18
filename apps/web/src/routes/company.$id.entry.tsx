@@ -20,7 +20,7 @@ export const Route = createFileRoute('/company/$id/entry')({
 
 function EntryRoute(): ReactElement | null {
   const { id } = Route.useParams();
-  const { stmt, fy, focus, job } = Route.useSearch();
+  const { stmt, fy, focus, job, upload } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const company = useCompany(id);
   const statements = useStatements(id);
@@ -51,11 +51,24 @@ function EntryRoute(): ReactElement | null {
       }
       jobId={job}
       onJobOpen={(jobId) =>
-        void navigate({ search: (previous) => ({ ...previous, job: jobId }) })
+        void navigate({
+          // The job takes the upload sheet's place in the address.
+          search: ({ upload: _chosen, ...rest }) => ({ ...rest, job: jobId })
+        })
       }
       onJobDismiss={() =>
         void navigate({
           search: ({ job: _finished, ...rest }) => rest,
+          replace: true
+        })
+      }
+      uploadOpen={upload === 1}
+      onUploadOpen={() =>
+        void navigate({ search: (previous) => ({ ...previous, upload: 1 }) })
+      }
+      onUploadClose={() =>
+        void navigate({
+          search: ({ upload: _closed, ...rest }) => rest,
           replace: true
         })
       }
