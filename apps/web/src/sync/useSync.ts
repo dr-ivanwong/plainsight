@@ -1,8 +1,9 @@
 /**
  * The sync cadence (main plan §5): silent, retried, never blocking. A run at
  * launch when a session exists, another whenever the network comes back, and
- * a quiet interval in between. Failures say nothing; the settings row's
- * "last synced" line is the only surface.
+ * a quiet interval in between. Failures say nothing; the settings row's sync
+ * line (last synced, or the count of writes still waiting) is the only
+ * surface.
  */
 import { useEffect } from 'react';
 import { getAccessToken } from '../auth/session';

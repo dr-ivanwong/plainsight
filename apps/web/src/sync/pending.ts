@@ -91,3 +91,9 @@ export async function collectPendingWrites(db: PlainsightDb): Promise<PendingWri
   }
   return { upserts, deletions };
 }
+
+/** How many local writes still await the server; the settings row's live number. */
+export async function countPendingWrites(db: PlainsightDb): Promise<number> {
+  const pending = await collectPendingWrites(db);
+  return pending.upserts.length + pending.deletions.length;
+}
