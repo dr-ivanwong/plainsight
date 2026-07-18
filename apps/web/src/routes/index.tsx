@@ -6,9 +6,11 @@ import { z } from 'zod';
 import { db, getMeta, setMeta } from '../db';
 import { needsInstallExplainer } from '../features/library/iosInstall';
 import { Library } from '../features/library/Library';
+import { LibrarySkeleton } from '../features/library/LibrarySkeleton';
 import { loadSampleData } from '../features/library/loadSamples';
 import { useCompanies } from '../hooks/useCompanies';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useSyncStatus } from '../sync/useSync';
 
 const librarySearchSchema = z.object({
   add: z.literal(1).optional().catch(undefined),
@@ -43,10 +45,26 @@ function LibraryScreen(): ReactElement | null {
     useLiveQuery(() => db.meta.get('sampleBannerDismissed'), [])?.value === true;
   const iosDismissed =
     useLiveQuery(() => db.meta.get('iosInstallDismissed'), [])?.value === true;
+  const syncSnapshot = useSyncStatus();
+  const signedIn = useLiveQuery(async () => (await db.meta.get('authSession')) !== undefined, []);
+  const hasSynced = useLiveQuery(async () => (await db.meta.get('lastSyncedAt')) !== undefined, []);
 
-  // First render only, while the live query attaches; milliseconds, so no
+  // First render only, while the live queries attach; milliseconds, so no
   // loading state (frontend spec §3).
-  if (companies === undefined) return null;
+  if (companies === undefined || signedIn === undefined || hasSynced === undefined) return null;
+
+  // The first catch-up (frontend spec §3, the library screen): an empty cache on a signed-in
+  // device that has never synced is not yet a true-empty library. Hold the
+  // screen until the first pull lands or fails; a failure serves the cache,
+  // which is what catch-up mode means (main plan §12.9).
+  if (
+    companies.length === 0 &&
+    signedIn &&
+    !hasSynced &&
+    (syncSnapshot.running || !syncSnapshot.settled)
+  ) {
+    return <LibrarySkeleton />;
+  }
 
   return (
     <Library

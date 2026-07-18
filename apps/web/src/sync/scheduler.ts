@@ -45,6 +45,7 @@ export class SyncScheduler {
   private drainTimer: unknown = null;
   private retryTimer: unknown = null;
   private lastFocusAt = Number.NEGATIVE_INFINITY;
+  private generation = 0;
   private snapshot: SyncSnapshot = { running: false, settled: false };
   private readonly listeners = new Set<() => void>();
 
@@ -115,6 +116,24 @@ export class SyncScheduler {
     this.listeners.clear();
   }
 
+  /**
+   * Back to boot state, in-flight runs disowned. The app never calls this;
+   * tests do between mounts, because the app-wide instance outlives them.
+   */
+  reset(): void {
+    this.generation += 1;
+    this.clearDrain();
+    this.clearRetry();
+    this.running = false;
+    this.rerunWanted = false;
+    this.settled = false;
+    this.signedIn = null;
+    this.pendingWrites = 0;
+    this.failures = 0;
+    this.lastFocusAt = Number.NEGATIVE_INFINITY;
+    this.publish();
+  }
+
   private attempt(): void {
     if (this.running) {
       this.rerunWanted = true;
@@ -123,12 +142,13 @@ export class SyncScheduler {
     this.running = true;
     this.clearDrain();
     this.publish();
+    const generation = this.generation;
     void this.deps.run().then(
       (outcome) => {
-        this.settle(outcome);
+        if (generation === this.generation) this.settle(outcome);
       },
       () => {
-        this.settle('failed');
+        if (generation === this.generation) this.settle('failed');
       }
     );
   }

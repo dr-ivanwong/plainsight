@@ -7,13 +7,13 @@
  * settings sync row is the surface.
  */
 import { liveQuery } from 'dexie';
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 import { getAccessToken } from '../auth/session';
 import { db } from '../db';
 import { runSync, type SyncDeps } from './engine';
 import { countPendingWrites } from './pending';
-import { SyncScheduler } from './scheduler';
+import { SyncScheduler, type SyncSnapshot } from './scheduler';
 
 const INTERVAL_MS = 5 * 60 * 1000;
 
@@ -64,4 +64,12 @@ export function useSyncRunner(): void {
       watcher.unsubscribe();
     };
   }, []);
+}
+
+/** The scheduler's snapshot, for reads that gate on the first catch-up. */
+export function useSyncStatus(): SyncSnapshot {
+  return useSyncExternalStore(
+    (listener) => appScheduler.subscribe(listener),
+    () => appScheduler.getSnapshot()
+  );
 }
