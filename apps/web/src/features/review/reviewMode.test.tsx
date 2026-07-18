@@ -63,21 +63,25 @@ if (haiku === undefined) throw new Error('registry lost its haiku rung');
 const deps: JobDeps = {
   preprocess: async () => ({
     ok: true,
-    document: { sections: [] },
+    document: { sections: [{ page: 84, text: 'the income statement' }] },
     needsVision: false,
-    window: { from: 1, to: 2 },
-    pageCount: 10
+    window: { from: 84, to: 84 },
+    pageCount: 180
   }),
   ladderPlan: () => ({ chosen: [haiku], remaining: [] }),
-  extract: async () => outcome
+  extract: async () => outcome,
+  makePageRenderer: async () => ({
+    render: async () => 'data:image/png;base64,QQ==',
+    destroy: () => undefined
+  })
 };
 
-async function openReview(company: CompanyRecord) {
+async function openReview(company: CompanyRecord, jobDeps: JobDeps = deps) {
   const id = startFilingJob({
     companyId: company.id,
     fileName: 'AR2024.pdf',
     bytes: new Uint8Array([1]),
-    deps
+    deps: jobDeps
   });
   await jobSettled(id);
   const router = renderAt(`/company/${company.id}/entry?job=${id}`);
@@ -177,6 +181,35 @@ describe('extraction review mode', () => {
     await waitFor(() => expect(router.state.location.search).toEqual({}));
     // The plain entry grid is back, holding the saved figures.
     expect(await screen.findByRole('button', { name: 'Add a year' })).toBeVisible();
+  });
+
+  it('peeks the source page a field names, then closes it', async () => {
+    const company = await seedCompany();
+    const { id } = await openReview(company);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Show source page 84 for Revenue, FY2024' })
+    );
+
+    expect(await screen.findByRole('img', { name: 'Page 84 of AR2024.pdf' })).toBeVisible();
+    expect(screen.getByText('Page 84 · AR2024.pdf')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close the source peek' }));
+    expect(screen.queryByRole('img', { name: 'Page 84 of AR2024.pdf' })).not.toBeInTheDocument();
+    dismissJob(id);
+  });
+
+  it('says so in words when the page cannot be rendered', async () => {
+    const company = await seedCompany();
+    const { makePageRenderer: _none, ...bare } = deps;
+    const { id } = await openReview(company, bare);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Show source page 84 for Revenue, FY2024' })
+    );
+
+    expect(await screen.findByText(/could not be rendered from the PDF/)).toBeVisible();
+    dismissJob(id);
   });
 
   it('discards only through the armed second step', async () => {

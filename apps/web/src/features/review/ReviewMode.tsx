@@ -9,15 +9,16 @@ import {
   type StatementKind
 } from '@plainsight/calc-engine';
 import { REGISTRY } from '@plainsight/extraction-core';
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 import { AMBER_BELOW, ConfidenceBadge } from '../../components/ConfidenceBadge';
 import type { FieldValue } from '../../components/MoneyField';
 import { SegmentedControl } from '../../components/SegmentedControl';
+import { SourcePeek, type SourcePeekState } from '../../components/SourcePeek';
 import { StatementGrid, type GridYear } from '../../components/StatementGrid';
 import { db, upsertStatement, type CompanyRecord } from '../../db';
 import * as buttons from '../../styles/buttons.css';
-import type { ExtractionJob } from './jobStore';
+import { sourcePageImage, type ExtractionJob } from './jobStore';
 import * as styles from './reviewMode.css';
 import {
   buildWrites,
@@ -70,6 +71,23 @@ export function ReviewMode({
   const [discardArmed, setDiscardArmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [peekPage, setPeekPage] = useState<number | null>(null);
+  const [peekState, setPeekState] = useState<SourcePeekState>({ kind: 'loading' });
+
+  // The peek renders from the job's retained bytes, first ask only; a
+  // closed-and-reopened page answers from the job's cache.
+  useEffect(() => {
+    if (peekPage === null) return;
+    let stale = false;
+    setPeekState({ kind: 'loading' });
+    void sourcePageImage(job.id, peekPage).then((image) => {
+      if (stale) return;
+      setPeekState(image === null ? { kind: 'unavailable' } : { kind: 'ready', image });
+    });
+    return () => {
+      stale = true;
+    };
+  }, [job.id, peekPage]);
 
   const gates = useMemo(() => gatesFor(model, edits), [model, edits]);
   const pending = useMemo(
@@ -153,17 +171,38 @@ export function ReviewMode({
 
   function renderCellExtra(id: LineItemId, fy: FyLabel): ReactElement | null {
     const key = fieldKey(fy, id);
-    if (edits.has(key)) return <span className={styles.edited}>edited</span>;
     const year = model.find((candidate) => candidate.fy === fy);
     const field = year?.fields[id];
+    const pageRef =
+      field?.page === undefined ? null : (
+        <button
+          type="button"
+          className={styles.pageRef}
+          aria-label={`Show source page ${field.page} for ${LINE_ITEMS[id].label}, ${fy}`}
+          onClick={() => setPeekPage(field.page as number)}
+        >
+          p. {field.page}
+        </button>
+      );
+    if (edits.has(key)) {
+      return (
+        <span className={styles.cellExtras}>
+          <span className={styles.edited}>edited</span>
+          {pageRef}
+        </span>
+      );
+    }
     if (field === undefined) return null;
     return (
-      <ConfidenceBadge
-        confidence={field.confidence}
-        confirmed={confirmedKeys.has(key)}
-        label={`${LINE_ITEMS[id].label}, ${fy}`}
-        onConfirm={() => setConfirmedKeys((current) => new Set(current).add(key))}
-      />
+      <span className={styles.cellExtras}>
+        <ConfidenceBadge
+          confidence={field.confidence}
+          confirmed={confirmedKeys.has(key)}
+          label={`${LINE_ITEMS[id].label}, ${fy}`}
+          onConfirm={() => setConfirmedKeys((current) => new Set(current).add(key))}
+        />
+        {pageRef}
+      </span>
     );
   }
 
@@ -225,14 +264,26 @@ export function ReviewMode({
         )}
       </div>
 
-      <StatementGrid
-        rows={rows}
-        years={gridYears}
-        mode="review"
-        onCommit={handleCommit}
-        cellTone={cellTone}
-        renderCellExtra={renderCellExtra}
-      />
+      <div className={peekPage === null ? styles.layout : styles.layoutWithPeek}>
+        {peekPage === null ? null : (
+          <div className={styles.peekPane}>
+            <SourcePeek
+              fileName={job.fileName}
+              page={peekPage}
+              state={peekState}
+              onClose={() => setPeekPage(null)}
+            />
+          </div>
+        )}
+        <StatementGrid
+          rows={rows}
+          years={gridYears}
+          mode="review"
+          onCommit={handleCommit}
+          cellTone={cellTone}
+          renderCellExtra={renderCellExtra}
+        />
+      </div>
 
       <div className={styles.footer}>
         <p className={styles.holdup} role="status">

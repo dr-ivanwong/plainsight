@@ -39,6 +39,26 @@ const createBrowserCanvas: CreateCanvas = (width, height) => {
   };
 };
 
+type PdfProxy = Awaited<ReturnType<typeof getDocument>['promise']>;
+
+// pdfjs's render() types demand its full parameter object while the
+// rasteriser's structural seam passes exactly the two fields pdfjs itself
+// produced (a real 2d context and a real viewport); the cast bridges the
+// static gap the runtime never had. Print intent because the output is a
+// static PNG: display intent schedules its completion on animation frames,
+// which a backgrounded tab throttles into a render that paints but never
+// resolves.
+const asPageSource = (proxy: PdfProxy): PageSource => ({
+  getPage: async (pageNumber) => {
+    const page = await proxy.getPage(pageNumber);
+    return {
+      getViewport: (params) => page.getViewport(params),
+      render: (params) =>
+        page.render({ ...params, intent: 'print' } as Parameters<typeof page.render>[0])
+    };
+  }
+});
+
 export interface BrowserJobOptions {
   /** providerId → stored key, from the device-local table. */
   readonly credentials: ReadonlyMap<string, string>;
@@ -53,25 +73,24 @@ export function browserJobDeps(options: BrowserJobOptions): JobDeps {
     async preprocess(bytes) {
       const loadingTask = getDocument({ data: bytes.slice(), useSystemFonts: true });
       const proxy = await loadingTask.promise;
-      // pdfjs's render() types demand its full parameter object while the
-      // rasteriser's structural seam passes exactly the two fields pdfjs
-      // itself produced (a real 2d context and a real viewport); the cast
-      // bridges the static gap the runtime never had.
-      const source: PageSource = {
-        getPage: async (pageNumber) => {
-          const page = await proxy.getPage(pageNumber);
-          return {
-            getViewport: (params) => page.getViewport(params),
-            render: (params) => page.render(params as Parameters<typeof page.render>[0])
-          };
-        }
-      };
       try {
-        const rasterisePage = makePageRasteriser(source, createBrowserCanvas);
+        const rasterisePage = makePageRasteriser(asPageSource(proxy), createBrowserCanvas);
         return await preprocessPdf(bytes, { rasterisePage });
       } finally {
         await loadingTask.destroy();
       }
+    },
+
+    // The source peek's engine: one document held open for the job's life,
+    // destroyed with it (jobStore owns the lifecycle).
+    async makePageRenderer(bytes) {
+      const loadingTask = getDocument({ data: bytes.slice(), useSystemFonts: true });
+      const proxy = await loadingTask.promise;
+      const rasterise = makePageRasteriser(asPageSource(proxy), createBrowserCanvas);
+      return {
+        render: async (pdfPage) => `data:image/png;base64,${await rasterise(pdfPage)}`,
+        destroy: () => void loadingTask.destroy()
+      };
     },
 
     ladderPlan(needsVision) {
