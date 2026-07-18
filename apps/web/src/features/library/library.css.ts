@@ -98,6 +98,45 @@ export const rows = style({
   padding: 0
 });
 
+/**
+ * The library's first catch-up (frontend spec §3): quiet placeholder rows while a
+ * signed-in device's first pull is in flight. Motionless by design; the
+ * calm is the message.
+ */
+export const skeletonRow = style({
+  minHeight: '64px',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  gap: space[8],
+  padding: `${space[8]} ${space[16]}`
+});
+
+export const skeletonName = style({
+  display: 'block',
+  width: '45%',
+  height: space[16],
+  borderRadius: radius.small,
+  backgroundColor: colour.surfaceHover
+});
+
+export const skeletonMeta = style({
+  display: 'block',
+  width: '25%',
+  height: space[12],
+  borderRadius: radius.small,
+  backgroundColor: colour.surface
+});
+
+export const srOnly = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  clipPath: 'inset(50%)',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap'
+});
+
 export const noMatches = style({
   fontSize: fontSize.subhead,
   color: colour.textSecondary,

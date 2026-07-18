@@ -56,6 +56,7 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 | Sample data present | Sample rows carry a quiet "Sample" chip; one-line dismissible banner links to S11 removal |
 | >12 companies | A filter field appears (progressive: invisible until useful) |
 | Loading | None in steady state (Dexie live queries are ~ms); skeleton rows only on cold service-worker start |
+| Signed in, first catch-up in flight, empty cache | Placeholder rows (64px, quiet, motionless) with a screen-reader status line, never the true-empty hero: an empty cache on a device that has never synced is not yet an empty library. The hero returns when the first pull lands empty or fails (catch-up serves the cache). Amendment 2026-07-18 with the reads-behind-the-API slice (main plan §12.9) |
 
 ### S3: Company dashboard
 
@@ -172,6 +173,7 @@ Any component crossing ~8 props triggers the design review per main plan §5.
 | `useProviderKeys()` | S10, S12 | `providerCredentials` table (never leaves device) |
 | `useStorageStatus()` | S11, quota banner | `navigator.storage` persist/estimate |
 | `useOnlineStatus()` | offline pill, feature-hiding | `navigator.onLine` + listener |
+| `useSyncRunner()` / `useSyncStatus()` | app shell / S2 first catch-up | the sync scheduler (main plan §12.9): revalidates on launch, reconnect, focus and sign-in, drains pending writes with backoff; the status snapshot gates the first read. Amendment 2026-07-18 with the reads-behind-the-API slice |
 
 Keystrokes never cross feature boundaries: `MoneyField` holds local state, commits on blur; the S3 dashboard cannot re-render from S5 typing (state colocation, main plan §5).
 
