@@ -155,6 +155,8 @@ export const layout = {
   columnMax: '720px',
   /** The wider column for the dashboard and compare screens (frontend spec §7). */
   columnWideMax: '960px',
+  /** The desktop company section rail (frontend spec §7, ≥1200px). */
+  railWidth: '200px',
   /** Width cap for a stacked action group in hero empty states. */
   actionColumnMax: '320px',
   /** Readable measure for centred prose (welcome panes, explainers). */

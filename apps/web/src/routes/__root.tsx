@@ -85,9 +85,21 @@ function RootShell(): ReactElement {
   const wide = useRouterState({
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),
   });
+  // Company routes reserve room for the desktop section rail (frontend spec
+  // §7, ≥1200px); the content cell keeps the route's designed width.
+  const inCompany = useRouterState({
+    select: (state) => state.matches.some((match) => match.routeId.startsWith('/company/$id')),
+  });
+  const columnClass = wide
+    ? inCompany
+      ? styles.columnWideRail
+      : styles.columnWide
+    : inCompany
+      ? styles.columnRail
+      : styles.column;
   return (
     <QueryClientProvider client={queryClient}>
-      <main className={wide ? styles.columnWide : styles.column}>
+      <main className={columnClass}>
         <Outlet />
       </main>
     </QueryClientProvider>

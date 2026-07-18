@@ -14,12 +14,18 @@ import {
   tracking
 } from '../../styles/tokens.css';
 
+// At desktop width the company rail carries both of this bar's destinations
+// (frontend spec §1.2 amendment); the same links one gutter away are noise,
+// so the whole bar recedes and the hero takes the top edge.
 export const chrome = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: space[16],
-  marginBottom: space[16]
+  marginBottom: space[16],
+  '@media': {
+    'screen and (min-width: 1200px)': { display: 'none' }
+  }
 });
 
 const chromeLink = style({

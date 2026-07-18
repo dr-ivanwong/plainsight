@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as SettingsProvidersRouteImport } from './routes/settings.providers'
 import { Route as SettingsDataRouteImport } from './routes/settings.data'
+import { Route as CompanyIdRouteImport } from './routes/company.$id'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as CompanyIdThesisRouteImport } from './routes/company.$id.thesis'
 import { Route as CompanyIdEntryRouteImport } from './routes/company.$id.entry'
@@ -49,26 +50,32 @@ const SettingsDataRoute = SettingsDataRouteImport.update({
   path: '/settings/data',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
-  id: '/company/$id/',
-  path: '/company/$id/',
+const CompanyIdRoute = CompanyIdRouteImport.update({
+  id: '/company/$id',
+  path: '/company/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompanyIdRoute,
 } as any)
 const CompanyIdThesisRoute = CompanyIdThesisRouteImport.update({
-  id: '/company/$id/thesis',
-  path: '/company/$id/thesis',
-  getParentRoute: () => rootRouteImport,
+  id: '/thesis',
+  path: '/thesis',
+  getParentRoute: () => CompanyIdRoute,
 } as any)
 const CompanyIdEntryRoute = CompanyIdEntryRouteImport.update({
-  id: '/company/$id/entry',
-  path: '/company/$id/entry',
-  getParentRoute: () => rootRouteImport,
+  id: '/entry',
+  path: '/entry',
+  getParentRoute: () => CompanyIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
+  '/company/$id': typeof CompanyIdRouteWithChildren
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
   '/settings/': typeof SettingsIndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
+  '/company/$id': typeof CompanyIdRouteWithChildren
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
   '/settings/': typeof SettingsIndexRoute
@@ -105,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compare'
     | '/onboarding'
+    | '/company/$id'
     | '/settings/data'
     | '/settings/providers'
     | '/settings/'
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compare'
     | '/onboarding'
+    | '/company/$id'
     | '/settings/data'
     | '/settings/providers'
     | '/settings/'
@@ -139,12 +149,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompareRoute: typeof CompareRoute
   OnboardingRoute: typeof OnboardingRoute
+  CompanyIdRoute: typeof CompanyIdRouteWithChildren
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsProvidersRoute: typeof SettingsProvidersRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
-  CompanyIdEntryRoute: typeof CompanyIdEntryRoute
-  CompanyIdThesisRoute: typeof CompanyIdThesisRoute
-  CompanyIdIndexRoute: typeof CompanyIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -191,40 +199,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsDataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/company/$id': {
+      id: '/company/$id'
+      path: '/company/$id'
+      fullPath: '/company/$id'
+      preLoaderRoute: typeof CompanyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/company/$id/': {
       id: '/company/$id/'
-      path: '/company/$id'
+      path: '/'
       fullPath: '/company/$id/'
       preLoaderRoute: typeof CompanyIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CompanyIdRoute
     }
     '/company/$id/thesis': {
       id: '/company/$id/thesis'
-      path: '/company/$id/thesis'
+      path: '/thesis'
       fullPath: '/company/$id/thesis'
       preLoaderRoute: typeof CompanyIdThesisRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CompanyIdRoute
     }
     '/company/$id/entry': {
       id: '/company/$id/entry'
-      path: '/company/$id/entry'
+      path: '/entry'
       fullPath: '/company/$id/entry'
       preLoaderRoute: typeof CompanyIdEntryRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CompanyIdRoute
     }
   }
 }
+
+interface CompanyIdRouteChildren {
+  CompanyIdEntryRoute: typeof CompanyIdEntryRoute
+  CompanyIdThesisRoute: typeof CompanyIdThesisRoute
+  CompanyIdIndexRoute: typeof CompanyIdIndexRoute
+}
+
+const CompanyIdRouteChildren: CompanyIdRouteChildren = {
+  CompanyIdEntryRoute: CompanyIdEntryRoute,
+  CompanyIdThesisRoute: CompanyIdThesisRoute,
+  CompanyIdIndexRoute: CompanyIdIndexRoute,
+}
+
+const CompanyIdRouteWithChildren = CompanyIdRoute._addFileChildren(
+  CompanyIdRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
   OnboardingRoute: OnboardingRoute,
+  CompanyIdRoute: CompanyIdRouteWithChildren,
   SettingsDataRoute: SettingsDataRoute,
   SettingsProvidersRoute: SettingsProvidersRoute,
   SettingsIndexRoute: SettingsIndexRoute,
-  CompanyIdEntryRoute: CompanyIdEntryRoute,
-  CompanyIdThesisRoute: CompanyIdThesisRoute,
-  CompanyIdIndexRoute: CompanyIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
