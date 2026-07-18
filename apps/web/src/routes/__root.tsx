@@ -16,9 +16,9 @@ export const Route = createRootRoute({
 });
 
 // Server state (main plan §5: TanStack Query from Phase 2), provided at the
-// root route so every render of the tree carries it, tests included.
-// Everything it caches is an optional enhancement; IndexedDB remains the
-// source of truth.
+// root route so every render of the tree carries it, tests included. It
+// caches the market-data reads; the library itself rides the sync engine,
+// with IndexedDB as the working copy (main plan §12.9).
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 }

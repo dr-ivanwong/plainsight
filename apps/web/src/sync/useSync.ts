@@ -1,14 +1,19 @@
 /**
- * The sync cadence (main plan §5): silent, retried, never blocking. A run at
- * launch when a session exists, another whenever the network comes back, and
- * a quiet interval in between. Failures say nothing; the settings row's sync
- * line (last synced, or the count of writes still waiting) is the only
- * surface.
+ * Sync glue: the scheduler policy (scheduler.ts) wired to the app. Reads
+ * revalidate through the API on launch, on reconnect, on returning to the
+ * app, and on sign-in; queued writes drain soon after they land and retry
+ * with backoff until the server accepts them (main plan §12.9). The interval
+ * is the fallback ceiling, not the cadence. Failures stay quiet; the
+ * settings sync row is the surface.
  */
+import { liveQuery } from 'dexie';
 import { useEffect } from 'react';
+
 import { getAccessToken } from '../auth/session';
 import { db } from '../db';
 import { runSync, type SyncDeps } from './engine';
+import { countPendingWrites } from './pending';
+import { SyncScheduler } from './scheduler';
 
 const INTERVAL_MS = 5 * 60 * 1000;
 
@@ -20,28 +25,43 @@ export const defaultSyncDeps = (): SyncDeps => ({
   newId: () => crypto.randomUUID()
 });
 
-let running = false;
-
-/** One run at a time; overlapping timers collapse into the run in flight. */
-export async function syncOnce(deps: SyncDeps = defaultSyncDeps()): Promise<void> {
-  if (running) return;
-  running = true;
-  try {
-    await runSync(deps);
-  } finally {
-    running = false;
-  }
-}
+/** The app-wide scheduler; tests build their own SyncScheduler instances. */
+export const appScheduler = new SyncScheduler({
+  run: async () => (await runSync(defaultSyncDeps())).outcome,
+  setTimer: (handler, ms) => window.setTimeout(handler, ms),
+  clearTimer: (handle) => window.clearTimeout(handle as number),
+  now: () => Date.now()
+});
 
 export function useSyncRunner(): void {
   useEffect(() => {
-    void syncOnce();
-    const timer = setInterval(() => void syncOnce(), INTERVAL_MS);
-    const onOnline = (): void => void syncOnce();
+    appScheduler.revalidate('launch');
+    const onOnline = (): void => appScheduler.revalidate('online');
+    const onFocus = (): void => appScheduler.revalidate('focus');
+    const onVisible = (): void => {
+      if (document.visibilityState === 'visible') appScheduler.revalidate('focus');
+    };
     window.addEventListener('online', onOnline);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    const timer = window.setInterval(() => appScheduler.revalidate('interval'), INTERVAL_MS);
+
+    // The queue watcher: any local write (or a session change) reports the
+    // pending diff, and the scheduler decides whether anything should run.
+    const watcher = liveQuery(async () => ({
+      signedIn: (await db.meta.get('authSession')) !== undefined,
+      pending: await countPendingWrites(db)
+    })).subscribe({
+      next: (state) => appScheduler.notePending(state.pending, state.signedIn),
+      error: () => undefined
+    });
+
     return () => {
-      clearInterval(timer);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(timer);
+      watcher.unsubscribe();
     };
   }, []);
 }
