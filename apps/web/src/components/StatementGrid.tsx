@@ -6,7 +6,7 @@ import type {
   LineItemMeta,
   Scale
 } from '@plainsight/calc-engine';
-import { useEffect, useRef, type KeyboardEvent, type ReactElement } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
 
 import { MoneyField, type FieldValue } from './MoneyField';
 import { unitOf } from './moneyEntry';
@@ -74,7 +74,9 @@ export function StatementGrid({
   mode = 'entry',
   onCommit,
   onScaleChange,
-  focusCell
+  focusCell,
+  cellTone,
+  renderCellExtra
 }: {
   rows: readonly LineItemMeta[];
   years: readonly GridYear[];
@@ -84,6 +86,10 @@ export function StatementGrid({
   onScaleChange?: (fy: FyLabel, scale: Scale) => void;
   /** Deep-link and new-year focus target; fires once per distinct target. */
   focusCell?: { id: LineItemId; fy: FyLabel };
+  /** Review mode's cell caution (frontend spec §3): the amber bands and gate breaches. */
+  cellTone?: (id: LineItemId, fy: FyLabel) => 'amber' | 'breached' | undefined;
+  /** Review mode's under-field adornment: the confidence badge, the edited word. */
+  renderCellExtra?: (id: LineItemId, fy: FyLabel) => ReactNode;
 }): ReactElement {
   const tableRef = useRef<HTMLTableElement>(null);
   const lastFocusTarget = useRef<string | null>(null);
@@ -175,21 +181,34 @@ export function StatementGrid({
                   {item.findItAs}
                 </span>
               </th>
-              {years.map((year, colIndex) => (
-                <td key={year.fy} className={styles.cell}>
-                  <MoneyField
-                    value={fieldValue(year.values[item.id])}
-                    scale={year.entryScale}
-                    unit={unitOf(item.id)}
-                    signed={item.signed}
-                    label={`${item.label}, ${year.fy}`}
-                    derivedMinor={derivedMinorFor(item, year)}
-                    dataRow={rowIndex}
-                    dataCol={colIndex}
-                    onCommit={(value) => onCommit(year.fy, item.id, value)}
-                  />
-                </td>
-              ))}
+              {years.map((year, colIndex) => {
+                const tone = cellTone?.(item.id, year.fy);
+                return (
+                  <td
+                    key={year.fy}
+                    className={
+                      tone === 'breached'
+                        ? styles.cellBreached
+                        : tone === 'amber'
+                          ? styles.cellAmber
+                          : styles.cell
+                    }
+                  >
+                    <MoneyField
+                      value={fieldValue(year.values[item.id])}
+                      scale={year.entryScale}
+                      unit={unitOf(item.id)}
+                      signed={item.signed}
+                      label={`${item.label}, ${year.fy}`}
+                      derivedMinor={derivedMinorFor(item, year)}
+                      dataRow={rowIndex}
+                      dataCol={colIndex}
+                      onCommit={(value) => onCommit(year.fy, item.id, value)}
+                    />
+                    {renderCellExtra?.(item.id, year.fy)}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

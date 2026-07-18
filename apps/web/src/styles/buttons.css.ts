@@ -36,6 +36,12 @@ const action = style({
     outline: `${focusRing.width} solid ${colour.accent}`,
     outlineOffset: focusRing.offset
   },
+  // A gated action rests visibly (review mode's Save while confirmations
+  // wait); it never wears the accent it cannot honour.
+  ':disabled': {
+    cursor: 'default',
+    transform: 'none'
+  },
   '@media': {
     '(prefers-reduced-motion: reduce)': {
       // The press scale collapses to a quiet opacity fade (main plan §4).
@@ -52,7 +58,11 @@ export const primaryAction = style([
   action,
   {
     backgroundColor: colour.accentFill,
-    color: colour.onAccent
+    color: colour.onAccent,
+    ':disabled': {
+      backgroundColor: colour.border,
+      color: colour.textSecondary
+    }
   }
 ]);
 
@@ -61,6 +71,9 @@ export const secondaryAction = style([
   {
     backgroundColor: colour.surface,
     color: colour.accent,
-    boxShadow: `inset 0 0 0 ${hairline} ${colour.border}`
+    boxShadow: `inset 0 0 0 ${hairline} ${colour.border}`,
+    ':disabled': {
+      color: colour.textSecondary
+    }
   }
 ]);

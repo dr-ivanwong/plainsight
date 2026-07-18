@@ -115,8 +115,9 @@ describe('the extraction job strip', () => {
     ).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Try Claude Haiku 4.5' }));
 
-    expect(await screen.findByText(/Extracted 1 year from AR2024\.pdf via Claude Haiku 4\.5\./)).toBeVisible();
-    expect(screen.getByText(/Nothing has been stored/)).toBeVisible();
+    // Success hands the layout straight to review mode.
+    expect(await screen.findByText(/Review before saving/)).toBeVisible();
+    expect(screen.getByText('Claude Haiku 4.5')).toBeVisible();
     dismissJob(id);
   });
 

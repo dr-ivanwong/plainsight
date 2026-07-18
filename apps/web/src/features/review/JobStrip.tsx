@@ -1,4 +1,3 @@
-import { REGISTRY } from '@plainsight/extraction-core';
 import type { ReactElement } from 'react';
 
 import { retryJob, type ExtractionJob } from './jobStore';
@@ -11,14 +10,12 @@ const UNREADABLE_WORDS: Readonly<Record<string, string>> = {
   rasteriser_required: 'This report needs its pages rendered as images, and the renderer was unavailable.'
 };
 
-const rungLabel = (rungId: string): string =>
-  REGISTRY.find((entry) => entry.id === rungId)?.label ?? rungId;
-
 /**
  * The extraction job's honest voice on the entry screen (frontend spec §3):
  * stage labels while it runs, the provider error spoken plainly on failure
  * with the next ladder rung offered by name, and the typed refusals in
- * words. A live region announces every change.
+ * words. A live region announces every change. A finished job never lands
+ * here: review mode takes the layout over the moment one succeeds.
  */
 export function JobStrip({
   job,
@@ -64,23 +61,6 @@ export function JobStrip({
         </>
       ) : null}
 
-      {job.phase === 'succeeded' ? (
-        <>
-          <p className={styles.line}>
-            Extracted {job.result.years.length}{' '}
-            {job.result.years.length === 1 ? 'year' : 'years'} from {job.fileName} via{' '}
-            {rungLabel(job.provenance.provider)}.
-          </p>
-          <p className={styles.quiet}>
-            Nothing has been stored: reviewing and saving these figures lands here next.
-          </p>
-          <div className={styles.actions}>
-            <button type="button" className={styles.action} onClick={onDismiss}>
-              Discard
-            </button>
-          </div>
-        </>
-      ) : null}
     </section>
   );
 }
