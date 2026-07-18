@@ -443,7 +443,7 @@ exports[`StaticSite template matches the reviewed snapshot 1`] = `
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":cloudfront::000000000000:distribution/",
+                    ":cloudfront::679345828813:distribution/",
                     {
                       "Ref": "Distribution830FAC52",
                     },

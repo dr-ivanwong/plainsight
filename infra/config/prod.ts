@@ -3,13 +3,10 @@ import type { EnvConfig } from './types';
 export const prod: EnvConfig = {
   envName: 'prod',
 
-  // >>> SET THE REAL ACCOUNT ID BEFORE FIRST DEPLOY. <<<
-  // The placeholder below keeps synth and the test suite account-agnostic by
-  // design (no credentials, no lookups); `cdk deploy` against it will fail
-  // fast rather than land anywhere. Fill in the one Plainsight account id
-  // (ADR 0001: single account, single environment) and commit it; an account
-  // id is not a secret.
-  account: '000000000000',
+  // The one Plainsight account (ADR 0001: single account, single
+  // environment), set 2026-07-18 for the Phase 2 go-live; an account id is
+  // not a secret. Synth and the test suite never look anything up in it.
+  account: '679345828813',
 
   region: 'ap-southeast-2',
 
