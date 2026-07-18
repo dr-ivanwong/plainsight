@@ -5,9 +5,13 @@ import { useEffect, type ReactElement } from 'react';
 
 import { completeSignIn } from '../auth/session';
 import { useSyncRunner } from '../sync/useSync';
+import { AppRail } from '../components/AppRail';
+import * as railStyles from '../components/appRail.css';
 import { Placeholder } from '../components/Placeholder';
 import * as placeholderStyles from '../components/placeholder.css';
 import { db } from '../db';
+import { useCompanies } from '../hooks/useCompanies';
+import { useCompany } from '../hooks/useCompany';
 import * as styles from '../styles/shell.css';
 
 export const Route = createRootRoute({
@@ -85,22 +89,42 @@ function RootShell(): ReactElement {
   const wide = useRouterState({
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),
   });
-  // Company routes reserve room for the desktop section rail (frontend spec
-  // §7, ≥1200px); the content cell keeps the route's designed width.
-  const inCompany = useRouterState({
-    select: (state) => state.matches.some((match) => match.routeId.startsWith('/company/$id')),
+  // The welcome flow is the one railless screen (frontend spec §1.2).
+  const onboarding = useRouterState({
+    select: (state) => state.matches.some((match) => match.routeId === '/onboarding'),
   });
-  const columnClass = wide
-    ? inCompany
+  // The rail's container facts: the open company (if any) for its section
+  // group, and the library size for Compare's progressive appearance.
+  const companyId = useRouterState({
+    select: (state) => {
+      const match = state.matches.find((entry) => entry.routeId.startsWith('/company/$id'));
+      return match === undefined ? undefined : (match.params as { id?: string }).id;
+    },
+  });
+  const company = useCompany(companyId ?? '');
+  const companies = useCompanies();
+  const columnClass = onboarding
+    ? styles.column
+    : wide
       ? styles.columnWideRail
-      : styles.columnWide
-    : inCompany
-      ? styles.columnRail
-      : styles.column;
+      : styles.columnRail;
   return (
     <QueryClientProvider client={queryClient}>
       <main className={columnClass}>
-        <Outlet />
+        {onboarding ? (
+          <Outlet />
+        ) : (
+          <div className={railStyles.frame}>
+            <AppRail
+              showCompare={(companies?.length ?? 0) >= 2}
+              companyId={companyId}
+              companyName={companyId === undefined ? undefined : company?.name}
+            />
+            <div>
+              <Outlet />
+            </div>
+          </div>
+        )}
       </main>
     </QueryClientProvider>
   );

@@ -53,21 +53,23 @@ describe('the library', () => {
     await upsertStatement(db, (({ updatedAt: _x, ...write }) => write)(incomeStatement({ companyId: wes.id })));
 
     renderLibrary();
-    const list = await screen.findByRole('list');
-    const labels = within(list)
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('aria-label'));
+    // Named by their composite labels: the navigation rail brings lists of
+    // its own, so the rows are found by what they say, not where they sit.
+    const labels = (await screen.findAllByRole('link', { name: /updated today/ })).map((link) =>
+      link.getAttribute('aria-label')
+    );
     expect(labels).toEqual(['Wesfarmers, updated today', 'Woolworths, updated today']);
   });
 
-  it('offers compare from the toolbar once two companies exist', async () => {
+  it('offers compare once two companies exist, toolbar and rail alike', async () => {
     await createCompany(db, { name: 'Wesfarmers', ticker: 'WES', currency: 'AUD' });
     renderLibrary();
     await screen.findByRole('link', { name: 'Wesfarmers, updated today' });
     expect(screen.queryByRole('link', { name: 'Compare' })).not.toBeInTheDocument();
 
     await createCompany(db, { name: 'Woolworths', ticker: 'WOW', currency: 'AUD' });
-    expect(await screen.findByRole('link', { name: 'Compare' })).toBeVisible();
+    // Both surfaces follow the same progressive rule, so both appear.
+    expect(await screen.findAllByRole('link', { name: 'Compare' })).toHaveLength(2);
   });
 
   it('marks sample companies with a quiet chip', async () => {
@@ -116,9 +118,8 @@ describe('the library', () => {
     const filter = await screen.findByRole('searchbox', { name: 'Filter companies' });
     fireEvent.change(filter, { target: { value: 'wow' } });
 
-    const list = screen.getByRole('list');
-    expect(within(list).getAllByRole('link')).toHaveLength(1);
-    expect(within(list).getByRole('link', { name: /Woolworths/ })).toBeVisible();
+    expect(screen.getAllByRole('link', { name: /updated today/ })).toHaveLength(1);
+    expect(screen.getByRole('link', { name: /Woolworths/ })).toBeVisible();
   });
 
   it('loads the sample set with one tap, banners it, and the banner dismisses for good', async () => {

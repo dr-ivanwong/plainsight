@@ -27,7 +27,7 @@
 
 ### 1.2 Navigation model
 
-Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl. *(Amended 2026-07-18 with the desktop section rail, main plan §12.10: at ≥1200px, screens inside a company gain a 200px rail to the left of the content column carrying a Library link, the company name, and the three sections: Dashboard, Data entry, Thesis, with the active one marked. At that breakpoint the rail owns wayfinding, so the company screens' duplicated top-bar chrome recedes: the dashboard's whole bar (both its links live in the rail), and the entry and thesis back affordances, while their titles and the autosave status line stay put. Per-company chrome only; the tab-bar refusal stands, no global sidebar exists at any width, and below the breakpoint the stack is untouched.)*
+Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl. *(Amended 2026-07-18, twice, with the desktop rail slices, main plan §12.10 and §12.11: at ≥1200px a persistent 200px navigation rail sits left of the content column on every screen except the welcome flow. It carries the top-level destinations (Library; Compare once two companies exist, §3's progressive rule; Settings) and, inside a company, the company's name and its three sections: Dashboard, Data entry, Thesis, with the active item marked throughout. At that breakpoint the rail owns wayfinding and per-screen top-bar navigation duplicates recede; titles, actions, and the autosave status line stay put. Below the breakpoint the stack is untouched, and the mobile tab-bar refusal stands.)*
 
 ## 2. Global chrome and cross-cutting states
 
@@ -152,7 +152,7 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `ConfidenceBadge` | Review-mode field state | `confidence, confirmed, onConfirm` |
 | `SourcePeek` | Page image / sheet-cell snippet | `provenance` |
 | `CompanyRow` | Library row | `company, flagsCount, roeSpark` |
-| `CompanyRail` | ≥1200px company section rail (§1.2 amendment) | `companyId, companyName?` |
+| `AppRail` | ≥1200px persistent navigation rail (§1.2 amendment) | `showCompare, companyId?, companyName?` |
 | `ComparisonTable` | S7 grid | `companies, metrics, hideAbsolutes` |
 | `ProviderRow` | S10 row | `provider, keyState, probeResult, onTest, onDelete` |
 | `EmptyState` | All empties, one component | `title, body, primary, secondary?` |
@@ -180,7 +180,7 @@ Keystrokes never cross feature boundaries: `MoneyField` holds local state, commi
 
 ## 7. Responsive rules
 
-Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1), ≥1200 inside a company (the section rail joins at left: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendment 2026-07-18, main plan §12.10). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
+Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1), ≥1200 (the navigation rail joins at left on every screen but the welcome flow: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 
