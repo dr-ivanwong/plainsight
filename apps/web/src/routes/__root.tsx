@@ -3,6 +3,7 @@ import { createRootRoute, Link, Outlet, useRouterState } from '@tanstack/react-r
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, type ReactElement } from 'react';
 
+import { completeSignIn } from '../auth/session';
 import { Placeholder } from '../components/Placeholder';
 import * as placeholderStyles from '../components/placeholder.css';
 import { db } from '../db';
@@ -41,6 +42,24 @@ function useRequestPersistence(): void {
 }
 
 /**
+ * Finish a hosted-UI sign-in when the URL carries one (the registered
+ * redirect is the origin root). The query is stripped either way so a
+ * bookmark or reload never replays a dead code; every other launch is
+ * untouched, because the params simply are not there.
+ */
+function useCompleteSignIn(): void {
+  useEffect(() => {
+    const search = window.location.search;
+    if (!search.includes('code=') || !search.includes('state=')) return;
+    void completeSignIn(search).then((outcome) => {
+      if (outcome !== 'not_a_callback') {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    });
+  }, []);
+}
+
+/**
  * The stored theme choice, applied to the document (tokens.css.ts): light or
  * dark outranks the system preference in either direction, and auto (or an
  * unreadable row) removes the attribute to hand control back to the system.
@@ -59,6 +78,7 @@ function useAppliedTheme(): void {
 
 function RootShell(): ReactElement {
   useRequestPersistence();
+  useCompleteSignIn();
   useAppliedTheme();
   const wide = useRouterState({
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),

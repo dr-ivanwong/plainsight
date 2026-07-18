@@ -42,6 +42,31 @@ describe('the settings root', () => {
     );
   });
 
+  it('offers sign-in while signed out, and everything still works without it', async () => {
+    renderAt('/settings');
+    expect(await screen.findByRole('heading', { name: 'Sync' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeVisible();
+    expect(screen.getByText(/works on this device without it/)).toBeVisible();
+  });
+
+  it('shows who is signed in and signs out to the signed-out row', async () => {
+    await setMeta(db, 'authSession', {
+      idToken: 'x.y.z',
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+      expiresAt: Date.now() + 60 * 60 * 1000,
+      email: 'ivan@example.com'
+    });
+    renderAt('/settings');
+    expect(await screen.findByText('ivan@example.com')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+    await waitFor(async () => {
+      expect(await getMeta(db, 'authSession')).toBeUndefined();
+    });
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeVisible();
+  });
+
   it('persists a theme choice and stamps the document, and auto hands back to the system', async () => {
     renderAt('/settings');
 

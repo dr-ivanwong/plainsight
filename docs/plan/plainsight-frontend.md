@@ -117,7 +117,7 @@ Four structured sections (business / moat / valuation / what kills it), distract
 
 ### S9: Settings root
 
-Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **About** (version, licences, replay onboarding).
+Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **Sync** (signed out: a sign-in row stating plainly that nothing needs it, online-only; signed in: the email and a sign-out; the hosted UI does the password handling, and the session lives in device-local meta outside the export allowlist. Amendment 2026-07-18 with the Phase 3 sign-in slice), **About** (version, licences, replay onboarding).
 
 ### S10: Settings → Providers (BYOK)
 

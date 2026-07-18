@@ -107,3 +107,23 @@ export const chevron = style({
   fontSize: fontSize.body,
   color: colour.textSecondary
 });
+
+// The quiet text button the sync row uses (the job strip's pattern).
+export const actionButton = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: touchTarget,
+  padding: `0 ${space[8]}`,
+  border: 'none',
+  backgroundColor: 'transparent',
+  borderRadius: radius.medium,
+  color: colour.accent,
+  fontFamily: 'inherit',
+  fontSize: fontSize.subhead,
+  fontWeight: fontWeight.semibold,
+  cursor: 'pointer',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: focusRing.offset
+  }
+});

@@ -246,7 +246,20 @@ export const metaRecordSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('schemaVersion'), value: z.number().int().positive() }),
   z.object({ key: z.literal('sampleBannerDismissed'), value: z.boolean() }),
   z.object({ key: z.literal('iosInstallDismissed'), value: z.boolean() }),
-  z.object({ key: z.literal('thesisSerif'), value: z.boolean() })
+  z.object({ key: z.literal('thesisSerif'), value: z.boolean() }),
+  // The device's hosted-UI session (auth module). Device-local by
+  // construction: not in the export allowlist, never a sync record type.
+  z.object({
+    key: z.literal('authSession'),
+    value: z.object({
+      idToken: z.string().min(1),
+      accessToken: z.string().min(1),
+      refreshToken: z.string().min(1),
+      /** Epoch milliseconds; refresh happens shortly before. */
+      expiresAt: z.number().int().positive(),
+      email: z.string()
+    })
+  })
 ]);
 
 export type MetaRecord = z.infer<typeof metaRecordSchema>;
