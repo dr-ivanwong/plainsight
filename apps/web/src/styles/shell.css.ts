@@ -1,6 +1,6 @@
 import { style } from '@vanilla-extract/css';
 
-import { layout, space } from './tokens.css';
+import { layout, railMedia, space } from './tokens.css';
 
 const base = style({
   margin: '0 auto',
@@ -25,7 +25,7 @@ export const columnRail = style([
   {
     maxWidth: layout.columnMax,
     '@media': {
-      'screen and (min-width: 1200px)': { maxWidth: `calc(${layout.columnMax} + ${railExtra})` }
+      [railMedia]: { maxWidth: `calc(${layout.columnMax} + ${railExtra})` }
     }
   }
 ]);
@@ -35,7 +35,7 @@ export const columnWideRail = style([
   {
     maxWidth: layout.columnWideMax,
     '@media': {
-      'screen and (min-width: 1200px)': {
+      [railMedia]: {
         maxWidth: `calc(${layout.columnWideMax} + ${railExtra})`
       }
     }
