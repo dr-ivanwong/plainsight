@@ -22,14 +22,17 @@ const outFile = join(here, '..', 'src', 'features', 'library', 'sampleData.ts');
 
 /**
  * The pinned sample set (data-model spec §12 sample-corpus decision, amended
- * 2026-07-18 with the ASX-first steer): CSL alone. The US trio retired when
- * the owner scoped the product ASX-first, and CSL is the ASX golden fixture
- * carrying the ten fiscal years the depth rationale wants behind sample
- * sparklines. Further ASX companies join if a second fixture is deepened to
- * ten years or the depth rule is amended.
+ * twice on 2026-07-18 with the ASX-first steer): the ASX golden five. The US
+ * trio retired when the owner scoped the product ASX-first; the same day the
+ * owner amended the depth rule so the four six-year ASX fixtures join CSL's
+ * ten, sparklines showing the years each fixture actually carries.
  */
 const SAMPLE_SET = [
-  { file: 'csl.json', id: 'sample-csl', sector: 'Healthcare' }
+  { file: 'csl.json', id: 'sample-csl', sector: 'Healthcare' },
+  { file: 'wes.json', id: 'sample-wesfarmers', sector: 'Conglomerate' },
+  { file: 'wow.json', id: 'sample-woolworths', sector: 'Consumer staples' },
+  { file: 'jbh.json', id: 'sample-jb-hi-fi', sector: 'Retail' },
+  { file: 'coh.json', id: 'sample-cochlear', sector: 'Medical devices' }
 ];
 
 const STATEMENT_KINDS = ['income', 'balance', 'cashflow'];

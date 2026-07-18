@@ -11,18 +11,35 @@ const NOW = '2026-07-11T09:30:00Z';
 
 describe('the generated sample data', () => {
   it('carries the pinned sample set, flagged sample throughout', () => {
-    // CSL alone since the ASX-first steer (data-model spec §12, the
-    // sample-corpus decision as amended 2026-07-18): the ASX golden fixture
-    // with ten-year depth.
-    expect(SAMPLE_COMPANIES.map((company) => company.id)).toEqual(['sample-csl']);
+    // The ASX golden five since the ASX-first steer (data-model spec §12,
+    // the sample-corpus decision as amended twice on 2026-07-18).
+    expect(SAMPLE_COMPANIES.map((company) => company.id)).toEqual([
+      'sample-csl',
+      'sample-wesfarmers',
+      'sample-woolworths',
+      'sample-jb-hi-fi',
+      'sample-cochlear'
+    ]);
     expect(SAMPLE_COMPANIES.every((company) => company.sample)).toBe(true);
-    expect(SAMPLE_COMPANIES.map((company) => company.name)).toEqual(['CSL']);
-    expect(SAMPLE_COMPANIES[0]).toMatchObject({ exchange: 'ASX', currency: 'USD' });
+    expect(SAMPLE_COMPANIES.map((company) => company.name)).toEqual([
+      'CSL',
+      'Wesfarmers',
+      'Woolworths',
+      'JB Hi-Fi',
+      'Cochlear'
+    ]);
+    expect(SAMPLE_COMPANIES.every((company) => company.exchange === 'ASX')).toBe(true);
+    // The ASX-listed-USD-reporter nuance rides along: CSL presents in USD.
+    expect(SAMPLE_COMPANIES[0]).toMatchObject({ currency: 'USD' });
+    expect(SAMPLE_COMPANIES.slice(1).every((company) => company.currency === 'AUD')).toBe(true);
   });
 
-  it('holds ten years of three statements, plus a price', () => {
-    expect(SAMPLE_STATEMENTS).toHaveLength(30);
-    expect(SAMPLE_PRICES).toHaveLength(1);
+  it('holds ten CSL years and six for each six-year fixture, plus a price each', () => {
+    expect(SAMPLE_STATEMENTS).toHaveLength(102);
+    expect(
+      SAMPLE_STATEMENTS.filter((row) => row.companyId === 'sample-csl')
+    ).toHaveLength(30);
+    expect(SAMPLE_PRICES).toHaveLength(5);
   });
 
   it('passes every record through the storage schemas once stamped', () => {
@@ -41,7 +58,9 @@ describe('the generated sample data', () => {
     for (const row of SAMPLE_STATEMENTS) {
       expect(row.provenance.source).toBe('sample');
       expect(row.provenance.filing?.system).toBe('ASX_MAP');
-      expect(row.provenance.filing?.documentId).toMatch(/^ar\d{4}$/);
+      // Annual reports for most; JB Hi-Fi publishes its results as a
+      // financial report, so its document keys carry the fr prefix.
+      expect(row.provenance.filing?.documentId).toMatch(/^(ar|fr)\d{4}$/);
     }
   });
 });

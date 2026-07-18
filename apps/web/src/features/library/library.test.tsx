@@ -128,10 +128,14 @@ describe('the library', () => {
       await screen.findByRole('button', { name: 'See it with sample data' })
     );
 
-    // CSL alone since the ASX-first steer (data-model spec §12, the
-    // sample-corpus decision as amended 2026-07-18).
+    // The ASX golden five since the ASX-first steer (data-model spec §12,
+    // the sample-corpus decision as amended twice on 2026-07-18).
     expect(await screen.findByRole('link', { name: /CSL, sample data/ })).toBeVisible();
-    expect(screen.getAllByText('Sample')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: /Wesfarmers, sample data/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /Woolworths, sample data/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /JB Hi-Fi, sample data/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /Cochlear, sample data/ })).toBeVisible();
+    expect(screen.getAllByText('Sample')).toHaveLength(5);
 
     const bannerLink = screen.getByRole('link', { name: 'Data & storage' });
     expect(bannerLink.getAttribute('href')).toBe('/settings/data');

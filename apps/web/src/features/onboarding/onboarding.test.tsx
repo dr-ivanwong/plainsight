@@ -106,7 +106,7 @@ describe('first run', () => {
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeVisible();
     expect(await screen.findByRole('link', { name: /CSL, sample data/ })).toBeVisible();
     expect(await getMeta(db, 'onboardingDone')).toBe(true);
-    expect(await db.companies.count()).toBe(1);
+    expect(await db.companies.count()).toBe(5);
   });
 
   it('stays reachable by address after completion', async () => {

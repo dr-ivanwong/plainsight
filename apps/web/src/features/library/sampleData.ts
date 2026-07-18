@@ -20,6 +20,42 @@ export const SAMPLE_COMPANIES: readonly SampleCompany[] = [
     "sector": "Healthcare",
     "currency": "USD",
     "sample": true
+  },
+  {
+    "id": "sample-wesfarmers",
+    "name": "Wesfarmers",
+    "ticker": "WES",
+    "exchange": "ASX",
+    "sector": "Conglomerate",
+    "currency": "AUD",
+    "sample": true
+  },
+  {
+    "id": "sample-woolworths",
+    "name": "Woolworths",
+    "ticker": "WOW",
+    "exchange": "ASX",
+    "sector": "Consumer staples",
+    "currency": "AUD",
+    "sample": true
+  },
+  {
+    "id": "sample-jb-hi-fi",
+    "name": "JB Hi-Fi",
+    "ticker": "JBH",
+    "exchange": "ASX",
+    "sector": "Retail",
+    "currency": "AUD",
+    "sample": true
+  },
+  {
+    "id": "sample-cochlear",
+    "name": "Cochlear",
+    "ticker": "COH",
+    "exchange": "ASX",
+    "sector": "Medical devices",
+    "currency": "AUD",
+    "sample": true
   }
 ];
 
@@ -1369,6 +1405,3142 @@ export const SAMPLE_STATEMENTS: readonly SampleStatement[] = [
         "documentId": "ar2025"
       }
     }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2020",
+    "statement": "income",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 3084600000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 274400000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 37000000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 237400000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 75200000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 169700000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1132000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2020",
+    "statement": "balance",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 291300000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 806400000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 2542500000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 727000000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 50300000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 215300000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1608100000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 934400000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2020",
+    "statement": "cashflow",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 454600000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 84400000000
+      },
+      "depreciationAmortisation": {
+        "kind": "entered",
+        "amountMinor": 152800000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 173400000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2021",
+    "statement": "income",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 3394100000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 371700000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 34400000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 337300000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 99300000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 238000000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1132000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2021",
+    "statement": "balance",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 302300000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 909600000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 2621400000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 791500000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 95000000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 207200000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1649900000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 971500000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2021",
+    "statement": "cashflow",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 338300000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 84300000000
+      },
+      "depreciationAmortisation": {
+        "kind": "entered",
+        "amountMinor": 150900000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 207400000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2022",
+    "statement": "income",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 3683800000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 363300000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 31300000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 332000000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 96800000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 235200000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1133000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2022",
+    "statement": "balance",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 70500000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 959900000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 2728600000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 890800000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 98800000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 397000000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1930500000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 798100000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2022",
+    "statement": "cashflow",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 230100000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 114000000000
+      },
+      "depreciationAmortisation": {
+        "kind": "entered",
+        "amountMinor": 157500000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 192700000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2023",
+    "statement": "income",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 4355000000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 386300000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 35400000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 350900000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 104400000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 246500000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1133000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2023",
+    "statement": "balance",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 67300000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 915400000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 2654600000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 785700000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 0
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 443000000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1826500000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 828100000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2023",
+    "statement": "cashflow",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 417900000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 128600000000
+      },
+      "depreciationAmortisation": {
+        "kind": "entered",
+        "amountMinor": 170100000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 213200000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2024",
+    "statement": "income",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 4418900000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 398900000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 40200000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 358700000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 103000000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 255700000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1133000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2024",
+    "statement": "balance",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 83500000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 941400000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 2730900000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 821300000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 475600000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1872400000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 858500000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2024",
+    "statement": "cashflow",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 459400000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 107600000000
+      },
+      "depreciationAmortisation": {
+        "kind": "entered",
+        "amountMinor": 180000000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 220000000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2025",
+    "statement": "income",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 4570000000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 446500000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 41200000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 405300000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 112700000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 292600000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1134000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2025",
+    "statement": "balance",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 63800000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 993300000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 2798100000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 832800000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 471900000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1879200000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 918900000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "fy": "FY2025",
+    "statement": "cashflow",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 456800000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 114700000000
+      },
+      "depreciationAmortisation": {
+        "kind": "entered",
+        "amountMinor": 183300000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 229100000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.771Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2020",
+    "statement": "income",
+    "endDate": "2020-06-28",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 5308000000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 3775000000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 1533000000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 202600000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 67100000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 135500000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 41700000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 116500000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1265400000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2020",
+    "statement": "balance",
+    "endDate": "2020-06-28",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 206800000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 812500000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 3847200000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1345700000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 202700000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 190400000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 2944000000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 903200000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2020",
+    "statement": "cashflow",
+    "endDate": "2020-06-28",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 456100000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 214900000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 113300000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2021",
+    "statement": "income",
+    "endDate": "2021-06-27",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 5569400000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 3936600000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 1632800000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 282300000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 61300000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 221000000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 60400000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 207400000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1262600000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2021",
+    "statement": "balance",
+    "endDate": "2021-06-27",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 100900000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 1578600000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 3923600000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 2311700000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 11900000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 275300000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 3749700000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 173900000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2021",
+    "statement": "cashflow",
+    "endDate": "2021-06-27",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 462400000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 238900000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 110400000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2022",
+    "statement": "income",
+    "endDate": "2022-06-26",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 6084900000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 4487800000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 1597100000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 269100000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 60000000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 209100000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 53400000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 793400000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1230300000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2022",
+    "statement": "balance",
+    "endDate": "2022-06-26",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 103200000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 611000000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 3327300000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1075000000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 35400000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 393800000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 2716900000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 610400000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2022",
+    "statement": "cashflow",
+    "endDate": "2022-06-26",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 337800000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 241600000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 100700000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 200000000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2023",
+    "statement": "income",
+    "endDate": "2023-06-25",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 6429400000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 4711800000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 1717600000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 299900000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 67700000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 232200000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 69300000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 161800000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1223100000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2023",
+    "statement": "balance",
+    "endDate": "2023-06-25",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 113500000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 637500000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 3364800000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1188600000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 46600000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 328900000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 2708300000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 656500000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2023",
+    "statement": "cashflow",
+    "endDate": "2023-06-25",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 475400000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 251900000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 102600000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 0
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2024",
+    "statement": "income",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 6792200000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 4937000000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 1855200000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 161600000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 74000000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 87600000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 75900000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 10800000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1225700000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2024",
+    "statement": "balance",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 129800000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 699100000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 3393600000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1281900000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 71200000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 386600000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 2836600000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 557000000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2024",
+    "statement": "cashflow",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 435900000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 254800000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 117200000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2025",
+    "statement": "income",
+    "endDate": "2025-06-29",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 6907700000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 5026200000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 1881500000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 218500000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 81100000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 137400000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 42100000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 96300000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 1228700000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2025",
+    "statement": "balance",
+    "endDate": "2025-06-29",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 127500000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 699100000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 3382900000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 1229700000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 24400000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 526700000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 2886700000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 496200000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-woolworths",
+    "fy": "FY2025",
+    "statement": "cashflow",
+    "endDate": "2025-06-29",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 455000000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 252800000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 166100000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.811Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2020",
+    "statement": "income",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 791890000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 622480000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 169410000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 48330000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 3640000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 44800000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 14570000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 30230000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 116000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2020",
+    "statement": "balance",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 25150000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 124580000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 315230000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 134590000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 204660000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 110570000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2020",
+    "statement": "cashflow",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 98130000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 4310000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 17230000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2021",
+    "statement": "income",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 891610000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 693890000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 197720000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 74310000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 2470000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 72000000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 21390000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 50610000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 115600000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2021",
+    "statement": "balance",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 26320000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 144930000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 325530000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 135530000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 194690000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 130840000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2021",
+    "statement": "cashflow",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 55870000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 5770000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 31020000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2022",
+    "statement": "income",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 923200000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 715160000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 208040000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 79460000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 2010000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 77530000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 23040000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 54490000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 114200000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2022",
+    "statement": "balance",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 12560000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 142470000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 316140000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 130630000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 5940000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 188110000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 128030000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2022",
+    "statement": "cashflow",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 62740000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 5760000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 31020000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 25000000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2023",
+    "statement": "income",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 962640000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 744390000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 218250000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 76900000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 2630000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 74710000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 22250000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 52460000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 109800000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2023",
+    "statement": "balance",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 17730000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 139930000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 323490000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 118490000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 4980000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 181530000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 141960000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2023",
+    "statement": "cashflow",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 71640000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 7200000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 38270000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 0
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2024",
+    "statement": "income",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 959240000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 745200000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 214040000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 64720000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 3100000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 62740000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 18860000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 43880000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 109800000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2024",
+    "statement": "balance",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 31770000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 158630000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 348660000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 131080000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 1500000000
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 192750000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 155910000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2024",
+    "statement": "cashflow",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 75260000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 7450000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 29850000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2025",
+    "statement": "income",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 1055480000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 819440000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 236040000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 69410000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 3770000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 66800000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 20520000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 46240000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 109700000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2025",
+    "statement": "balance",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 28410000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 181560000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 388270000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 155100000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 0
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 226090000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 162180000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "fy": "FY2025",
+    "statement": "cashflow",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 71160000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 8230000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 38590000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.694Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "fr2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2020",
+    "statement": "income",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 132060000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 34440000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 97620000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": -26220000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 1050000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": -27110000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": -3280000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": -23830000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 59634602
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2020",
+    "statement": "balance",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 56500000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 147750000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 257570000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 81750000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 39310000000
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 7990000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 117420000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 140150000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2020",
+    "statement": "cashflow",
+    "endDate": "2020-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": -15780000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 9290000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 19370000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2021",
+    "statement": "income",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 149760000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 41020000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 108740000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 37410000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 1200000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 36570000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 3920000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 32650000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 65734342
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2021",
+    "statement": "balance",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 60960000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 123000000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 243820000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 40250000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 0
+      },
+      "longTermDebt": {
+        "kind": "entered",
+        "amountMinor": 4500000000
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 73650000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 170170000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2021",
+    "statement": "cashflow",
+    "endDate": "2021-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 27130000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 4120000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 7560000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2021"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2022",
+    "statement": "income",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 164830000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 41100000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 123730000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 40000000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 860000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 39380000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 10470000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 28910000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 65770646
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2022",
+    "statement": "balance",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 62930000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 132700000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 246510000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 52760000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 4260000000
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 77940000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 168570000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2022",
+    "statement": "cashflow",
+    "endDate": "2022-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 37650000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 4450000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 19400000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 0
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2023",
+    "statement": "income",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 193610000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 48800000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 144810000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 38950000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 940000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 39660000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 9600000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 30060000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 65896853
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2023",
+    "statement": "balance",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 55550000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 136150000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 256870000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 57800000000
+      },
+      "shortTermDebt": {
+        "kind": "entered",
+        "amountMinor": 0
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 81990000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 174880000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2023",
+    "statement": "cashflow",
+    "endDate": "2023-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 36240000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 5000000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 19740000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 2960000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2023"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2024",
+    "statement": "income",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 223560000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 56210000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 167350000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 47500000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 920000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 48480000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 12800000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 35680000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 65720649
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2024",
+    "statement": "balance",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 51360000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 145210000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 274510000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 63150000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 90460000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 184050000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2024",
+    "statement": "cashflow",
+    "endDate": "2024-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 38880000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 6240000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 24570000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 4300000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2025",
+    "statement": "income",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "revenue": {
+        "kind": "entered",
+        "amountMinor": 234310000000
+      },
+      "costOfRevenue": {
+        "kind": "entered",
+        "amountMinor": 61520000000
+      },
+      "grossProfit": {
+        "kind": "entered",
+        "amountMinor": 172790000000
+      },
+      "operatingIncome": {
+        "kind": "entered",
+        "amountMinor": 51780000000
+      },
+      "interestExpense": {
+        "kind": "entered",
+        "amountMinor": 1100000000
+      },
+      "pretaxIncome": {
+        "kind": "entered",
+        "amountMinor": 51850000000
+      },
+      "taxExpense": {
+        "kind": "entered",
+        "amountMinor": 12960000000
+      },
+      "netIncome": {
+        "kind": "entered",
+        "amountMinor": 38890000000
+      },
+      "dilutedShares": {
+        "kind": "entered",
+        "amountMinor": 65606224
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2025",
+    "statement": "balance",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "cashAndEquivalents": {
+        "kind": "entered",
+        "amountMinor": 27570000000
+      },
+      "currentAssets": {
+        "kind": "entered",
+        "amountMinor": 141680000000
+      },
+      "totalAssets": {
+        "kind": "entered",
+        "amountMinor": 282500000000
+      },
+      "currentLiabilities": {
+        "kind": "entered",
+        "amountMinor": 60230000000
+      },
+      "shortTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "longTermDebt": {
+        "kind": "not_reported_zero"
+      },
+      "totalLiabilities": {
+        "kind": "entered",
+        "amountMinor": 87470000000
+      },
+      "totalEquity": {
+        "kind": "entered",
+        "amountMinor": 195030000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
+  },
+  {
+    "companyId": "sample-cochlear",
+    "fy": "FY2025",
+    "statement": "cashflow",
+    "endDate": "2025-06-30",
+    "entryScale": "millions",
+    "values": {
+      "operatingCashFlow": {
+        "kind": "entered",
+        "amountMinor": 23760000000
+      },
+      "capex": {
+        "kind": "entered",
+        "amountMinor": 6240000000
+      },
+      "dividendsPaid": {
+        "kind": "entered",
+        "amountMinor": 27820000000
+      },
+      "shareRepurchases": {
+        "kind": "entered",
+        "amountMinor": 2830000000
+      }
+    },
+    "provenance": {
+      "source": "sample",
+      "recordedAt": "2026-07-15T11:47:03.732Z",
+      "filing": {
+        "system": "ASX_MAP",
+        "documentId": "ar2025"
+      }
+    }
   }
 ];
 
@@ -1377,6 +4549,30 @@ export const SAMPLE_PRICES: readonly SamplePrice[] = [
     "companyId": "sample-csl",
     "amountMinor": 15000,
     "currency": "USD",
+    "asOf": "2026-07-15"
+  },
+  {
+    "companyId": "sample-wesfarmers",
+    "amountMinor": 8500,
+    "currency": "AUD",
+    "asOf": "2026-07-15"
+  },
+  {
+    "companyId": "sample-woolworths",
+    "amountMinor": 3100,
+    "currency": "AUD",
+    "asOf": "2026-07-15"
+  },
+  {
+    "companyId": "sample-jb-hi-fi",
+    "amountMinor": 11000,
+    "currency": "AUD",
+    "asOf": "2026-07-15"
+  },
+  {
+    "companyId": "sample-cochlear",
+    "amountMinor": 31000,
+    "currency": "AUD",
     "asOf": "2026-07-15"
   }
 ];
