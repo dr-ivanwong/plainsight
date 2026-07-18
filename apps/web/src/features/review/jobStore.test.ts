@@ -9,6 +9,7 @@ import {
   getJob,
   jobSettled,
   retryJob,
+  sourcePageImage,
   startFilingJob,
   type JobDeps
 } from './jobStore';
@@ -151,6 +152,99 @@ describe('the extraction job store', () => {
       expect(settled.detail).toBe('No usable model rung: no key covers this document.');
       expect(settled.nextRung).toBeNull();
     }
+    dismissJob(id);
+  });
+
+  it('maps printed pages to pdf indexes through the sections, remembering renders', async () => {
+    const rendered: number[] = [];
+    let destroyed = 0;
+    const id = startFilingJob({
+      companyId: 'c',
+      fileName: 'AR2024.pdf',
+      bytes: new Uint8Array([1]),
+      deps: {
+        preprocess: async () => ({
+          ok: true,
+          document: { sections: [{ text: 'a' }, { page: 84, text: 'b' }, { text: 'c' }] },
+          needsVision: false,
+          window: { from: 80, to: 82 },
+          pageCount: 180
+        }),
+        ladderPlan: () => ({ chosen: [rung('anthropic-haiku-4.5')], remaining: [] }),
+        extract: async () => success,
+        makePageRenderer: async () => ({
+          render: async (pdfPage) => {
+            rendered.push(pdfPage);
+            return `data:image/png;base64,${pdfPage}`;
+          },
+          destroy: () => {
+            destroyed += 1;
+          }
+        })
+      }
+    });
+    await jobSettled(id);
+
+    // Printed 84 sits at section index 1: pdf page 81.
+    expect(await sourcePageImage(id, 84)).toBe('data:image/png;base64,81');
+    // Printed 85 rides the same offset: pdf page 82.
+    expect(await sourcePageImage(id, 85)).toBe('data:image/png;base64,82');
+    // A repeat answers from the cache.
+    expect(await sourcePageImage(id, 84)).toBe('data:image/png;base64,81');
+    expect(rendered).toEqual([81, 82]);
+    // A printed page the offset pushes past the document is honestly absent.
+    expect(await sourcePageImage(id, 500)).toBeNull();
+
+    dismissJob(id);
+    await Promise.resolve();
+    expect(destroyed).toBe(1);
+  });
+
+  it('maps the eps-note extras appended beyond the window', async () => {
+    const rendered: number[] = [];
+    const id = startFilingJob({
+      companyId: 'c',
+      fileName: 'AR2024.pdf',
+      bytes: new Uint8Array([1]),
+      deps: {
+        preprocess: async () => ({
+          ok: true,
+          document: { sections: [{ text: 'a' }, { text: 'b' }, { page: 100, text: 'note' }] },
+          needsVision: false,
+          window: { from: 80, to: 81, epsNotePage: 90 },
+          pageCount: 180
+        }),
+        ladderPlan: () => ({ chosen: [rung('anthropic-haiku-4.5')], remaining: [] }),
+        extract: async () => success,
+        makePageRenderer: async () => ({
+          render: async (pdfPage) => {
+            rendered.push(pdfPage);
+            return 'data:img';
+          },
+          destroy: () => undefined
+        })
+      }
+    });
+    await jobSettled(id);
+
+    expect(await sourcePageImage(id, 100)).toBe('data:img');
+    expect(rendered).toEqual([90]);
+    dismissJob(id);
+  });
+
+  it('answers unavailable when no renderer exists', async () => {
+    const id = startFilingJob({
+      companyId: 'c',
+      fileName: 'AR2024.pdf',
+      bytes: new Uint8Array([1]),
+      deps: {
+        preprocess: okPreprocess,
+        ladderPlan: () => ({ chosen: [rung('anthropic-haiku-4.5')], remaining: [] }),
+        extract: async () => success
+      }
+    });
+    await jobSettled(id);
+    expect(await sourcePageImage(id, 1)).toBeNull();
     dismissJob(id);
   });
 

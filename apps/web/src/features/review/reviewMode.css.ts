@@ -100,3 +100,56 @@ export const edited = style({
   letterSpacing: tracking.caption,
   color: colour.textSecondary
 });
+
+export const cellExtras = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: space[8]
+});
+
+/** Jump-to-source (frontend spec §3): the printed page a field's provenance names. */
+export const pageRef = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  marginTop: space[4],
+  padding: `0 ${space[4]}`,
+  border: 'none',
+  backgroundColor: 'transparent',
+  borderRadius: radius.small,
+  color: colour.accent,
+  fontFamily: fontStack,
+  fontSize: fontSize.caption2,
+  letterSpacing: tracking.caption,
+  fontVariantNumeric: 'tabular-nums',
+  cursor: 'pointer',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: 0
+  }
+});
+
+/** The grid alone, and the grid beside the source page once a peek opens (frontend spec §3). */
+export const layout = style({
+  display: 'block'
+});
+
+export const layoutWithPeek = style({
+  display: 'grid',
+  gap: space[16],
+  gridTemplateColumns: '1fr',
+  '@media': {
+    'screen and (min-width: 900px)': {
+      gridTemplateColumns: 'minmax(260px, 340px) 1fr',
+      alignItems: 'start'
+    }
+  }
+});
+
+export const peekPane = style({
+  '@media': {
+    'screen and (min-width: 900px)': {
+      position: 'sticky',
+      top: space[16]
+    }
+  }
+});
