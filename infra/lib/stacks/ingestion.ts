@@ -126,12 +126,19 @@ export class IngestionStack extends Stack {
 
     // The ingestion path owns every write, and only in ticker partitions
     // (spec §6: single-table access scoped by key-prefix conditions where
-    // sensible). No deletes exist anywhere: served data is only ever
-    // overwritten by a newer ingest.
+    // sensible). GetItem joins for the sweep's change detector, which reads
+    // the stored filing marker before deciding whether to refetch. No
+    // deletes exist anywhere: served data is only ever overwritten by a
+    // newer ingest.
     ingest.fn.addToRolePolicy(
       new iam.PolicyStatement({
         sid: 'WriteTickerPartitions',
-        actions: ['dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:BatchWriteItem'],
+        actions: [
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:BatchWriteItem',
+        ],
         resources: [table.tableArn],
         conditions: {
           'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['TICKER#*'] },

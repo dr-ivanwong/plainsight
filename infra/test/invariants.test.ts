@@ -717,9 +717,12 @@ describe('Ingestion stack (backend spec §5, §10; main plan §6 tracing rule)',
     }
   });
 
-  it('writes only ticker partitions, never deletes, and reads one SSM parameter', () => {
+  it('reads and writes only ticker partitions, never deletes, and reads one SSM parameter', () => {
+    // GetItem is the sweep's freshness check (the stored filing marker); it
+    // rides the same ticker-partition condition as the writes.
     const writes = statementsWithSid('WriteTickerPartitions');
     expect(writes.Action).toEqual([
+      'dynamodb:GetItem',
       'dynamodb:PutItem',
       'dynamodb:UpdateItem',
       'dynamodb:BatchWriteItem',
