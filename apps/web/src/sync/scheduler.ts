@@ -44,13 +44,16 @@ export class SyncScheduler {
   private failures = 0;
   private drainTimer: unknown = null;
   private retryTimer: unknown = null;
-  private lastFocusAt = Number.NEGATIVE_INFINITY;
+  private lastFocusAt: number;
   private generation = 0;
   private snapshot: SyncSnapshot = { running: false, settled: false };
   private readonly listeners = new Set<() => void>();
 
   constructor(deps: SchedulerDeps) {
     this.deps = deps;
+    // Primed at boot: the load-time focus and visibility flurry collapses
+    // into the launch run instead of stacking runs behind it.
+    this.lastFocusAt = deps.now();
   }
 
   subscribe(listener: () => void): () => void {
@@ -130,7 +133,7 @@ export class SyncScheduler {
     this.signedIn = null;
     this.pendingWrites = 0;
     this.failures = 0;
-    this.lastFocusAt = Number.NEGATIVE_INFINITY;
+    this.lastFocusAt = this.deps.now();
     this.publish();
   }
 
@@ -157,6 +160,9 @@ export class SyncScheduler {
     this.running = false;
     this.settled = true;
     if (outcome === 'failed') {
+      // The queued rerun would hit the same unreachable server; drop it.
+      // Reads retry on the next trigger, writes ride the backoff below.
+      this.rerunWanted = false;
       this.failures += 1;
       if (this.signedIn === true && this.pendingWrites > 0 && this.retryTimer === null) {
         const wait = Math.min(RETRY_BASE_MS * 2 ** (this.failures - 1), RETRY_CAP_MS);
