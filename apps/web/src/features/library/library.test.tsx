@@ -128,11 +128,10 @@ describe('the library', () => {
       await screen.findByRole('button', { name: 'See it with sample data' })
     );
 
-    expect(await screen.findByRole('link', { name: /Apple, sample data/ })).toBeVisible();
-    expect(screen.getByRole('link', { name: /Coca-Cola, sample data/ })).toBeVisible();
-    expect(screen.getByRole('link', { name: /Costco, sample data/ })).toBeVisible();
-    expect(screen.getByRole('link', { name: /CSL, sample data/ })).toBeVisible();
-    expect(screen.getAllByText('Sample')).toHaveLength(4);
+    // CSL alone since the ASX-first steer (data-model spec §12, the
+    // sample-corpus decision as amended 2026-07-18).
+    expect(await screen.findByRole('link', { name: /CSL, sample data/ })).toBeVisible();
+    expect(screen.getAllByText('Sample')).toHaveLength(1);
 
     const bannerLink = screen.getByRole('link', { name: 'Data & storage' });
     expect(bannerLink.getAttribute('href')).toBe('/settings/data');
@@ -149,7 +148,7 @@ describe('the library', () => {
     await loadSampleData(db);
 
     renderLibrary();
-    const row = await screen.findByRole('link', { name: 'Apple, sample data, updated today' });
+    const row = await screen.findByRole('link', { name: 'CSL, sample data, updated today' });
     await waitFor(() => {
       expect(row.querySelector('svg')).not.toBeNull();
     });

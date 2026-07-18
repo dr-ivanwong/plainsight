@@ -104,9 +104,9 @@ describe('first run', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'See it with sample data' }));
 
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeVisible();
-    expect(await screen.findByRole('link', { name: /Costco, sample data/ })).toBeVisible();
+    expect(await screen.findByRole('link', { name: /CSL, sample data/ })).toBeVisible();
     expect(await getMeta(db, 'onboardingDone')).toBe(true);
-    expect(await db.companies.count()).toBe(4);
+    expect(await db.companies.count()).toBe(1);
   });
 
   it('stays reachable by address after completion', async () => {

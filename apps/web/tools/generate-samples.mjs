@@ -21,14 +21,14 @@ const fixturesDir = join(here, '..', '..', '..', 'packages', 'calc-engine', 'fix
 const outFile = join(here, '..', 'src', 'features', 'library', 'sampleData.ts');
 
 /**
- * The pinned sample set (data-model spec §12 sample-corpus decision): the
- * Phase 1 trio, plus CSL from the day the Phase 2.5 ASX golden files landed,
- * so the samples showcase ASX support the moment it exists.
+ * The pinned sample set (data-model spec §12 sample-corpus decision, amended
+ * 2026-07-18 with the ASX-first steer): CSL alone. The US trio retired when
+ * the owner scoped the product ASX-first, and CSL is the ASX golden fixture
+ * carrying the ten fiscal years the depth rationale wants behind sample
+ * sparklines. Further ASX companies join if a second fixture is deepened to
+ * ten years or the depth rule is amended.
  */
 const SAMPLE_SET = [
-  { file: 'aapl.json', id: 'sample-apple', sector: 'Technology' },
-  { file: 'ko.json', id: 'sample-coca-cola', sector: 'Beverages' },
-  { file: 'cost.json', id: 'sample-costco', sector: 'Retail' },
   { file: 'csl.json', id: 'sample-csl', sector: 'Healthcare' }
 ];
 

@@ -440,27 +440,75 @@ describe('the company dashboard', () => {
     expect(within(sheet).getByText(/no positive equity base/)).toBeVisible();
   });
 
-  it('renders the sample corpus end to end, interpretation notes visible', async () => {
+  it('renders the sample corpus end to end', async () => {
     const { loadSampleData } = await import('../library/loadSamples');
     await loadSampleData(db);
 
-    // Apple asserts not-reported-zero interest from its FY2023 filing on, so
-    // coverage speaks the pinned healthy phrase rather than a number.
-    renderAt('/company/sample-apple');
-    expect(await screen.findByRole('heading', { name: 'Apple' })).toBeVisible();
-    const coverage = await screen.findByRole('article', { name: 'Interest coverage' });
-    expect(within(coverage).getByText('n/m: no interest burden')).toBeVisible();
-    const gross = screen.getByRole('article', { name: 'Gross margin' });
+    // CSL alone since the ASX-first steer: ten hand-verified years, an ASX
+    // listing reporting in USD, straight through the whole render path.
+    renderAt('/company/sample-csl');
+    expect(await screen.findByRole('heading', { name: 'CSL' })).toBeVisible();
+    const gross = await screen.findByRole('article', { name: 'Gross margin' });
     expect(within(gross).getByText(/\d+\.\d%/)).toBeVisible();
   });
 
-  it('shows the ending basis on the sample with no total liabilities', async () => {
-    const { loadSampleData } = await import('../library/loadSamples');
-    await loadSampleData(db);
+  it('shows the ending basis when total liabilities are never filed', async () => {
+    // Some filers never print a total-liabilities line, so no year is
+    // complete and the return metrics stay on the ending basis despite
+    // multiple years of data (the trait Coca-Cola carried while it was a
+    // sample; kept as a seeded case since the sample set went ASX-only).
+    const company = await seedCompany();
+    for (const fy of ['FY2023', 'FY2024'] as const) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          {
+            revenue: e(100_000),
+            costOfRevenue: e(60_000),
+            operatingIncome: e(20_000),
+            interestExpense: e(1_000),
+            pretaxIncome: e(19_000),
+            taxExpense: e(4_000),
+            netIncome: e(15_000),
+            dilutedShares: e(10_000)
+          },
+          fy
+        )
+      );
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'balance',
+          {
+            cashAndEquivalents: e(5_000),
+            currentAssets: e(30_000),
+            totalAssets: e(100_000),
+            currentLiabilities: e(15_000),
+            shortTermDebt: e(2_000),
+            longTermDebt: e(18_000),
+            totalEquity: e(40_000)
+          },
+          fy
+        )
+      );
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'cashflow',
+          {
+            operatingCashFlow: e(18_000),
+            capex: e(6_000)
+          },
+          fy
+        )
+      );
+    }
 
-    // Coca-Cola files no total-liabilities line, so no year is complete and
-    // the return metrics stay on the ending basis despite ten years of data.
-    renderAt('/company/sample-coca-cola?metric=roe');
+    renderAt(`/company/${company.id}?metric=roe`);
     const sheet = await screen.findByRole('dialog', { name: 'ROE' });
     expect(within(sheet).getByText('ending basis')).toBeVisible();
   });
