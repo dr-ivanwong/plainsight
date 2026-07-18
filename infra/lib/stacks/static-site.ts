@@ -272,6 +272,10 @@ export class StaticSiteStack extends Stack {
     this.distribution.addBehavior('/v1/*', apiOrigin, {
       ...behaviourDefaults,
       cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      // The uncached catch-all carries the writable routes (sync push now;
+      // uploads and extraction jobs later), so every method passes; the
+      // cached financials behaviour above stays read-only.
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
     });
 
     // The ingest function reads this at runtime to invalidate after accepted

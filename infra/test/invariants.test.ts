@@ -989,10 +989,22 @@ describe('the edge (cdk spec §3: the same distribution fronts /v1/*)', () => {
     ]);
     for (const behaviour of behaviours) {
       expect(behaviour.ViewerProtocolPolicy).toBe('redirect-to-https');
-      expect(behaviour.AllowedMethods).toEqual(['GET', 'HEAD']);
       // No SPA rewrite on the API behaviours.
       expect(behaviour.FunctionAssociations ?? []).toEqual([]);
     }
+    // The cached financials path is read-only; the uncached catch-all
+    // carries the writable routes (sync push now, uploads later), so every
+    // method passes there.
+    expect(behaviours[0].AllowedMethods).toEqual(['GET', 'HEAD']);
+    expect([...behaviours[1].AllowedMethods].sort()).toEqual([
+      'DELETE',
+      'GET',
+      'HEAD',
+      'OPTIONS',
+      'PATCH',
+      'POST',
+      'PUT',
+    ]);
     // The catch-all uses the managed CachingDisabled policy.
     expect(behaviours[1].CachePolicyId).toBe('4135ea2d-6df8-44a3-9df3-4b5a84be39ad');
 
