@@ -69,6 +69,8 @@ export {
   buildSeries,
   computeMetric,
   effectiveTaxRate,
+  investedCapital,
+  nopat,
   type MetricContext,
   type MetricDef
 } from './metrics.js';

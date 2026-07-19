@@ -3,8 +3,10 @@ import {
   buildSeries,
   computeMetric,
   effectiveTaxRate,
+  investedCapital,
   METRIC_IDS,
   METRICS,
+  nopat,
   type MetricContext
 } from '../src/metrics.js';
 import { fyYear } from '../src/fy.js';
@@ -165,6 +167,19 @@ describe('ROIC (the pinned definition)', () => {
     expect(effectiveTaxRate(600, 1_000)).toBe(0.45); // one-off charge
     expect(effectiveTaxRate(300, 1_000)).toBeCloseTo(0.3, 12);
     expect(effectiveTaxRate(300, 0)).toBe(0);
+  });
+
+  it('exposes the pinned NOPAT and invested-capital arithmetic for the detail sheet', () => {
+    expect(nopat(25_000, 4_000, 24_000)).toBeCloseTo(25_000 * (5 / 6), 12);
+    expect(nopat(25_000, 4_000, -1_000)).toBe(25_000); // rate taken as 0 below the line
+    expect(
+      investedCapital({
+        shortTermDebt: 5_000,
+        longTermDebt: 15_000,
+        totalEquity: 40_000,
+        cashAndEquivalents: 10_000
+      })
+    ).toBe(50_000);
   });
 
   it('is not meaningful when invested capital is non-positive', () => {

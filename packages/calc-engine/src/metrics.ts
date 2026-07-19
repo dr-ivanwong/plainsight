@@ -143,6 +143,29 @@ export function effectiveTaxRate(taxExpense: number, pretaxIncome: number): numb
   return Math.min(Math.max(taxExpense / pretaxIncome, 0), 0.45);
 }
 
+/**
+ * NOPAT = operatingIncome × (1 − effective tax rate) (the pinned ROIC
+ * definition, data-model section 6). Exported so the detail sheet substitutes
+ * the very arithmetic the metric used, never a parallel derivation.
+ */
+export function nopat(operatingIncome: number, taxExpense: number, pretaxIncome: number): number {
+  return operatingIncome * (1 - effectiveTaxRate(taxExpense, pretaxIncome));
+}
+
+/**
+ * Invested capital = shortTermDebt + longTermDebt + totalEquity −
+ * cashAndEquivalents (the pinned ROIC definition, data-model section 6).
+ * Exported for the same single-definition reason as `nopat`.
+ */
+export function investedCapital(parts: {
+  shortTermDebt: number;
+  longTermDebt: number;
+  totalEquity: number;
+  cashAndEquivalents: number;
+}): number {
+  return parts.shortTermDebt + parts.longTermDebt + parts.totalEquity - parts.cashAndEquivalents;
+}
+
 export interface MetricContext {
   year: StatementYear;
   /** The year labelled one prior, when present in the input; feeds the averaged denominator basis. */
@@ -189,14 +212,14 @@ function grossProfitOf(year: StatementYear): number {
   return requireValue(year, 'revenue') - requireValue(year, 'costOfRevenue');
 }
 
-/** Invested capital = shortTermDebt + longTermDebt + totalEquity − cashAndEquivalents (the pinned ROIC definition, data-model section 6). */
+/** The year's invested capital from its required items (sufficiency-checked by the caller). */
 function investedCapitalOf(year: StatementYear): number {
-  return (
-    requireValue(year, 'shortTermDebt') +
-    requireValue(year, 'longTermDebt') +
-    requireValue(year, 'totalEquity') -
-    requireValue(year, 'cashAndEquivalents')
-  );
+  return investedCapital({
+    shortTermDebt: requireValue(year, 'shortTermDebt'),
+    longTermDebt: requireValue(year, 'longTermDebt'),
+    totalEquity: requireValue(year, 'totalEquity'),
+    cashAndEquivalents: requireValue(year, 'cashAndEquivalents')
+  });
 }
 
 function fcfOf(year: StatementYear): number {
@@ -245,14 +268,14 @@ export function computeMetric(id: MetricId, ctx: MetricContext): MetricValue {
       return ok(requireValue(year, 'netIncome') / denominator, basis);
     }
     case 'roic': {
-      const taxRate = effectiveTaxRate(
+      const nopatValue = nopat(
+        requireValue(year, 'operatingIncome'),
         requireValue(year, 'taxExpense'),
         requireValue(year, 'pretaxIncome')
       );
-      const nopat = requireValue(year, 'operatingIncome') * (1 - taxRate);
       const { denominator, basis } = returnDenominator(ctx, investedCapitalOf);
       if (denominator <= 0) return notMeaningful('negative_invested_capital');
-      return ok(nopat / denominator, basis);
+      return ok(nopatValue / denominator, basis);
     }
     case 'debtToEquity': {
       const equity = requireValue(year, 'totalEquity');
