@@ -20,6 +20,7 @@ import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
 import { MetricSheet } from './MetricSheet';
 import { DASHBOARD_SECTIONS } from './sections';
+import { TrendSection } from './TrendSection';
 
 const STALE_PRICE_MS = 90 * 86_400_000;
 
@@ -246,6 +247,8 @@ export function Dashboard({
           {report.fyLabels.length === 1 ? (
             <p className={styles.trendHint}>Add more years to see trends.</p>
           ) : null}
+
+          <TrendSection metrics={metrics} />
 
           {flags !== undefined && (flags.active.length > 0 || flags.dismissed.length > 0) ? (
             <section className={styles.flagSection} aria-label="Items to investigate">

@@ -253,6 +253,46 @@ describe('the company dashboard', () => {
     expect(screen.getByText('Add more years to see trends.')).toBeVisible();
   });
 
+  it('keeps the trends section away below three years', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+
+    await screen.findByRole('article', { name: 'Gross margin' });
+    expect(screen.queryByRole('region', { name: 'Trends' })).not.toBeInTheDocument();
+  });
+
+  it('offers grouped trends with a table fallback once three years exist', async () => {
+    const company = await seedCompany();
+    for (let offset = 0; offset < 3; offset += 1) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${2022 + offset}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}`);
+
+    const section = await screen.findByRole('region', { name: 'Trends' });
+    const picker = within(section).getByRole('radiogroup', { name: 'Trend group' });
+    expect(within(picker).getAllByRole('radio')).toHaveLength(5);
+
+    fireEvent.click(within(section).getByRole('button', { name: 'Show table' }));
+    const grossRow = within(section).getByRole('row', { name: /Gross margin/ });
+    expect(grossRow).toHaveTextContent('40.0%');
+    expect(grossRow).toHaveTextContent('42.0%');
+
+    fireEvent.click(within(picker).getByRole('radio', { name: 'Safety' }));
+    expect(within(section).getByRole('row', { name: /Interest coverage/ })).toBeVisible();
+    expect(within(section).getByRole('button', { name: 'Show charts' })).toBeVisible();
+  });
+
   it('fires, dismisses and restores an item to investigate', async () => {
     const company = await seedCompany();
     await upsertStatement(

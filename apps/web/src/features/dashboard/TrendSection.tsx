@@ -1,0 +1,143 @@
+import { METRICS } from '@plainsight/calc-engine';
+import { lazy, Suspense, useState, type ReactElement } from 'react';
+
+import { SegmentedControl } from '../../components/SegmentedControl';
+import { StatusValue } from '../../components/StatusValue';
+import type { CompanyMetrics } from '../../hooks/useMetrics';
+import { DASHBOARD_SECTIONS } from './sections';
+import type { TrendPoint } from './TrendMiniChart';
+import * as styles from './trendSection.css';
+
+// The chart library loads only when the section first renders a chart; the
+// picker and the table fallback never pay for it.
+const TrendMiniChart = lazy(() =>
+  import('./TrendMiniChart').then((module) => ({ default: module.TrendMiniChart }))
+);
+
+/**
+ * The dashboard's trends section (dashboard design plan §6): one metric group
+ * at a time as small multiples on a shared run of fiscal years, with the
+ * table fallback every chart carries (frontend spec §8). Absent below three
+ * labelled years: trend shape needs at least three points; the sparklines
+ * and delta chips carry the story until then.
+ */
+export function TrendSection({ metrics }: { metrics: CompanyMetrics }): ReactElement | null {
+  const { company, report } = metrics;
+  const [groupLabel, setGroupLabel] = useState<string>(DASHBOARD_SECTIONS[0]?.label ?? '');
+  const [view, setView] = useState<'chart' | 'table'>('chart');
+
+  const group = DASHBOARD_SECTIONS.find((section) => section.label === groupLabel);
+  if (report.fyLabels.length < 3 || group === undefined) return null;
+
+  const options = DASHBOARD_SECTIONS.map((section) => ({
+    value: section.label,
+    label: section.label
+  }));
+
+  return (
+    <section className={styles.section} aria-label="Trends">
+      <h2 className={styles.heading}>Trends</h2>
+
+      <SegmentedControl
+        label="Trend group"
+        options={options}
+        value={group.label}
+        onChange={setGroupLabel}
+      />
+
+      {view === 'chart' ? (
+        <div className={styles.chartRow}>
+          {group.ids.map((id) => {
+            const def = METRICS[id];
+            const series = report.metrics[id];
+            const points: TrendPoint[] = report.fyLabels.map((fy) => {
+              const value = series.values[fy];
+              return {
+                fy,
+                value: value !== undefined && value.status === 'ok' ? value.value : null
+              };
+            });
+            const plottable = points.filter((point) => point.value !== null).length >= 2;
+            return (
+              <figure key={id} className={styles.chartCell}>
+                <figcaption className={styles.chartLabel}>{def.label}</figcaption>
+                {plottable ? (
+                  <Suspense fallback={<div className={styles.chartGhost} />}>
+                    <TrendMiniChart points={points} kind={def.format} currency={company.currency} />
+                  </Suspense>
+                ) : (
+                  <p className={styles.chartEmpty}>
+                    {series.latest === null ? (
+                      'No data'
+                    ) : (
+                      <StatusValue
+                        value={series.latest}
+                        kind={def.format}
+                        currency={company.currency}
+                        scale="table"
+                      />
+                    )}
+                  </p>
+                )}
+              </figure>
+            );
+          })}
+        </div>
+      ) : (
+        <div className={styles.scroller}>
+          <table className={styles.table}>
+            <caption className={styles.srOnly}>
+              {group.label} trends by fiscal year, metrics as rows
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" className={styles.metricColHead}>
+                  Metric
+                </th>
+                {report.fyLabels.map((fy) => (
+                  <th key={fy} scope="col" className={styles.yearHead}>
+                    {fy}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {group.ids.map((id) => (
+                <tr key={id}>
+                  <th scope="row" className={styles.metricRowHead}>
+                    {METRICS[id].label}
+                  </th>
+                  {report.fyLabels.map((fy) => {
+                    const value = report.metrics[id].values[fy];
+                    return (
+                      <td key={fy} className={styles.cell}>
+                        {value === undefined ? (
+                          <span className={styles.noData}>No data</span>
+                        ) : (
+                          <StatusValue
+                            value={value}
+                            kind={METRICS[id].format}
+                            currency={company.currency}
+                            scale="table"
+                          />
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <button
+        type="button"
+        className={styles.viewToggle}
+        onClick={() => setView((current) => (current === 'chart' ? 'table' : 'chart'))}
+      >
+        {view === 'chart' ? 'Show table' : 'Show charts'}
+      </button>
+    </section>
+  );
+}

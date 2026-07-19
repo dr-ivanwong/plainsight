@@ -60,7 +60,7 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 
 ### S3: Company dashboard
 
-Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2), red-flag section, entry points to S4/S5/S8.
+Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8.
 
 | State | Rendering |
 |---|---|
@@ -71,6 +71,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 | Flags fired | Orange/red cards beneath the grid: what fired (with numbers), why it matters, what to check |
 | Flags dismissed | Collapsed "1 dismissed" link; tap to review/undo |
 | Single year only | Sparklines and delta chips hidden; gentle "Add more years to see trends" hint |
+| 3+ labelled years | Trends section (added 2026-07-19, dashboard design plan §6): five-group segmented control, one small-multiple chart per metric (own y-axis, gaps where a year did not compute, a metric with under two computed years states its latest value in words), "Show table" fallback rendering the group's metrics by fiscal year; absent below three labelled years |
 | n/m values | Per companion P-5: "n/m: negative earnings" etc., never blank, never 0 |
 
 ### S4: Metric detail sheet (query-param addressable)
@@ -145,6 +146,8 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `MetricCard` | One metric tile | `label, value: MetricValue, spark?: Series, delta?: Delta, onOpen` |
 | `StatusValue` | Renders the `MetricValue` union (the no-NaN rule lives here) | `value, formatKind` |
 | `Sparkline` / `TrendChart` | 10-yr micro / full chart | `series, currency?, emphasisYear?` |
+| `TrendSection` | S3 trends: group picker, small multiples, table fallback (added 2026-07-19) | `metrics: CompanyMetrics` |
+| `TrendMiniChart` | One metric's small-multiple chart for `TrendSection` | `points: TrendPoint[], kind, currency` |
 | `DeltaChip` | 5-yr direction | `direction, magnitudeLabel` |
 | `RedFlagBanner` | One fired rule | `rule, firedWith, onDismiss, onExplain` |
 | `StatementGrid` | S5/S6 table shell | `rows, years, mode: 'entry'\|'review', onCommit` |

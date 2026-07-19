@@ -372,6 +372,8 @@ The section has a "View as table" toggle (the table-fallback pattern from main p
 
 Each mini chart draws its line on first render only (spring curve, 350ms), using Recharts' `isAnimationActive` prop. Data updates (switching categories via the segmented control) are instant: no transition, no morph. `prefers-reduced-motion` disables the draw-in entirely.
 
+**Build note (2026-07-19):** shipped with animation off entirely, matching the recorded stance on the detail and compare charts (a chart states a history, it does not perform one). A first-render-only draw-in would replay on every category switch, because each switch mounts new charts; suppressing that, plus the reduced-motion case, buys ceremony with complexity. Instant everywhere is the calmer reading of this section's own intent.
+
 ### 6.5 Benchmark reference lines
 
 **Current:** trend charts show raw values with no context for what "good" looks like.
@@ -499,6 +501,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Render below the grid (or table), above the red-flag section, in `Dashboard.tsx`.
 - Suppress when `fyLabels.length < 3`.
 - Add both components to the frontend spec §5 inventory (§11).
+- Landed 2026-07-19 (the first step under the instrument-panel direction, main plan §12 entry 12). The mini chart ships as `TrendMiniChart`: the detail sheet's chart already owns the `TrendChart` name. Animation per the §6.4 build note; a metric with under two computed years states its latest value in words in place of its plot.
 
 ### Step 12: benchmark reference lines
 
