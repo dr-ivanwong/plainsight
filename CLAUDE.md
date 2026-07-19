@@ -69,4 +69,4 @@ Decisions in the plans (see §12 decision log) are **resolved**; do not relitiga
 - **12-card budget** (data-model §12 D2): the dictionary pins M1–M14; exactly 12 render as dashboard cards (M10 and M13 live in their siblings' detail sheets); adding a card requires removing or demoting one.
 - **Never buy/sell language** anywhere in copy; red flags are "items to investigate," education framing throughout (legal posture, main plan §15).
 - Every displayed number must be reproducible by hand from its detail sheet; a number the owner can't trace to inputs is a P0 bug.
-- Progressive disclosure: the dashboard stays 12 numbers; depth (formula, inputs, Owner's-lens context) is one tap away, never on-screen by default.
+- Progressive disclosure: the dashboard stays 12 metrics, their recent years visible on the card faces (the history loosening, main plan §12 entry 14); depth (formula, inputs, Owner's-lens context) stays one tap away.

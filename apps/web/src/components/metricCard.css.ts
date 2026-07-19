@@ -67,6 +67,41 @@ export const valueRow = style({
   flexWrap: 'wrap'
 });
 
+/** The multi-year row (dashboard design plan §4.6): the figures carry the history. */
+export const historyRow = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: space[8]
+});
+
+// Cells keep their natural width: growing would stretch a wrapped line's
+// stragglers apart, and shrinking would clip figures. A crowded card wraps
+// the row instead (dashboard design plan §4.6: the row wraps naturally).
+export const historyCell = style({
+  flex: '0 0 auto',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: space[4]
+});
+
+// The year label stays full-strength textSecondary rather than the plan's
+// reduced opacity: 11px text dimmed further would slip under the AA floor
+// the contrast test pins (dashboard design plan §4.6 build note).
+export const historyYear = style({
+  fontSize: fontSize.caption2,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary,
+  fontVariantNumeric: 'tabular-nums'
+});
+
+export const historyValue = style({
+  fontSize: fontSize.caption2,
+  letterSpacing: tracking.caption,
+  color: colour.textPrimary,
+  fontVariantNumeric: 'tabular-nums',
+  whiteSpace: 'nowrap'
+});
+
 export const footnote = style({
   fontSize: fontSize.caption2,
   letterSpacing: tracking.caption,

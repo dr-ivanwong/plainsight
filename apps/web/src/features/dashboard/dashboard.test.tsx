@@ -234,7 +234,9 @@ describe('the company dashboard', () => {
     renderAt(`/company/${company.id}`);
 
     const gross = await screen.findByRole('article', { name: 'Gross margin' });
-    expect(within(gross).getByText('45.0%')).toBeVisible();
+    // The latest value appears twice from here: the display figure and the
+    // multi-year row's newest cell.
+    expect(within(gross).getAllByText('45.0%').length).toBeGreaterThan(0);
     expect(within(gross).getByText(/5\.0 pp/)).toHaveAttribute(
       'aria-label',
       'up 5.0 percentage points, FY2019 to FY2024'
@@ -476,6 +478,45 @@ describe('the company dashboard', () => {
     ).toBeVisible();
   });
 
+  it('carries the latest five years on the card face once three exist', async () => {
+    const company = await seedCompany();
+    for (let offset = 0; offset < 6; offset += 1) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${2019 + offset}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}`);
+
+    const gross = await screen.findByRole('article', { name: 'Gross margin' });
+    // Six years of history: the row carries the latest five as bare years,
+    // oldest dropped.
+    expect(within(gross).getByText('2020')).toBeVisible();
+    expect(within(gross).getByText('41.0%')).toBeVisible();
+    expect(within(gross).queryByText('2019')).not.toBeInTheDocument();
+    // An incomplete metric's row speaks the short form with the full phrase.
+    const roe = screen.getByRole('article', { name: 'ROE' });
+    const shortCells = within(roe).getAllByText('n/a');
+    expect(shortCells.length).toBeGreaterThan(0);
+    expect(shortCells[0]).toHaveAttribute('aria-label', 'not enough data');
+  });
+
+  it('keeps the card face to the latest value below three years', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+
+    const gross = await screen.findByRole('article', { name: 'Gross margin' });
+    expect(within(gross).queryByText('2024')).not.toBeInTheDocument();
+  });
+
   it('fires, dismisses and restores an item to investigate', async () => {
     const company = await seedCompany();
     await upsertStatement(
@@ -672,7 +713,7 @@ describe('the company dashboard', () => {
     renderAt('/company/sample-csl');
     expect(await screen.findByRole('heading', { name: 'CSL' })).toBeVisible();
     const gross = await screen.findByRole('article', { name: 'Gross margin' });
-    expect(within(gross).getByText(/\d+\.\d%/)).toBeVisible();
+    expect(within(gross).getAllByText(/\d+\.\d%/).length).toBeGreaterThan(0);
   });
 
   it('shows the ending basis when total liabilities are never filed', async () => {

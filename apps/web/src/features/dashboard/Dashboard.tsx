@@ -1,9 +1,16 @@
-import { METRICS, type MetricId, type MetricSeries } from '@plainsight/calc-engine';
+import {
+  formatMetricValue,
+  METRICS,
+  NOT_MEANINGFUL_PHRASES,
+  type MetricFormat,
+  type MetricId,
+  type MetricSeries
+} from '@plainsight/calc-engine';
 import { Link } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Fragment, useState, type ReactElement } from 'react';
 
-import { MetricCard } from '../../components/MetricCard';
+import { MetricCard, type HistoryEntry } from '../../components/MetricCard';
 import { RedFlagBanner } from '../../components/RedFlagBanner';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { okPoints, type SparkPoint } from '../../components/Sparkline';
@@ -81,6 +88,28 @@ export function Dashboard({
   // has been reviewed, so it stops claiming the dot.
   const activeRuleIds = flags?.active.map((flag) => flag.ruleId) ?? [];
 
+  // The multi-year row (dashboard design plan §4.6): the latest five labelled
+  // years, from three years of history up. Always the same five whatever the
+  // range control says: ranges are suffixes sharing one tail, and the card
+  // face pins its width at five; the table and charts carry longer ranges.
+  const historyFor = (
+    series: MetricSeries,
+    kind: MetricFormat
+  ): HistoryEntry[] | undefined => {
+    if (report.fyLabels.length < 3) return undefined;
+    return report.fyLabels.slice(-5).map((fy) => {
+      const value = series.values[fy];
+      if (value === undefined || value.status === 'insufficient_data') {
+        return { fy, display: 'n/a', spoken: 'not enough data' };
+      }
+      if (value.status === 'not_meaningful') {
+        const phrase = NOT_MEANINGFUL_PHRASES[value.reason];
+        return { fy, display: 'n/m', spoken: phrase.replace('n/m:', 'not meaningful:') };
+      }
+      return { fy, display: formatMetricValue(value, kind, company.currency) };
+    });
+  };
+
   // One dashboard card. The section map supplies the ids, which the dashboard
   // test holds to the dictionary's card flags (the metric-budget decision).
   const renderCard = (id: MetricId): ReactElement | null => {
@@ -97,6 +126,7 @@ export function Dashboard({
 
     const spark = sparkFor(series);
     const health = cardHealth(id, series.delta, activeRuleIds);
+    const history = historyFor(series, def.format);
     if (latest.status === 'insufficient_data' && report.latestFy !== null) {
       return (
         <Link
@@ -115,6 +145,7 @@ export function Dashboard({
             delta={series.delta ?? undefined}
             health={health}
             healthDirection={def.healthDirection}
+            history={history}
           />
         </Link>
       );
@@ -137,6 +168,7 @@ export function Dashboard({
           delta={series.delta ?? undefined}
           health={health}
           healthDirection={def.healthDirection}
+          history={history}
           footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
           stale={valuation && priceIsStale}
         />

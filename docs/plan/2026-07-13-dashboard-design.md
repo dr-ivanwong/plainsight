@@ -238,6 +238,8 @@ This is the single most impactful change for making the dashboard feel financial
 
 Implementation: `MetricCard` receives a new optional `history?: Array<{ fy: string; display: string }>` prop. The `Dashboard` container builds it from `report.metrics[id].values`, formatting each via the existing `formatMetricValue`. The year row is a flex container with `gap: space[8]`, each cell a `flex: 1` span.
 
+**Build note (2026-07-19, landed):** four readings settled at build time. Year labels render as bare years, exactly as this section's sketch draws them: five FY prefixes collide at 11px. They stay full-strength textSecondary rather than the reduced opacity above, which would slip 11px text under the AA floor the contrast test pins. Cells keep natural width (`flex: 0 0 auto`) and the row wraps as this section anticipates where five formatted figures outgrow a four-column card; the pinned formatter stays (§4.7), so a wide percentage wraps rather than shedding its sign. Degenerate years speak the practitioner table's short forms ("n/m", "n/a") with the full phrases as accessible names. And the year-range control's claim over this row (§5.5) proved vacuous: ranges are suffixes sharing one tail and the row pins at the latest five, so the range governs the table and the charts while the card face stays put.
+
 ### 4.7 Compact number formatting
 
 **Correction (2026-07-14): the first draft proposed something that already exists.** It claimed money currently renders as full figures with thousands separators; it does not. `formatMoneyMinor` in the calc-engine already renders money compact to 3 significant figures with a currency symbol ("$9.65b", lowercase suffixes k/m/b/t; sub-thousand amounts plain), and that precision is pinned display policy (data-model §4), owner-confirmed in the display-precision review (its §12). The existing formatter even settles the boundary the first draft's test plan got wrong: a value like $999.50k deliberately prints as "$1.00m", never "$1000k".
@@ -482,6 +484,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Add the `history` prop to `MetricCard`; build the array in `Dashboard.tsx` via the existing `formatMetricValue` (§4.7: no new formatter).
 - Style the year row in `metricCard.css.ts`.
 - Amend the frontend spec's S3 card-contents row and the main plan §4 wording in the same change.
+- Landed 2026-07-19, the loosening owner-approved with stage 3 of the finance-look gap plan (main plan §12 entry 14); readings per the §4.6 build note.
 
 ### Step 7: key-stats header
 
