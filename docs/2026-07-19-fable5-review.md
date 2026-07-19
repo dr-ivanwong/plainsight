@@ -14,6 +14,7 @@
 2. **Single-device operation is the owner's posture; the backend stays the source of truth.** The owner runs one device and is not converging a second. Sign-in and the backend-of-record (decision §12.9) stay, so the findings on the sign-in and upload legs are untouched: **INFRA-1 and FE-2 stay P1** (sign-in still happens; both since fixed, item 3 below) and **BE-2 stays P1** (live whenever a filing is uploaded). What re-scores is the sync-*convergence* cluster, which needs a concurrent second writer to bite: **BE-1 P1 → P2, BE-3 P2 → P3, BE-4 P2 → P3, FE-4 P2 → P3**, each latent and reactivating to its original severity the day a second device syncs. **X-1 narrows** from a four-leg journey to sign-in → first sync → upload. This posture also descopes the pinned two-device Phase 3 exit criterion (main plan §8; CLAUDE.md still reads "awaiting the owner's two real devices"), which should get its own decision-log entry; the sync protocol itself stays correct-by-design and tested, so nothing here is deleted, only deferred.
 3. **INFRA-1 and FE-2 are fixed.** The deployed CSP now names the Cognito hosted-UI origin, so the sign-in PKCE token exchange is no longer blocked, confirmed live on the edge (commit `b306b74`, deployed 2026-07-19). Token refresh now separates a definitive refusal from an unreachable endpoint: only a refusal signs the device out, while a network blip, a 5xx, or a 429 keeps the session and fails the run into the scheduler's backoff, so the retry-until-accepted obligation holds through a bad network moment (commit `d1af36e`). With both landed, the imminent single-device path (sign-in → first sync → upload) has one live blocker left, BE-2 on the upload leg (since fixed, item 4); the CSP fix has cleared the runbook's account-creation step.
 4. **BE-2 is fixed.** The upload worker's `validating` stage now runs the pinned §5 gates (cross-footing, scale-jump, and the conversion-level sign and integer checks) over the extracted result, so a filing that does not cross-foot no longer reaches review unflagged (commit `4288746`). Uploads keep no quarantine, since the user is the reviewer: findings never fail the job and no year is dropped, they ride the review payload as `gateFindings` for the reviewer to see. With this, every named code break on the single-device path (INFRA-1, FE-2, BE-2) is cleared; what remains for go-live is the rehearsal itself (an owner step) and the never-fired cost chain (INFRA-3).
+5. **FE-1 is fixed.** A per-feature-region error boundary now carries the pinned three affordances (a friendly message naming the region, a retry that remounts it clean, and the export escape hatch, downloading the real library file through a shared path the data screen uses too); it wraps every sheet body, the three Recharts surfaces, review mode, and the import-job strip, and the router gained `defaultErrorComponent` as the screen-level backstop (commit `d51f4cd`). The pinned scenario, a chart crash taking down a grid holding unsaved keystrokes, is now impossible by construction; eight tests drive real crashes through catch, retry, and the export path.
 
 ---
 
@@ -55,7 +56,7 @@ Evidence-backed, not aspirational:
 
 ## 3. Findings at a glance
 
-41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2 and BE-2 fixed, and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 7 P1, 15 P2, 15 P3.
+41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2 and FE-1 fixed, and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 6 P1, 15 P2, 15 P3.
 
 | Code | Sev | Finding |
 |---|---|---|
@@ -63,7 +64,7 @@ Evidence-backed, not aspirational:
 | X-1 | P1 | The sign-in → first-sync → upload path is unrehearsed; its named code breaks (INFRA-1, FE-2, BE-2) all fixed 2026-07-19, so what remains is the rehearsal (owner step) and the cost chain (INFRA-3); second-device leg descoped |
 | BE-1 | P2 (was P1) | Sync pull checkpoint can permanently skip committed records (non-atomic seq, eventually consistent feed); needs a concurrent second writer |
 | BE-2 | P1 (fixed) | Upload job's "validating" stage never runs the pinned cross-footing gates. Fixed 2026-07-19 (`4288746`) |
-| FE-1 | P1 | No error boundaries anywhere; the pinned message/retry/export escape hatch does not exist |
+| FE-1 | P1 (fixed) | No error boundaries anywhere; the pinned message/retry/export escape hatch does not exist. Fixed 2026-07-19 (`d51f4cd`) |
 | FE-2 | P1 (fixed) | Transient network failure during token refresh signs the device out and halts write retries silently. Fixed 2026-07-19 (`d1af36e`) |
 | FE-3 | P1 | Service worker force-reloads mid-session on every deploy, against its own stated intent; unsaved work at risk |
 | UI-2 | P1 | First-run copy states the superseded architecture ("no account and no server") as fact |
@@ -186,7 +187,9 @@ A single year failing the storage-schema parse throws out of the mapping and fai
 
 ## 6. Frontend architecture
 
-### FE-1 · P1 · No error boundaries; the pinned escape hatch does not exist
+### FE-1 · P1 (fixed) · No error boundaries; the pinned escape hatch does not exist
+
+*Fixed 2026-07-19 (`d51f4cd`): a `RegionBoundary` component with the pinned three affordances wraps every sheet body, the three Recharts surfaces, review mode, and the import-job strip, with `defaultErrorComponent` on the router as the screen-level backstop; the export escape hatch downloads the real library file through a shared path. Eight tests drive real crashes. The original finding follows.*
 
 Frontend spec §2 and main plan §5 pin per-feature-region boundaries with a friendly message, retry, and an "Export my data" escape hatch; the stated rationale is that a chart crash must never take down a grid holding unsaved keystrokes. A repo-wide search finds no ErrorBoundary, no `errorComponent`, no `defaultErrorComponent` on the router (`apps/web/src/main.tsx:13`, `routes/__root.tsx`). A render-time throw falls to TanStack Router's bare default at whole-route blast radius. Recharts now renders in four places, including inside the entry route via review mode, which is precisely the pinned scenario. **Direction:** one small designed boundary component (message, retry, export link reusing the settings export path) around chart regions, sheet bodies, and each route's feature region, plus a router-level backstop.
 
@@ -348,7 +351,7 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 1. **Restore the trust invariant (UI-1). Done 2026-07-19 (`08ba083`, `41837c3`).** Substituted the averaged denominator, listed the prior-year input, rendered the ROIC intermediates, and added the evaluate-the-substitution test across all fourteen metrics on both bases. This was the product's founding promise; it outranked everything else.
 2. **Unblock sign-in (INFRA-1). Done 2026-07-19 (`b306b74`).** Cognito origin into connect-src, the spec §6 formula and invariant expectation amended in the same commit, verified live on the edge.
 3. **Rehearse the single-device path (X-1; FE-2 done `d1af36e`).** Token refresh is now blip-tolerant (FE-2 fixed 2026-07-19), so what remains is the walk itself: sign-in → first sync → upload once against the real backend, then one deliberate firing of the budget kill chain. The sync-convergence fixes (BE-1, BE-3, BE-4, FE-4) are deferred under single-device operation; schedule them as the pre-condition for ever adding a second device, not for this go-live.
-4. **Protect unsaved work (FE-3, FE-1).** Settle the service-worker update posture and land the designed error boundaries; both defend the same asset, the owner's in-flight keystrokes.
+4. **Protect unsaved work (FE-1 done `d51f4cd`; FE-3 remains).** The designed error boundaries landed (per-region plus a router backstop, message/retry/export). What remains is settling the service-worker update posture (FE-3), which defends the same asset: the owner's in-flight keystrokes.
 5. **Make uploads honest before they are used (BE-2 done `4288746`; BE-5, FE-5, FE-6, BE-6 remain).** Gates in the worker (done: they run in the validating stage and the verdicts reach the reviewer), then quota refunds plus a runbook reset, user-only known-zero minting, the atomic review save, and the keep-source decision.
 6. **Close the pipeline's own gaps (INFRA-2, INFRA-4, INFRA-3).** The read-only diff role, drop the dead environment trust, and the cost-chain verification steps tied to the tag-activation runbook step.
 7. **One documentation commit (X-2, UI-2's spec half, FE-9's claim, plan tensions 4–6).** Sweep README, runbook, main plan §7 and epigraph, cdk spec §7, CLAUDE.md, ADR 0001 (or a superseding ADR), infra README, and the two stale code headers; align the spec copy passages with the source-of-truth decision.
