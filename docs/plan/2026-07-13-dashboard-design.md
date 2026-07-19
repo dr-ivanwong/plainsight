@@ -344,6 +344,8 @@ Implementation: a segmented control with three options, stored in component stat
 
 This is a standard financial dashboard control. Morningstar, Koyfin, and Bloomberg all default to 5 years and let the user expand.
 
+**Build note (2026-07-19):** landed with the trends section (step 11) as its first consumer, seated between the hero and the grid: the key-stats header this section placed it under is later staged work and does not exist yet. It scopes the trends charts and table today, the practitioner table when step 10 lands, and the multi-year card row when step 6 unblocks.
+
 ## 6. Trend chart section
 
 ### 6.1 Purpose
@@ -485,6 +487,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Add the segmented control to the dashboard chrome.
 - Thread the selected range through the card history, table, and chart rendering.
 - Render only when more than 5 fiscal years exist.
+- Landed 2026-07-19 alongside step 11, per the deferral note above (placement per the §5.5 build note).
 
 ### Step 10: practitioner table view
 

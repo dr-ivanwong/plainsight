@@ -282,6 +282,8 @@ describe('the company dashboard', () => {
     const section = await screen.findByRole('region', { name: 'Trends' });
     const picker = within(section).getByRole('radiogroup', { name: 'Trend group' });
     expect(within(picker).getAllByRole('radio')).toHaveLength(5);
+    // The year-range control exists only past five labelled years.
+    expect(screen.queryByRole('radiogroup', { name: 'Year range' })).not.toBeInTheDocument();
 
     fireEvent.click(within(section).getByRole('button', { name: 'Show table' }));
     const grossRow = within(section).getByRole('row', { name: /Gross margin/ });
@@ -291,6 +293,34 @@ describe('the company dashboard', () => {
     fireEvent.click(within(picker).getByRole('radio', { name: 'Safety' }));
     expect(within(section).getByRole('row', { name: /Interest coverage/ })).toBeVisible();
     expect(within(section).getByRole('button', { name: 'Show charts' })).toBeVisible();
+  });
+
+  it('scopes the trends by the year-range control once six years exist', async () => {
+    const company = await seedCompany();
+    for (let offset = 0; offset < 6; offset += 1) {
+      const year = 2019 + offset;
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${year}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}`);
+
+    const section = await screen.findByRole('region', { name: 'Trends' });
+    fireEvent.click(within(section).getByRole('button', { name: 'Show table' }));
+    expect(
+      within(section).queryByRole('columnheader', { name: 'FY2019' })
+    ).not.toBeInTheDocument();
+    expect(within(section).getByRole('columnheader', { name: 'FY2024' })).toBeVisible();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'All' }));
+    expect(await within(section).findByRole('columnheader', { name: 'FY2019' })).toBeVisible();
   });
 
   it('fires, dismisses and restores an item to investigate', async () => {

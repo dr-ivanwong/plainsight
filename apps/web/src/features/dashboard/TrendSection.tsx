@@ -1,4 +1,4 @@
-import { METRICS } from '@plainsight/calc-engine';
+import { METRICS, type FyLabel } from '@plainsight/calc-engine';
 import { lazy, Suspense, useState, type ReactElement } from 'react';
 
 import { SegmentedControl } from '../../components/SegmentedControl';
@@ -19,9 +19,18 @@ const TrendMiniChart = lazy(() =>
  * at a time as small multiples on a shared run of fiscal years, with the
  * table fallback every chart carries (frontend spec §8). Absent below three
  * labelled years: trend shape needs at least three points; the sparklines
- * and delta chips carry the story until then.
+ * and delta chips carry the story until then. The years drawn come from the
+ * dashboard's year-range control (dashboard design plan §5.5); presence
+ * gates on the full history regardless of the range picked.
  */
-export function TrendSection({ metrics }: { metrics: CompanyMetrics }): ReactElement | null {
+export function TrendSection({
+  metrics,
+  fyLabels
+}: {
+  metrics: CompanyMetrics;
+  /** The fiscal years in the picked range, ascending. */
+  fyLabels: readonly FyLabel[];
+}): ReactElement | null {
   const { company, report } = metrics;
   const [groupLabel, setGroupLabel] = useState<string>(DASHBOARD_SECTIONS[0]?.label ?? '');
   const [view, setView] = useState<'chart' | 'table'>('chart');
@@ -50,7 +59,7 @@ export function TrendSection({ metrics }: { metrics: CompanyMetrics }): ReactEle
           {group.ids.map((id) => {
             const def = METRICS[id];
             const series = report.metrics[id];
-            const points: TrendPoint[] = report.fyLabels.map((fy) => {
+            const points: TrendPoint[] = fyLabels.map((fy) => {
               const value = series.values[fy];
               return {
                 fy,
@@ -94,7 +103,7 @@ export function TrendSection({ metrics }: { metrics: CompanyMetrics }): ReactEle
                 <th scope="col" className={styles.metricColHead}>
                   Metric
                 </th>
-                {report.fyLabels.map((fy) => (
+                {fyLabels.map((fy) => (
                   <th key={fy} scope="col" className={styles.yearHead}>
                     {fy}
                   </th>
@@ -107,7 +116,7 @@ export function TrendSection({ metrics }: { metrics: CompanyMetrics }): ReactEle
                   <th scope="row" className={styles.metricRowHead}>
                     {METRICS[id].label}
                   </th>
-                  {report.fyLabels.map((fy) => {
+                  {fyLabels.map((fy) => {
                     const value = report.metrics[id].values[fy];
                     return (
                       <td key={fy} className={styles.cell}>

@@ -12,6 +12,7 @@ import { Fragment, useState, type FormEvent, type ReactElement } from 'react';
 import { MetricCard } from '../../components/MetricCard';
 import { parseEntryText } from '../../components/moneyEntry';
 import { RedFlagBanner } from '../../components/RedFlagBanner';
+import { SegmentedControl } from '../../components/SegmentedControl';
 import { okPoints, type SparkPoint } from '../../components/Sparkline';
 import { db, putPrice, type CompanyRecord } from '../../db';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
@@ -23,6 +24,15 @@ import { DASHBOARD_SECTIONS } from './sections';
 import { TrendSection } from './TrendSection';
 
 const STALE_PRICE_MS = 90 * 86_400_000;
+
+/** The year-range scopes (dashboard design plan §5.5); the control exists only past five years. */
+type YearRange = 'last5' | 'last10' | 'all';
+
+const YEAR_RANGE_OPTIONS: readonly { value: YearRange; label: string }[] = [
+  { value: 'last5', label: 'Last 5 years' },
+  { value: 'last10', label: 'Last 10 years' },
+  { value: 'all', label: 'All' }
+];
 
 const localToday = (): string => {
   const now = new Date();
@@ -132,6 +142,13 @@ export function Dashboard({
   const { company, price, report } = metrics;
   const flags = useRedFlags(company.id, report);
   const [showDismissed, setShowDismissed] = useState(false);
+  // Not persisted by design: the range resets to the default each visit
+  // (dashboard design plan §5.5). Cards and sparklines deliberately ignore it.
+  const [yearRange, setYearRange] = useState<YearRange>('last5');
+  const rangedFyLabels =
+    yearRange === 'all'
+      ? report.fyLabels
+      : report.fyLabels.slice(yearRange === 'last5' ? -5 : -10);
   const hero = [company.sector, report.latestFy, company.currency]
     .filter((part): part is string => typeof part === 'string' && part !== '')
     .join(' · ');
@@ -235,6 +252,17 @@ export function Dashboard({
         </section>
       ) : (
         <>
+          {report.fyLabels.length > 5 ? (
+            <div className={styles.rangeRow}>
+              <SegmentedControl
+                label="Year range"
+                options={YEAR_RANGE_OPTIONS}
+                value={yearRange}
+                onChange={setYearRange}
+              />
+            </div>
+          ) : null}
+
           <section className={styles.grid} aria-label="Metrics">
             {DASHBOARD_SECTIONS.map(({ label, ids }) => (
               <Fragment key={label}>
@@ -248,7 +276,7 @@ export function Dashboard({
             <p className={styles.trendHint}>Add more years to see trends.</p>
           ) : null}
 
-          <TrendSection metrics={metrics} />
+          <TrendSection metrics={metrics} fyLabels={rangedFyLabels} />
 
           {flags !== undefined && (flags.active.length > 0 || flags.dismissed.length > 0) ? (
             <section className={styles.flagSection} aria-label="Items to investigate">

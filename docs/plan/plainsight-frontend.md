@@ -72,6 +72,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 | Flags dismissed | Collapsed "1 dismissed" link; tap to review/undo |
 | Single year only | Sparklines and delta chips hidden; gentle "Add more years to see trends" hint |
 | 3+ labelled years | Trends section (added 2026-07-19, dashboard design plan §6): five-group segmented control, one small-multiple chart per metric (own y-axis, gaps where a year did not compute, a metric with under two computed years states its latest value in words), "Show table" fallback rendering the group's metrics by fiscal year; absent below three labelled years |
+| 6+ labelled years | Year-range control between hero and grid (added 2026-07-19, dashboard design plan §5.5): Last 5 years (default) / Last 10 years / All, scoping the trends section and the table view; cards and sparklines unaffected; not persisted |
 | n/m values | Per companion P-5: "n/m: negative earnings" etc., never blank, never 0 |
 
 ### S4: Metric detail sheet (query-param addressable)

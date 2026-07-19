@@ -68,6 +68,11 @@ export const heroFacts = style({
   fontVariantNumeric: 'tabular-nums'
 });
 
+/** Seats the year-range control between the hero and the grid (dashboard design plan §5.5). */
+export const rangeRow = style({
+  marginBottom: space[16]
+});
+
 /**
  * Auto-fit below the wide breakpoint; four deterministic columns at it, wide
  * enough to seat the coming multi-year row (dashboard design plan §5.1,
