@@ -7,8 +7,10 @@ import { RouteErrorFallback } from './components/RegionBoundary';
 import { routeTree } from './routeTree.gen';
 import './styles/global.css';
 
-// The offline shell: assets precache on first visit and updates apply on the
-// next launch, with no update ceremony (calm over chrome).
+// The offline shell: assets precache on first visit, and an update installs
+// beside the running app, taking over on the next launch (pwaOptions.ts pins
+// the semantics). Nothing reloads mid-session and no ceremony interrupts:
+// calm over chrome, and no keystroke is ever lost to a deploy.
 registerSW({ immediate: true });
 
 // The route-level backstop (frontend spec section 2): an uncaught render
