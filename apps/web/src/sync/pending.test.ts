@@ -45,7 +45,7 @@ const offlineFetch: typeof fetch = (async () => {
 
 const deps = (fetchImpl: typeof fetch): SyncDeps => ({
   db,
-  accessToken: async () => 'token',
+  accessToken: async () => ({ status: 'token', accessToken: 'token' }),
   fetchImpl,
   now: () => new Date('2026-07-18T10:00:00Z'),
   newId: () => `id-${(counter += 1)}`

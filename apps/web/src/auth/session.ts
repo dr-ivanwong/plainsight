@@ -1,11 +1,12 @@
 /**
- * The hosted-UI session (main plan §5: sync is an optional overlay; backend
- * spec §2: the Cognito token is what the authenticated routes check). Cognito
- * hosts the sign-in page, so no form of ours ever sees a credential; this
- * module only walks the code-and-PKCE handshake, keeps the tokens in the
- * device-local meta row the export allowlist can never reach, and refreshes
- * quietly. Signed out, nothing changes anywhere: the app's whole offline core
- * neither knows nor cares.
+ * The hosted-UI session (main plan §12.9: the backend is the source of truth,
+ * so the session is what durable use rides on; backend spec §2: the Cognito
+ * token is what the authenticated routes check). Cognito hosts the sign-in
+ * page, so no form of ours ever sees a credential; this module only walks the
+ * code-and-PKCE handshake, keeps the tokens in the device-local meta row the
+ * export allowlist can never reach, and refreshes quietly. Only the endpoint
+ * itself refusing a grant ends the session: an unreachable endpoint is a
+ * moment, not a verdict, and must never sign the device out.
  */
 import { db, getMeta, setMeta, type MetaValue } from '../db';
 import { challengeOf, randomUrlSafe } from './pkce';
@@ -78,20 +79,37 @@ interface TokenAnswer {
   expires_in?: number;
 }
 
-async function tokenCall(
-  deps: AuthDeps,
-  body: Record<string, string>
-): Promise<TokenAnswer | undefined> {
+type TokenCallResult =
+  | { kind: 'answered'; answer: TokenAnswer }
+  | { kind: 'refused' }
+  | { kind: 'unreachable' };
+
+/**
+ * One POST to the token endpoint, its failures told apart because they mean
+ * different things: a 4xx answer is the endpoint judging the grant dead
+ * (retrying cannot revive it), while a thrown fetch, a 5xx, or a 429 says
+ * nothing about the grant at all. A captive portal at refresh time therefore
+ * reads as 'unreachable', never as a refusal.
+ */
+async function tokenCall(deps: AuthDeps, body: Record<string, string>): Promise<TokenCallResult> {
+  let response: Response;
   try {
-    const response = await deps.fetchImpl(`${AUTH_CONFIG.hostedUiBase}/oauth2/token`, {
+    response = await deps.fetchImpl(`${AUTH_CONFIG.hostedUiBase}/oauth2/token`, {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(body).toString()
     });
-    if (!response.ok) return undefined;
-    return (await response.json()) as TokenAnswer;
   } catch {
-    return undefined;
+    return { kind: 'unreachable' };
+  }
+  if (response.status >= 500 || response.status === 429) return { kind: 'unreachable' };
+  if (!response.ok) return { kind: 'refused' };
+  try {
+    return { kind: 'answered', answer: (await response.json()) as TokenAnswer };
+  } catch {
+    // A success status with an unreadable body is a mangled response (a
+    // proxy, a portal), not a judgement on the grant.
+    return { kind: 'unreachable' };
   }
 }
 
@@ -122,15 +140,17 @@ export async function completeSignIn(
   }
   if (handshake.state !== state) return 'failed';
 
-  const answer = await tokenCall(deps, {
+  const result = await tokenCall(deps, {
     grant_type: 'authorization_code',
     client_id: AUTH_CONFIG.clientId,
     code,
     code_verifier: handshake.verifier,
     redirect_uri: window.location.origin
   });
+  if (result.kind !== 'answered') return 'failed';
+  const answer = result.answer;
   if (
-    answer?.id_token === undefined ||
+    answer.id_token === undefined ||
     answer.access_token === undefined ||
     answer.refresh_token === undefined ||
     answer.expires_in === undefined
@@ -149,37 +169,55 @@ export async function completeSignIn(
 }
 
 /**
- * The access token for an authenticated call, refreshed when it is about to
- * die. A failed refresh signs the device out quietly: sync is silent and
- * retried by design (main plan §5), and the settings row shows the state.
+ * The three-way answer of a token ask. 'unavailable' keeps the session: the
+ * endpoint could not be reached (or had a server-side moment), so nothing was
+ * learnt about the grant and the caller's retry cadence owns the wait. Only a
+ * definitive refusal, or no session at all, answers signed_out.
  */
-export async function getAccessToken(deps: AuthDeps = defaultDeps()): Promise<string | null> {
-  const session = await getMeta(db, 'authSession');
-  if (session === undefined) return null;
-  if (session.expiresAt - deps.now() > REFRESH_MARGIN_MS) return session.accessToken;
+export type AccessTokenAnswer =
+  | { status: 'token'; accessToken: string }
+  | { status: 'signed_out' }
+  | { status: 'unavailable' };
 
-  const answer = await tokenCall(deps, {
+/**
+ * The access token for an authenticated call, refreshed when it is about to
+ * die. Only the endpoint refusing the refresh signs the device out; an
+ * unreachable endpoint keeps the session and answers 'unavailable', so the
+ * sync run fails into the scheduler's backoff and the retry-until-accepted
+ * obligation (main plan §12.9) survives a network blip at refresh time. The
+ * settings row shows whichever state results.
+ */
+export async function getAccessToken(deps: AuthDeps = defaultDeps()): Promise<AccessTokenAnswer> {
+  const session = await getMeta(db, 'authSession');
+  if (session === undefined) return { status: 'signed_out' };
+  if (session.expiresAt - deps.now() > REFRESH_MARGIN_MS) {
+    return { status: 'token', accessToken: session.accessToken };
+  }
+
+  const result = await tokenCall(deps, {
     grant_type: 'refresh_token',
     client_id: AUTH_CONFIG.clientId,
     refresh_token: session.refreshToken
   });
+  if (result.kind === 'unreachable') return { status: 'unavailable' };
   if (
-    answer?.id_token === undefined ||
-    answer.access_token === undefined ||
-    answer.expires_in === undefined
+    result.kind === 'refused' ||
+    result.answer.id_token === undefined ||
+    result.answer.access_token === undefined ||
+    result.answer.expires_in === undefined
   ) {
     await db.meta.delete('authSession');
-    return null;
+    return { status: 'signed_out' };
   }
   const refreshed: AuthSession = {
     ...session,
-    idToken: answer.id_token,
-    accessToken: answer.access_token,
-    expiresAt: deps.now() + answer.expires_in * 1000,
-    email: emailOfIdToken(answer.id_token)
+    idToken: result.answer.id_token,
+    accessToken: result.answer.access_token,
+    expiresAt: deps.now() + result.answer.expires_in * 1000,
+    email: emailOfIdToken(result.answer.id_token)
   };
   await setMeta(db, 'authSession', refreshed);
-  return refreshed.accessToken;
+  return { status: 'token', accessToken: refreshed.accessToken };
 }
 
 /** Drops the local session and lets the hosted UI end its own. */

@@ -27,13 +27,17 @@ import {
   thesisVersionRecordSchema,
   type SyncStateRecord
 } from '../db/records';
+import type { AccessTokenAnswer } from '../auth/session';
 import { getMeta, setMeta } from '../db/meta';
 import { collectPendingWrites, recordKeyOf } from './pending';
 
 export interface SyncDeps {
   db: PlainsightDb;
-  /** Null means signed out; the run ends quietly. */
-  accessToken(): Promise<string | null>;
+  /**
+   * The auth layer's three-way answer: signed_out ends the run quietly,
+   * unavailable fails it into the scheduler's backoff with the session kept.
+   */
+  accessToken(): Promise<AccessTokenAnswer>;
   fetchImpl: typeof fetch;
   now(): Date;
   newId(): string;
@@ -114,9 +118,16 @@ const pullWins = (record: SyncServerRecord, shadow: SyncStateRecord): boolean =>
 export async function runSync(deps: SyncDeps): Promise<SyncOutcome> {
   try {
     const token = await deps.accessToken();
-    if (token === null) return { outcome: 'signed_out' };
+    if (token.status === 'signed_out') return { outcome: 'signed_out' };
+    // An unreachable token endpoint fails the run without touching the wire:
+    // the backoff owns the retry, and the queued writes keep waiting rather
+    // than the device silently signing out (main plan §12.9).
+    if (token.status === 'unavailable') return { outcome: 'failed' };
     const { db } = deps;
-    const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };
+    const headers = {
+      authorization: `Bearer ${token.accessToken}`,
+      'content-type': 'application/json'
+    };
 
     let deviceId = await getMeta(db, 'deviceId');
     if (deviceId === undefined) {

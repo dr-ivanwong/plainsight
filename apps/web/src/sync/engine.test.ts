@@ -60,7 +60,7 @@ class FakeServer {
 let counter = 0;
 const deviceDeps = (db: PlainsightDb, server: FakeServer, device: string): SyncDeps => ({
   db,
-  accessToken: async () => 'token',
+  accessToken: async () => ({ status: 'token', accessToken: 'token' }),
   fetchImpl: server.fetchImpl,
   now: () => new Date('2026-07-18T10:00:00Z'),
   newId: () => `${device}-${(counter += 1)}`
@@ -300,7 +300,26 @@ describe('two devices converge on the server\'s copy', () => {
   });
 
   it('signed out, the run ends quietly and touches nothing', async () => {
-    const deps = { ...deviceDeps(deviceA, server, 'a'), accessToken: async () => null };
+    const deps: SyncDeps = {
+      ...deviceDeps(deviceA, server, 'a'),
+      accessToken: async () => ({ status: 'signed_out' })
+    };
     await expect(runSync(deps)).resolves.toEqual({ outcome: 'signed_out' });
+  });
+
+  it('an unavailable token fails the run without touching the wire', async () => {
+    let fetched = 0;
+    const deps: SyncDeps = {
+      ...deviceDeps(deviceA, server, 'a'),
+      accessToken: async () => ({ status: 'unavailable' }),
+      fetchImpl: (async () => {
+        fetched += 1;
+        throw new Error('the run must not reach the wire without a token');
+      }) as typeof fetch
+    };
+    // Failed, not signed out: the session stays whole and the scheduler's
+    // backoff owns the retry while the token endpoint is unreachable.
+    await expect(runSync(deps)).resolves.toEqual({ outcome: 'failed' });
+    expect(fetched).toBe(0);
   });
 });
