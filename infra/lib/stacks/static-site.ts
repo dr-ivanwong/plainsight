@@ -6,19 +6,25 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../../config/types';
+import { hostedUiOrigin } from './auth';
 import { distributionIdParameterName } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 
 /**
  * The CSP served on every response (main plan §6; spec §6 pins the equality
- * invariant on connect-src). Built from config so the BYOK allowlist can
- * never silently widen: connect-src is exactly 'self' plus
- * config.csp.providerOrigins, in order. When features.api turns on in
- * Phase 2, a future change adds the API origin to this list (and the
- * invariant test's expectation in the same commit).
+ * invariant on connect-src). Built from config so the allowlist can never
+ * silently widen: connect-src is exactly 'self', then the Cognito hosted-UI
+ * origin while features.auth is on (sign-in's PKCE token exchange and refresh
+ * call it from the page; spec §6 as amended 2026-07-19), then
+ * config.csp.providerOrigins, in order. The API needs no entry: it is served
+ * same-origin through this distribution's /v1/* behaviour.
  */
 function buildContentSecurityPolicy(config: EnvConfig): string {
-  const connectSrc = ["'self'", ...config.csp.providerOrigins].join(' ');
+  const connectSrc = [
+    "'self'",
+    ...(config.features.auth ? [hostedUiOrigin(config)] : []),
+    ...config.csp.providerOrigins,
+  ].join(' ');
   return [
     "default-src 'self'",
     "script-src 'self'",

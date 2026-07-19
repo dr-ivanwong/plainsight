@@ -87,7 +87,7 @@ Two layers, both CI-blocking:
    - every Lambda: timeout present, log retention present, ARM64;
    - prod `Data` stack: PITR enabled, deletion protection enabled;
    - no IAM policy statement with `Action: '*'` or `Resource: '*'` outside the two documented CDK-managed exceptions;
-   - the CloudFront response-headers policy's CSP `connect-src` equals exactly `['self', apiOrigin, ...config.csp.providerOrigins]` (the BYOK allowlist can never silently widen);
+   - the CloudFront response-headers policy's CSP `connect-src` equals exactly `['self', hostedUiOrigin(config), ...config.csp.providerOrigins]`, the hosted-UI origin present only while `features.auth` is on (the BYOK allowlist can never silently widen). *Amended 2026-07-19: sign-in's PKCE token exchange calls the Cognito hosted domain from the page, so the CSP names that origin; the original formula's `apiOrigin` term is retired because the API is served same-origin through the distribution's `/v1/*` behaviour and never needed an entry;*
    - every API route flagged `auth: true` in the route table has the Cognito authoriser attached.
 
 Snapshot tests exist for `StaticSite` and `Data` only (the stacks where unnoticed template churn is most dangerous), reviewed on change rather than blindly regenerated.

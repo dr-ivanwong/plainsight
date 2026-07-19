@@ -9,6 +9,20 @@ export interface AuthStackProps extends StackProps {
 }
 
 /**
+ * The hosted UI's deterministic home. The account id namespaces the prefix
+ * and the environment keeps a rehearsal copy from colliding with prod in the
+ * same account. Exported as pure functions of config (the same pattern as the
+ * uploads bucket name) so StaticSite can name the origin in its CSP without a
+ * stack dependency, and so the derivation exists exactly once.
+ */
+export const hostedUiDomainPrefix = (config: EnvConfig): string =>
+  `plainsight-${config.envName}-${config.account}`;
+
+/** The origin of the sign-in pages and the PKCE token endpoint the web app calls (spec §6). */
+export const hostedUiOrigin = (config: EnvConfig): string =>
+  `https://${hostedUiDomainPrefix(config)}.auth.${config.region}.amazoncognito.com`;
+
+/**
  * Auth (spec §3, Phase 3): the Cognito user pool behind sync and the BYOK
  * proxy. Single-user by decision (main plan §2 audience): the one account is
  * created by the owner from the CLI (runbook, Phase 3 section), self-signup
@@ -73,11 +87,10 @@ export class AuthStack extends Stack {
         'budget kill switch bound the abuse a stolen login could spend.'
     );
 
-    // The hosted UI home. The prefix is deterministic and unique per region:
-    // the account id namespaces it, the environment keeps a rehearsal copy
-    // from colliding with prod in the same account.
+    // The hosted UI home; the shared derivation above is the one source of
+    // the prefix, so the CSP's copy of the origin can never drift from it.
     const domain = this.userPool.addDomain('HostedUi', {
-      cognitoDomain: { domainPrefix: `plainsight-${config.envName}-${config.account}` },
+      cognitoDomain: { domainPrefix: hostedUiDomainPrefix(config) },
     });
 
     // The SPA client: public (no secret), authorisation-code flow only, and

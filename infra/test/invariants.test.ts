@@ -233,14 +233,25 @@ describe('CSP (spec §6: the BYOK allowlist can never silently widen)', () => {
     policy.Properties.ResponseHeadersPolicyConfig.SecurityHeadersConfig.ContentSecurityPolicy
       .ContentSecurityPolicy;
 
-  it("connect-src equals exactly 'self' plus config.csp.providerOrigins, in order", () => {
+  // Pinned as a literal, not recomputed through the helper under test: this
+  // exact string is the origin the web client's PKCE token exchange calls
+  // (apps/web/src/auth/session.ts pins the same value), so a drift in the
+  // derivation fails here instead of in a browser console.
+  const prodHostedUiOrigin =
+    'https://plainsight-prod-679345828813.auth.ap-southeast-2.amazoncognito.com';
+
+  it("connect-src equals exactly 'self', the hosted-UI origin (features.auth on), then config.csp.providerOrigins, in order", () => {
     const directives = new Map<string, string[]>(
       csp.split('; ').map((directive): [string, string[]] => {
         const [name, ...values] = directive.split(' ');
         return [name ?? '', values];
       }),
     );
-    expect(directives.get('connect-src')).toEqual(["'self'", ...prod.csp.providerOrigins]);
+    expect(directives.get('connect-src')).toEqual([
+      "'self'",
+      prodHostedUiOrigin,
+      ...prod.csp.providerOrigins,
+    ]);
   });
 
   it('the full policy matches the pinned directive set', () => {
@@ -250,7 +261,7 @@ describe('CSP (spec §6: the BYOK allowlist can never silently widen)', () => {
       "style-src 'self'",
       "img-src 'self' data:",
       "font-src 'self'",
-      `connect-src ${["'self'", ...prod.csp.providerOrigins].join(' ')}`,
+      `connect-src ${["'self'", prodHostedUiOrigin, ...prod.csp.providerOrigins].join(' ')}`,
       "manifest-src 'self'",
       "worker-src 'self'",
       "object-src 'none'",
@@ -259,6 +270,15 @@ describe('CSP (spec §6: the BYOK allowlist can never silently widen)', () => {
       "frame-ancestors 'none'",
     ].join('; ');
     expect(csp).toBe(expected);
+  });
+
+  it('the features-off posture names no hosted-UI origin (no pool exists to call)', () => {
+    const offPolicy: any = only(staticSiteOff.findResources('AWS::CloudFront::ResponseHeadersPolicy'));
+    const offCsp: string =
+      offPolicy.Properties.ResponseHeadersPolicyConfig.SecurityHeadersConfig.ContentSecurityPolicy
+        .ContentSecurityPolicy;
+    expect(offCsp).toContain("connect-src 'self'; ");
+    expect(offCsp).not.toContain('amazoncognito.com');
   });
 
   it('the remaining security headers are present', () => {
