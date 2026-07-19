@@ -80,6 +80,7 @@ export const rowHead = style({
 export const rowLink = style({
   display: 'flex',
   alignItems: 'center',
+  gap: space[8],
   height: '100%',
   minHeight: tableTokens.rowHeight,
   padding: tableTokens.cellPadding,
@@ -94,6 +95,17 @@ export const rowLink = style({
     outlineOffset: `-${focusRing.width}`
   }
 });
+
+/** The row-level health dot, before the label (dashboard design plan §5.4, §4.2). */
+const dot = style({
+  width: '6px',
+  height: '6px',
+  borderRadius: radius.full,
+  flexShrink: 0
+});
+
+export const dotHealthy = style([dot, { backgroundColor: colour.healthy }]);
+export const dotInvestigate = style([dot, { backgroundColor: colour.investigate }]);
 
 export const cell = style({
   height: tableTokens.rowHeight,

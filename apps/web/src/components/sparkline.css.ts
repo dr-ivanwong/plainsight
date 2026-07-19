@@ -9,6 +9,12 @@ export const spark = style({
   color: colour.textSecondary
 });
 
+// The card's health signal, worn by line and fill through currentColor
+// (dashboard design plan §4.4). The base semantic tokens serve directly: the
+// planned spark aliases resolved to them, no new colours minted.
+export const sparkHealthy = style([spark, { color: colour.healthy }]);
+export const sparkInvestigate = style([spark, { color: colour.investigate }]);
+
 export const line = style({
   fill: 'none',
   stroke: 'currentColor',

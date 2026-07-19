@@ -32,7 +32,14 @@ const PAD = 2;
  * §4.4): the stroke colour at a tenth of the opacity, closed to the bottom
  * edge, following currentColor wherever the line goes.
  */
-export function Sparkline({ points }: { points: readonly SparkPoint[] }): ReactElement | null {
+export function Sparkline({
+  points,
+  health
+}: {
+  points: readonly SparkPoint[];
+  /** The card's computed health signal (dashboard design plan §4.4); absent stays neutral grey. */
+  health?: 'healthy' | 'investigate';
+}): ReactElement | null {
   if (points.length < 2) return null;
   const values = points.map((point) => point.value);
   const min = Math.min(...values);
@@ -46,9 +53,16 @@ export function Sparkline({ points }: { points: readonly SparkPoint[] }): ReactE
     .join(' ');
   const area = `${x(0).toFixed(2)},${HEIGHT} ${line} ${x(points.length - 1).toFixed(2)},${HEIGHT}`;
 
+  const sparkClass =
+    health === undefined
+      ? styles.spark
+      : health === 'healthy'
+        ? styles.sparkHealthy
+        : styles.sparkInvestigate;
+
   return (
     <svg
-      className={styles.spark}
+      className={sparkClass}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       preserveAspectRatio="none"
       aria-hidden="true"

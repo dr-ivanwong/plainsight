@@ -13,6 +13,7 @@ import { useRedFlags } from '../../hooks/useRedFlags';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
 import { entrySearchFor } from './entrySearch';
+import { cardHealth } from './healthSignal';
 import { MetricSheet } from './MetricSheet';
 import { MetricTable } from './MetricTable';
 import { PriceCard } from './PriceCard';
@@ -76,6 +77,10 @@ export function Dashboard({
   // (data-sufficiency policy), which Sparkline itself enforces.
   const sparkFor = (series: MetricSeries): SparkPoint[] => okPoints(series, report.fyLabels);
 
+  // The card-level health signal reads active flags only: a dismissed flag
+  // has been reviewed, so it stops claiming the dot.
+  const activeRuleIds = flags?.active.map((flag) => flag.ruleId) ?? [];
+
   // One dashboard card. The section map supplies the ids, which the dashboard
   // test holds to the dictionary's card flags (the metric-budget decision).
   const renderCard = (id: MetricId): ReactElement | null => {
@@ -91,6 +96,7 @@ export function Dashboard({
     }
 
     const spark = sparkFor(series);
+    const health = cardHealth(id, series.delta, activeRuleIds);
     if (latest.status === 'insufficient_data' && report.latestFy !== null) {
       return (
         <Link
@@ -107,6 +113,7 @@ export function Dashboard({
             currency={company.currency}
             spark={spark}
             delta={series.delta ?? undefined}
+            health={health}
             healthDirection={def.healthDirection}
           />
         </Link>
@@ -128,6 +135,7 @@ export function Dashboard({
           currency={company.currency}
           spark={spark}
           delta={series.delta ?? undefined}
+          health={health}
           healthDirection={def.healthDirection}
           footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
           stale={valuation && priceIsStale}
@@ -191,7 +199,7 @@ export function Dashboard({
           </div>
 
           {view === 'table' ? (
-            <MetricTable metrics={metrics} fyLabels={rangedFyLabels} />
+            <MetricTable metrics={metrics} fyLabels={rangedFyLabels} activeRuleIds={activeRuleIds} />
           ) : (
             <section className={styles.grid} aria-label="Metrics">
               {DASHBOARD_SECTIONS.map(({ label, ids }) => (

@@ -399,6 +399,83 @@ describe('the company dashboard', () => {
     expect(link.getAttribute('href')).toContain('focus=totalEquity');
   });
 
+  it('dots and colours an improving card, sparkline included', async () => {
+    const company = await seedCompany();
+    // Cost falls year over year: gross margin improves, a pinned up-direction.
+    for (let offset = 0; offset < 6; offset += 1) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${2019 + offset}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}`);
+
+    const gross = await screen.findByRole('article', { name: 'Gross margin' });
+    expect(within(gross).getByRole('img', { name: 'improving' })).toBeVisible();
+    expect(within(gross).getByText(/5\.0 pp/).className).toContain('chipHealthy');
+    expect(gross.querySelector('svg')?.getAttribute('class')).toContain('sparkHealthy');
+  });
+
+  it('lets a fired rule win the dot over the trend', async () => {
+    const company = await seedCompany();
+    // Coverage at 2 times fires the fragility rule; its card wears investigate
+    // with no delta at all.
+    await upsertStatement(
+      db,
+      yearWrite(company.id, 'income', {
+        revenue: e(100_000),
+        operatingIncome: e(2_000),
+        interestExpense: e(1_000)
+      })
+    );
+
+    renderAt(`/company/${company.id}`);
+
+    const coverage = await screen.findByRole('article', { name: 'Interest coverage' });
+    // The flags land through their own live query, one tick after the cards.
+    expect(await within(coverage).findByRole('img', { name: 'worth investigating' })).toBeVisible();
+  });
+
+  it('keeps valuation and current-ratio cards free of health colour', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await putPrice(db, { companyId: company.id, amountMinor: 30, currency: 'USD', asOf: '2026-07-10' });
+
+    renderAt(`/company/${company.id}`);
+
+    const pe = await screen.findByRole('article', { name: 'P/E' });
+    expect(within(pe).queryByRole('img')).not.toBeInTheDocument();
+    const currentRatio = screen.getByRole('article', { name: 'Current ratio' });
+    expect(within(currentRatio).queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('carries the health dot into the table rows', async () => {
+    const company = await seedCompany();
+    await upsertStatement(
+      db,
+      yearWrite(company.id, 'income', {
+        revenue: e(100_000),
+        operatingIncome: e(2_000),
+        interestExpense: e(1_000)
+      })
+    );
+    await setMeta(db, 'dashboardTableView', true);
+
+    renderAt(`/company/${company.id}`);
+
+    const table = await screen.findByRole('table');
+    const coverageRow = within(table).getByRole('row', { name: /Interest coverage/ });
+    expect(
+      await within(coverageRow).findByRole('img', { name: 'worth investigating' })
+    ).toBeVisible();
+  });
+
   it('fires, dismisses and restores an item to investigate', async () => {
     const company = await seedCompany();
     await upsertStatement(

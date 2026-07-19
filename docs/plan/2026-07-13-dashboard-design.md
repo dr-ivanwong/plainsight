@@ -104,6 +104,8 @@ sparkInvestigate:
 
 These are not new colours; they are aliases that make the existing semantic palette available in the sparkline context. The default remains `textSecondary`; colour applies only when the metric has a clear directional preference and the five-year delta is known.
 
+**Build note (2026-07-19):** the sparkline aliases resolved to direct use of the semantic tokens (no new names minted; the sparkline styles read `colour.healthy` and `colour.investigate`). What the build did mint is a text-grade pair, `healthyText` and `investigateText`, because the delta chip's 13px figures need the 4.5:1 text floor where the base pair is held to 3:1 as graphics; light healthy steps darker, everything else aliases its base. Both floors are contrast-tested in both themes.
+
 ### 3.3 Section label styling (new)
 
 A new composite token for the metric-group section labels:
@@ -169,6 +171,8 @@ Three specifics the first draft left open:
 
 Implementation: a new `healthDot` prop on `MetricCard`, computed by the `Dashboard` container from the delta direction, the fired-rules list, and the rule-to-metric map. The dot is a `<span role="img">` with an `aria-label` ("improving" or "worth investigating") placed inline after the label; a bare span with an `aria-label` is not reliably announced, so the role is part of the contract.
 
+**Build note (2026-07-19, landed):** the rule-to-metric map shipped as drafted above (owner-approved with stage 2 of the finance-look gap plan), as a constant beside the section map, and the signal computes once per card and feeds the dot and the sparkline together (the prop is `health`). Only active flags claim the dot: a dismissed flag has been reviewed. The same dot renders before the practitioner table's row labels (§5.4).
+
 ### 4.3 DeltaChip: directional colour
 
 **Current:** always `colour.textSecondary`, with the code comment "deliberately neutral in colour; health colour belongs to the items-to-investigate section, not to every trend."
@@ -190,6 +194,8 @@ Two corrections to the first draft's claims (2026-07-14). First, direction lives
 
 Implementation: `DeltaChip` receives a new optional `higherIsBetter?: boolean` prop, named after the existing field. The container passes `METRICS[id].higherIsBetter` for the ten operating metrics and omits it for the valuation pair, whose chips stay neutral. The chip's className resolves to one of three styles: `chipHealthy`, `chipInvestigate`, or the existing neutral `chip`.
 
+**Build note (2026-07-19, landed):** the pin split the field this section wanted to reuse. `higherIsBetter` turned out to be consumed by the compare screen's best-in-row tick (a peer ranking pinned in the frontend spec, where the group's lowest P/E rightly keeps its tick), so the own-trend direction landed as its own optional dictionary field, `healthDirection` (data-model §6 note N6), and the chip prop carries that name. Current ratio is pinned direction-neutral per the review this section asked for; nine operating metrics plus FCF margin carry a direction; the valuation trio carries none. Chips forward the field on the cards, the practitioner table and the detail sheet; the decision is logged in main plan §12 entry 13.
+
 ### 4.4 Sparkline: area fill and health colour
 
 **Current:** a 100x28 SVG polyline in `textSecondary`, no fill.
@@ -199,6 +205,8 @@ Implementation: `DeltaChip` receives a new optional `higherIsBetter?: boolean` p
 Optionally, when the metric's five-year delta is known and the sparkline has sufficient data, the stroke and fill colour changes from `textSecondary` to `sparkHealthy` or `sparkInvestigate` (§3.2). This is the same health signal as the dot (§4.2) and the delta chip (§4.3), computed once in the container and passed to all three, with the same valuation exemption. When the delta is flat or unknown, the sparkline stays neutral grey.
 
 The viewBox stays `0 0 100 28`; the component gains an optional `health?: 'healthy' | 'investigate'` prop.
+
+**Build note (2026-07-19, landed):** as specified, riding the same computed signal as the dot through `currentColor`; the fill (the first half of this step) had already shipped.
 
 ### 4.5 RedFlagBanner: no change
 
@@ -451,12 +459,14 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Add `chipHealthy` and `chipInvestigate` style variants to `deltaChip.css.ts`.
 - Update `Dashboard.tsx` to pass `METRICS[id].higherIsBetter` for the operating metrics.
 - Record the decision change in main plan §12; update the DeltaChip code comment and its frontend spec §5 row.
+- Landed 2026-07-19, current ratio settled neutral; the field and prop shipped as `healthDirection` per the §4.3 build note.
 
 ### Step 4: health-status dots
 
 - Pin the rule-to-metric map (§4.2) with the owner alongside the education copy.
 - Add the `healthDot` style and optional prop to `MetricCard` (`role="img"` plus `aria-label`).
 - Compute health state in `Dashboard.tsx` from delta direction, fired rules, and the map; a fired rule wins; valuation cards are exempt.
+- Landed 2026-07-19 with the map as drafted; details per the §4.2 build note.
 
 ### Step 5: sparkline area fill and health colour
 
@@ -464,6 +474,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Extend `Sparkline` with the area polygon and optional `health` prop.
 - Update `sparkline.css.ts` with the fill and colour-variant styles.
 - Update `Dashboard.tsx` to pass health state through.
+- Health-colour half landed 2026-07-19 with steps 3 and 4.
 
 ### Step 6: multi-year values on cards
 

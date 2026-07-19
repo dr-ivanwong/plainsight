@@ -64,7 +64,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 
 | State | Rendering |
 |---|---|
-| Complete years | Cards: label (13px secondary), value (34px tabular), sparkline, 5-yr delta chip |
+| Complete years | Cards: label (13px secondary), value (34px tabular), sparkline, 5-yr delta chip; from 2026-07-19 the chip, a 6px label dot and the sparkline wear the computed health signal (main plan §12 entry 13): a fired rule wins, then the delta against the pinned direction; current ratio and valuation stay neutral |
 | Partial year(s) | Affected cards render `insufficient_data` as "Add the 2 missing numbers"; tappable, deep-links into S5 at those fields (companion §10) |
 | No price entered | The two valuation cards (M12, M14) collapse into one "Enter today's price" card; on entry, they expand in place |
 | Stale price | Valuation cards show "as of ⟨YYYY-MM-DD⟩" badge; amber past 90 days |
@@ -73,7 +73,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 | Single year only | Sparklines and delta chips hidden; gentle "Add more years to see trends" hint |
 | 3+ labelled years | Trends section (added 2026-07-19, dashboard design plan §6): five-group segmented control, one small-multiple chart per metric (own y-axis, gaps where a year did not compute, a metric with under two computed years states its latest value in words), "Show table" fallback rendering the group's metrics by fiscal year; absent below three labelled years |
 | 6+ labelled years | Year-range control between hero and grid (added 2026-07-19, dashboard design plan §5.5): Last 5 years (default) / Last 10 years / All, scoping the trends section and the table view; cards and sparklines unaffected; not persisted |
-| Table view picked | The practitioner table replaces the card grid (added 2026-07-19, dashboard design plan §5.4): metrics as rows under the five section bands, ranged fiscal years as columns, the 5-yr delta column (hidden single-year); cells speak "n/m" and "n/a" short with the full pinned phrase as the accessible name; the latest year's insufficient cell deep-links into S5; without a price the valuation rows collapse into the enter-price row; metric links open S4; arrows move between metric links |
+| Table view picked | The practitioner table replaces the card grid (added 2026-07-19, dashboard design plan §5.4): metrics as rows under the five section bands, ranged fiscal years as columns, the 5-yr delta column (hidden single-year); cells speak "n/m" and "n/a" short with the full pinned phrase as the accessible name; the latest year's insufficient cell deep-links into S5; without a price the valuation rows collapse into the enter-price row; metric links open S4, wearing the row's health dot before the label (2026-07-19); arrows move between metric links |
 | n/m values | Per companion P-5: "n/m: negative earnings" etc., never blank, never 0 |
 
 ### S4: Metric detail sheet (query-param addressable)
@@ -145,13 +145,13 @@ Rationale: a library that starts full lies about whose research it is: ownership
 
 | Component | Responsibility | Key props (sketch) |
 |---|---|---|
-| `MetricCard` | One metric tile | `label, value: MetricValue, spark?: Series, delta?: Delta, onOpen` |
+| `MetricCard` | One metric tile | `label, value: MetricValue, spark?: Series, delta?: Delta, health?, healthDirection?, onOpen` (health props added 2026-07-19: the dot and sparkline colour) |
 | `StatusValue` | Renders the `MetricValue` union (the no-NaN rule lives here) | `value, formatKind` |
-| `Sparkline` / `TrendChart` | 10-yr micro / full chart | `series, currency?, emphasisYear?` |
+| `Sparkline` / `TrendChart` | 10-yr micro / full chart | `series, currency?, emphasisYear?`; Sparkline adds `health?` (2026-07-19), wearing the card's signal as its colour |
 | `TrendSection` | S3 trends: group picker, small multiples, table fallback (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels` |
 | `TrendMiniChart` | One metric's small-multiple chart for `TrendSection` | `points: TrendPoint[], kind, currency` |
 | `MetricTable` | S3 practitioner table view (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels` |
-| `DeltaChip` | 5-yr direction | `direction, magnitudeLabel` |
+| `DeltaChip` | 5-yr direction | `direction, magnitudeLabel, healthDirection?` (2026-07-19: colours by the pinned own-trend direction, data-model §6 N6; neutral without one; supersedes the always-neutral contract, main plan §12 entry 13) |
 | `RedFlagBanner` | One fired rule | `rule, firedWith, onDismiss, onExplain` |
 | `StatementGrid` | S5/S6 table shell | `rows, years, mode: 'entry'\|'review', onCommit` |
 | `MoneyField` | Numeric input: separators, sign rules, known-zero menu | `value: MonetaryInt\|null\|'zero', signed, onChange` |

@@ -49,6 +49,24 @@ describe('Sparkline', () => {
     expect(coords).toContain('50.00,2.00');
   });
 
+  it('wears the health signal as its colour class, neutral without one', () => {
+    const points = [
+      { fy: 'FY2023', value: 0.4 },
+      { fy: 'FY2024', value: 0.5 }
+    ] as const;
+    const neutral = render(<Sparkline points={points} />);
+    expect(neutral.container.querySelector('svg')?.getAttribute('class')).toContain('spark');
+    expect(neutral.container.querySelector('svg')?.getAttribute('class')).not.toContain('Healthy');
+
+    const healthy = render(<Sparkline points={points} health="healthy" />);
+    expect(healthy.container.querySelector('svg')?.getAttribute('class')).toContain('sparkHealthy');
+
+    const investigate = render(<Sparkline points={points} health="investigate" />);
+    expect(investigate.container.querySelector('svg')?.getAttribute('class')).toContain(
+      'sparkInvestigate'
+    );
+  });
+
   it('draws a centre line for a flat series instead of dividing by zero', () => {
     const { container } = render(
       <Sparkline

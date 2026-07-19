@@ -39,11 +39,26 @@ export const card = style({
 });
 
 export const label = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: space[8],
   fontSize: fontSize.caption1,
   letterSpacing: tracking.caption,
   fontWeight: fontWeight.regular,
   color: colour.textSecondary
 });
+
+/** The card-level health signal (dashboard design plan §4.2): a 6px dot at the label's trailing edge. */
+const dot = style({
+  width: '6px',
+  height: '6px',
+  borderRadius: radius.full,
+  flexShrink: 0
+});
+
+export const dotHealthy = style([dot, { backgroundColor: colour.healthy }]);
+export const dotInvestigate = style([dot, { backgroundColor: colour.investigate }]);
 
 export const valueRow = style({
   display: 'flex',

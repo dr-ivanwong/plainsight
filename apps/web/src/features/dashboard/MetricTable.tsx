@@ -4,7 +4,8 @@ import {
   NOT_MEANINGFUL_PHRASES,
   type FyLabel,
   type MetricId,
-  type MetricValue
+  type MetricValue,
+  type RuleId
 } from '@plainsight/calc-engine';
 import { Link } from '@tanstack/react-router';
 import type { KeyboardEvent, ReactElement } from 'react';
@@ -12,6 +13,7 @@ import type { KeyboardEvent, ReactElement } from 'react';
 import { DeltaChip } from '../../components/DeltaChip';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
 import { entrySearchFor } from './entrySearch';
+import { cardHealth } from './healthSignal';
 import * as styles from './metricTable.css';
 import { PriceCard } from './PriceCard';
 import { DASHBOARD_SECTIONS } from './sections';
@@ -28,11 +30,14 @@ import { DASHBOARD_SECTIONS } from './sections';
  */
 export function MetricTable({
   metrics,
-  fyLabels
+  fyLabels,
+  activeRuleIds
 }: {
   metrics: CompanyMetrics;
   /** The fiscal years in the picked range, ascending. */
   fyLabels: readonly FyLabel[];
+  /** Fired, undismissed rules; they feed the row-level health dots. */
+  activeRuleIds: readonly RuleId[];
 }): ReactElement {
   const { company, price, report } = metrics;
   const showDelta = report.fyLabels.length > 1;
@@ -90,6 +95,7 @@ export function MetricTable({
   const rowFor = (id: MetricId): ReactElement => {
     const def = METRICS[id];
     const series = report.metrics[id];
+    const health = cardHealth(id, series.delta, activeRuleIds);
     return (
       <tr key={id}>
         <th scope="row" className={styles.rowHead}>
@@ -100,6 +106,13 @@ export function MetricTable({
             className={styles.rowLink}
             data-row-link=""
           >
+            {health === undefined ? null : (
+              <span
+                role="img"
+                aria-label={health === 'healthy' ? 'improving' : 'worth investigating'}
+                className={health === 'healthy' ? styles.dotHealthy : styles.dotInvestigate}
+              />
+            )}
             {def.label}
           </Link>
         </th>
