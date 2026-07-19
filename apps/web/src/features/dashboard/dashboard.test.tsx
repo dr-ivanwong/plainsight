@@ -668,8 +668,69 @@ describe('the company dashboard', () => {
     const sheet = await screen.findByRole('dialog', { name: 'ROE' });
     expect(within(sheet).getByText('37.5%')).toBeVisible();
     expect(within(sheet).getByText('ending basis')).toBeVisible();
+    expect(within(sheet).getByText('$150 ÷ $400 = 37.5%')).toBeVisible();
     // One computed year: no chart, and the trend block stays away entirely.
     expect(within(sheet).queryByRole('button', { name: /Show/ })).not.toBeInTheDocument();
+  });
+
+  it('substitutes the averaged denominator and lists the opening balance', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await upsertStatement(
+      db,
+      yearWrite(
+        company.id,
+        'balance',
+        {
+          cashAndEquivalents: e(9_000),
+          currentAssets: e(30_000),
+          totalAssets: e(100_000),
+          currentLiabilities: e(15_000),
+          shortTermDebt: e(2_000),
+          longTermDebt: e(18_000),
+          totalLiabilities: e(60_000),
+          totalEquity: e(36_000)
+        },
+        'FY2023'
+      )
+    );
+
+    renderAt(`/company/${company.id}?metric=roe`);
+
+    // The substituted equation divides by the average the engine actually
+    // used (the denominator-basis policy, data-model section 4), and the
+    // opening balance it read is on the sheet with its own row.
+    const sheet = await screen.findByRole('dialog', { name: 'ROE' });
+    expect(within(sheet).getByText('39.5%')).toBeVisible();
+    expect(within(sheet).getByText('average basis')).toBeVisible();
+    expect(within(sheet).getByText('net income ÷ average total equity')).toBeVisible();
+    expect(within(sheet).getByText('$150 ÷ $380 = 39.5%')).toBeVisible();
+    expect(
+      within(sheet).getByRole('heading', { name: 'Inputs, FY2023 and FY2024' })
+    ).toBeVisible();
+    expect(within(sheet).getByText('Total equity, FY2023')).toBeVisible();
+    expect(within(sheet).getByText('Average total equity (derived)')).toBeVisible();
+    expect(within(sheet).getByText('($400 + $360) ÷ 2 = $380')).toBeVisible();
+  });
+
+  it('states the ROIC intermediates plainly on the sheet', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}?metric=roic`);
+
+    // NOPAT and invested capital are not line items; the sheet derives them
+    // in the open so the value is reproducible by hand (the pinned ROIC
+    // definition, data-model section 6).
+    const sheet = await screen.findByRole('dialog', { name: 'ROIC' });
+    expect(within(sheet).getByText('28.7%')).toBeVisible();
+    expect(within(sheet).getByText('$158 ÷ $550 = 28.7%')).toBeVisible();
+    expect(within(sheet).getByText('Effective tax rate (derived)')).toBeVisible();
+    expect(within(sheet).getByText('$40.0 ÷ $190 = 21.1%')).toBeVisible();
+    expect(within(sheet).getByText('NOPAT (derived)')).toBeVisible();
+    expect(within(sheet).getByText('$200 × (1 − 21.1%) = $158')).toBeVisible();
+    expect(within(sheet).getByText('Invested capital, FY2024 (derived)')).toBeVisible();
+    expect(within(sheet).getByText('$20.0 + $180 + $400 − $50.0 = $550')).toBeVisible();
   });
 
   it('shows chart and table views once history exists', async () => {

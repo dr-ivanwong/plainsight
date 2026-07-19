@@ -6,6 +6,7 @@ import {
   METRICS,
   metricInputs,
   NOT_MEANINGFUL_PHRASES,
+  type FyLabel,
   type LineItemId,
   type MetricId
 } from '@plainsight/calc-engine';
@@ -29,20 +30,9 @@ import type { CompanyMetrics } from '../../hooks/useMetrics';
 import { useStatements } from '../../hooks/useStatements';
 import { METRIC_COPY, REASON_EXPLAINERS } from './metricCopy';
 import * as styles from './metricSheet.css';
+import { deriveSheetFigures, replaceTokens } from './sheetDerivation';
 
 const USES_PRICE: ReadonlySet<MetricId> = new Set(['pe', 'earningsYield', 'fcfYield']);
-
-/** Replace each line-item token in a pinned formula through the given mapping. */
-function replaceTokens(formula: string, replacer: (id: LineItemId) => string | null): string {
-  let text = formula;
-  for (const id of Object.keys(LINE_ITEMS) as LineItemId[]) {
-    const replacement = replacer(id);
-    if (replacement !== null) {
-      text = text.replace(new RegExp(`\\b${id}\\b`, 'g'), replacement);
-    }
-  }
-  return text;
-}
 
 interface InputRow {
   id: string;
@@ -86,18 +76,19 @@ export function MetricSheet({
   const points = okPoints(series, report.fyLabels);
   const companions = METRIC_IDS.filter((id) => METRICS[id].detailHostId === metricId);
 
-  const rowFor = (itemId: LineItemId): StatementRecord | undefined =>
-    statements.find(
-      (row) => row.fy === latestFy && row.statement === LINE_ITEMS[itemId].statement
-    );
+  const rowFor = (itemId: LineItemId, fy: FyLabel | null): StatementRecord | undefined =>
+    statements.find((row) => row.fy === fy && row.statement === LINE_ITEMS[itemId].statement);
 
   const amountText = (itemId: LineItemId, amountMinor: number): string =>
     unitOf(itemId) === 'money'
       ? formatMoneyMinor(amountMinor, company.currency)
       : formatEntryText(amountMinor, { scale: 'ones', unit: 'count' });
 
-  const resolvedAmount = (itemId: LineItemId): { minor: number; derived: boolean } | null => {
-    const row = rowFor(itemId);
+  const resolvedAmount = (
+    itemId: LineItemId,
+    fy: FyLabel | null
+  ): { minor: number; derived: boolean } | null => {
+    const row = rowFor(itemId, fy);
     const entry = row?.values[itemId];
     if (entry?.kind === 'entered') return { minor: entry.amountMinor, derived: false };
     if (entry?.kind === 'not_reported_zero') return { minor: 0, derived: false };
@@ -113,10 +104,10 @@ export function MetricSheet({
     return null;
   };
 
-  const inputRows: InputRow[] = metricInputs(metricId).map((itemId) => {
-    const row = rowFor(itemId);
+  const inputRowFor = (itemId: LineItemId, fy: FyLabel | null, labelledYear: boolean): InputRow => {
+    const row = rowFor(itemId, fy);
     const entry = row?.values[itemId];
-    const resolved = resolvedAmount(itemId);
+    const resolved = resolvedAmount(itemId, fy);
     const text =
       entry?.kind === 'not_reported_zero'
         ? '∅0 (not reported)'
@@ -128,8 +119,8 @@ export function MetricSheet({
     // when the filing carries a URL.
     const filing = row?.provenance.filing;
     return {
-      id: itemId,
-      label: LINE_ITEMS[itemId].label,
+      id: labelledYear ? `${itemId}-${fy}` : itemId,
+      label: labelledYear ? `${LINE_ITEMS[itemId].label}, ${fy}` : LINE_ITEMS[itemId].label,
       text,
       derived: resolved?.derived ?? false,
       ...(row === undefined
@@ -142,7 +133,24 @@ export function MetricSheet({
           }),
       ...(filing?.url === undefined ? {} : { filingUrl: filing.url })
     };
+  };
+
+  // The substituted equation and the derived figures come from one place, so
+  // the sheet's arithmetic can never drift from the engine's (the averaged
+  // denominator basis, data-model section 4).
+  const derivation = deriveSheetFigures({
+    metricId,
+    latest,
+    latestFy,
+    currency: company.currency,
+    resolve: (itemId, fy) => resolvedAmount(itemId, fy)?.minor ?? null,
+    amountText,
+    priceText: price === null ? null : formatMoneyMinor(price.amountMinor, price.currency)
   });
+
+  const inputRows: InputRow[] = metricInputs(metricId).map((itemId) =>
+    inputRowFor(itemId, latestFy, false)
+  );
   if (USES_PRICE.has(metricId)) {
     inputRows.push({
       id: 'price',
@@ -155,20 +163,23 @@ export function MetricSheet({
       ...(price === null ? {} : { source: 'entered by hand' })
     });
   }
+  if (derivation.priorFy !== null) {
+    for (const itemId of derivation.priorInputs) {
+      inputRows.push(inputRowFor(itemId, derivation.priorFy, true));
+    }
+  }
+  for (const figure of derivation.derivedRows) {
+    inputRows.push({ id: figure.id, label: figure.label, text: figure.text, derived: true });
+  }
 
-  const humanisedFormula = replaceTokens(def.formula, (id) =>
-    LINE_ITEMS[id].label.toLowerCase()
-  );
-  const substituted =
-    latest !== null && latest.status === 'ok'
-      ? `${replaceTokens(def.formula, (id) => {
-          const resolved = resolvedAmount(id);
-          return resolved === null ? null : amountText(id, resolved.minor);
-        }).replace(
-          /\bprice\b/g,
-          price === null ? 'price' : formatMoneyMinor(price.amountMinor, price.currency)
-        )} = ${formatMetricValue(latest, def.format, company.currency)}`
-      : null;
+  const humanisedFormula = derivation.humanisedFormula;
+  const substituted = derivation.substituted;
+  const inputsHeading =
+    latestFy === null
+      ? null
+      : derivation.priorFy === null
+        ? `This year, ${latestFy}`
+        : `Inputs, ${derivation.priorFy} and ${latestFy}`;
 
   return (
     <SheetShell open onClose={onClose} label={def.label}>
@@ -245,9 +256,9 @@ export function MetricSheet({
           {substituted === null ? null : <p className={styles.formula}>{substituted}</p>}
         </section>
 
-        {latestFy === null ? null : (
-          <section className={styles.block} aria-label={`Inputs, ${latestFy}`}>
-            <h3 className={styles.blockTitle}>This year, {latestFy}</h3>
+        {inputsHeading === null ? null : (
+          <section className={styles.block} aria-label={inputsHeading}>
+            <h3 className={styles.blockTitle}>{inputsHeading}</h3>
             <ul className={styles.inputs}>
               {inputRows.map((row) => (
                 <li key={row.id} className={styles.inputRow}>
