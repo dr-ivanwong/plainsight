@@ -1,6 +1,6 @@
 # Data Model & Metric Dictionary
 
-**Companion to:** `plainsight.md` (product definition §3, calc-engine rules §5) and `plainsight-frontend.md` (every value defined here is rendered there). **Status:** Reviewed and pinned; owner review pass completed 2026-07-11 · **Date:** 2026-07-11
+**Companion to:** `plainsight.md` (product definition §3, calc-engine rules §5) and `plainsight-frontend.md` (every value defined here is rendered there). **Status:** Reviewed and pinned; owner review pass completed 2026-07-11; §12 D3 drafted 2026-07-19, its judgement calls awaiting owner confirmation · **Date:** 2026-07-11
 **Purpose:** the build contract for `packages/calc-engine` and the client data layer: the canonical statement schema, the policies (P-0…P-8), the pinned formula for every metric (M1–M14), the red-flag rule thresholds (R1–R7), the storage/export schemas, and the golden corpus. Every displayed number must be reproducible by hand from this document; that is the product's credibility, so this is the contract that gets reviewed hardest.
 
 ---
@@ -9,7 +9,7 @@
 
 - **"Pinned" means contract.** Changing a pinned formula, threshold, or policy requires updating this document in the same change, plus a regression test capturing the old and new behaviour. The calc engine implements this document; it does not interpret it.
 - The engine is `(statements) → MetricsReport`: pure, zero-dependency, no I/O (main plan §5). It consumes the §2 line items typed per §3, applies the §4 policies, and emits §6 metric values and §7 rule results as discriminated unions. The UI renders unions; it never recomputes.
-- Both §12 decisions are resolved (D1 the sample corpus, D2 the metric budget). Everything else in this draft is pinned pending the review pass.
+- §12 decisions D1 (the sample corpus) and D2 (the metric budget) are resolved; D3 (the sector vocabulary, 2026-07-19) is drafted with its judgement calls awaiting owner confirmation. Everything else in this draft is pinned pending the review pass.
 
 ## 2. Canonical line items
 
@@ -211,6 +211,7 @@ meta                  key, value                            // onboardingDone, l
 
 - **dataVersion** increments in the same Dexie transaction as any `statements`/`prices` write for that company; `useMetrics` memoises on `(companyId, dataVersion)` (main plan §5).
 - **sample flag:** `sample: true` on the company; S11's one-tap removal deletes by flag across all tables via `companyId`.
+- **sector:** an id from the pinned sector vocabulary (§12 D3), absent meaning unclassified. Legacy free-text values normalise through D3's mapping at every read boundary (Dexie-on-read, sync pull, file import) before Zod; a company row never quarantines over a cosmetic label.
 - **Provenance (pinned shape):**
 
 ```ts
@@ -282,7 +283,18 @@ A missing **price** is not `insufficient_data`: it renders as S3's "Enter today'
 
 **Amendment (owner-confirmed 2026-07-15): the valuation currency guard.** Surfaced by the Phase 2.5 golden-file pass (CSL: AUD market price, USD statements): M12–M14 and market cap return `not_meaningful` with the new `currency_mismatch` reason when the price currency differs from the statements' currency, with the pinned phrase in P-5. Engine, phrases, and a regression test capturing the old silently-computed behaviour landed in the same change, per the §1 contract rule.
 
-**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance: **confirmed 2026-07-11**, tightened to `max(3 × scaleUnit, 0.1%)` with display precisions as drafted; the R1–R7 thresholds (§7): **confirmed 2026-07-11**, with two de-noising amendments (R1: cumulative OCF ÷ NI < 0.9; R2: cumulative decline ≥ 2 pp); policies P-0…P-8 and the §11 depth decision (10/6 FYs): **confirmed 2026-07-11**. The review pass is **complete**: every pinned item in this document is owner-reviewed.
+**D3: the sector vocabulary and the grouped library. Requested (owner, 2026-07-19); drafted the same day; three judgement calls await owner confirmation.** The owner asked for library sections: healthcare, technology, banks, retail, and ETFs. ETFs are excluded here deliberately: a fund is a different entity, not a sector value, and the fund-shelf draft of 2026-07-19 scopes it separately. For companies, `sector` stops being free text and becomes an id from this pinned vocabulary. Free text is the trap the sample set already demonstrates: five companies carrying five different strings ("Healthcare", "Conglomerate", "Consumer staples", "Retail", "Medical devices"), which grouped as-is would render one section per company and file Cochlear outside Healthcare.
+
+| Id | Section label |
+|---|---|
+| `healthcare` | Healthcare |
+| `technology` | Technology |
+| `banks` | Banks |
+| `retail` | Retail |
+
+Pinned rules: vocabulary order is section order (the owner's stated order); absence is the unclassified state and is never encoded as a value (the §8 spirit: unknown is an absent key, not a sentinel); extension is a one-line amendment to this table, the same discipline as the §6 dictionary, no freestyle values anywhere; code writes the id (`healthcare`), and this table is the id-to-label mapping, per the naming decision (main plan §12 entry 8). **The sample mapping (judgement call one):** CSL and Cochlear file under `healthcare` (retiring "Medical devices"); Wesfarmers, Woolworths and JB Hi-Fi under `retail` (retiring "Conglomerate" and "Consumer staples"; Wesfarmers is the contestable call, filed by where its earnings live). **The free string retires (judgement call two):** everywhere the descriptive string rendered, the dashboard hero included, the section label now shows; a company whose one-word description carried nuance ("Medical devices") keeps that nuance in its thesis, not its label. Migration: a Dexie-versioned data pass rewrites known legacy strings per the mapping and clears unknown ones to absent for one-tap reassignment through the new details sheet (frontend §3), landing with the previous-schema fixture test §9 requires; the rewrite commits as an ordinary edit, so it queues, pushes, and converges the server copy (main plan §12.9). Export format unchanged: `formatVersion` stays 1 (§5, additive rule), and older export files normalise on import through the same mapping. The wire stays untouched in this slice: the api-contract company profile's `sector` remains provider-described free text (the ASX list's GICS industry group, EDGAR's SIC description; neither populated today), the sync payload stays opaque to the server, and mapping a provider description to a suggested vocabulary value at import is a later slice. **Judgement call three** lives in the frontend spec's details sheet: name and sector editable, ticker, exchange and currency fixed (a wrong identity or money field is a re-create, not an edit).
+
+**Review list (per main plan §12.1):** the ROIC construction (N1): **confirmed 2026-07-11**, with the lease note added to §2; the FCF definition (N2): **confirmed 2026-07-11**, with two detail-sheet copy notes recorded and `leaseRepayments` declined for v1; the P-2 tolerance: **confirmed 2026-07-11**, tightened to `max(3 × scaleUnit, 0.1%)` with display precisions as drafted; the R1–R7 thresholds (§7): **confirmed 2026-07-11**, with two de-noising amendments (R1: cumulative OCF ÷ NI < 0.9; R2: cumulative decline ≥ 2 pp); policies P-0…P-8 and the §11 depth decision (10/6 FYs): **confirmed 2026-07-11**. The review pass is **complete**: every pinned item in this document is owner-reviewed. *(2026-07-19: D3 joins the list with three judgement calls open: the sample mapping, the free-string retirement, and the details sheet's fixed fields. The pass above remains complete for everything dated before D3.)*
 
 ---
 

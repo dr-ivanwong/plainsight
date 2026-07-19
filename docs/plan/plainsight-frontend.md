@@ -13,7 +13,7 @@
 |---|---|---|---|
 | `/` | S2 Library | shell | Root of the navigation stack |
 | `/onboarding` | S1 First-run | onboarding | Auto-redirect target on true first launch only |
-| `/company/:id` | S3 Dashboard | dashboard (incl. Recharts) | `?metric=roe` opens S4 detail sheet |
+| `/company/:id` | S3 Dashboard | dashboard (incl. Recharts) | `?metric=roe` opens S4 detail sheet; `?details=1` the company details sheet (2026-07-19, main plan §12 entry 16) |
 | `/company/:id/entry` | S5 Data entry | entry | `?job=:jobId` renders S6 review mode |
 | `/company/:id/thesis` | S8 Thesis | thesis | `?history=1` opens version list |
 | `/compare?ids=a,b,c` | S7 Compare | compare | 2–4 comma-separated company ids |
@@ -52,15 +52,17 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 | State | Rendering |
 |---|---|
 | True empty (first run) | Hero empty state: one-line promise + two buttons, "Add a company" (accented) and "See it with sample data" |
-| Populated | Rows sorted by last-updated; "+ Add" in toolbar |
+| Populated | Rows grouped under quiet sector section headers, last-updated within a section; "+ Add" in toolbar *(amended 2026-07-19, below; previously one flat last-updated list)* |
 | Sample data present | Sample rows carry a quiet "Sample" chip; one-line dismissible banner links to S11 removal |
 | >12 companies | A filter field appears (progressive: invisible until useful) |
 | Loading | None in steady state (Dexie live queries are ~ms); skeleton rows only on cold service-worker start |
 | Signed in, first catch-up in flight, empty cache | Placeholder rows (64px, quiet, motionless) with a screen-reader status line, never the true-empty hero: an empty cache on a device that has never synced is not yet an empty library. The hero returns when the first pull lands empty or fails (catch-up serves the cache). Amendment 2026-07-18 with the reads-behind-the-API slice (main plan §12.9) |
 
+**Sector sections (added 2026-07-19, main plan §12 entry 16).** Companies group under the pinned vocabulary's section labels (companion §12 D3) in vocabulary order, styled as the dashboard grid's quiet section labels (dashboard design plan §5.2); within a section, the last-updated sort stands. Unclassified companies gather under a closing "Unclassified" section whose header renders only when a classified section also renders: a library where nothing is classified reads exactly as before, one flat list, the same progressive spirit as the >12 filter. That filter matches rows across sections, a section with no matches dropping out, and the first-catch-up placeholder rows stay flat. Empty sections never render. The add sheet's sector field becomes a picker over the vocabulary with "None" as the default; free text retires, and legacy values normalise per the companion's mapping.
+
 ### S3: Company dashboard
 
-Purpose: the heart; hero header (name, sector, latest FY, currency), key-stats header (dashboard design plan §5.3, added 2026-07-19), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2) with a cards-or-table view toggle (dashboard design plan §5.4; choice persisted in `meta`), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8.
+Purpose: the heart; hero header (name, sector, latest FY, currency), key-stats header (dashboard design plan §5.3, added 2026-07-19), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2) with a cards-or-table view toggle (dashboard design plan §5.4; choice persisted in `meta`), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8. *(Amended 2026-07-19, main plan §12 entry 16: the hero is a button opening the company details sheet at `?details=1` per §1.1's URL rules, `SheetShell`-owned. Name and sector are editable, sector through the vocabulary picker (companion §12 D3); ticker, exchange and currency display fixed, a wrong identity or money field being a re-create, not an edit.)*
 
 | State | Rendering |
 |---|---|
@@ -138,7 +140,7 @@ Export (with last-export date; feeds the 30-day nudge); Import (file → **dry-r
 
 ## 4. First-run and sample data: decision pinned
 
-**One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads the **ASX golden five**: CSL (the ten-year showcase, an ASX listing reporting in USD), Wesfarmers, Woolworths, JB Hi-Fi, and Cochlear, as `sample: true` records (schema flag per companion §9), each badged, all removable with one action in S11. *(Amended twice on 2026-07-18 with the ASX-first steer: first the original US trio, Apple, Coca-Cola, and Costco, retired per companion §12 D1's amendment, leaving CSL alone; then the owner amended the companion's depth rule the same day so the four six-year ASX fixtures join, their sparklines showing the six years each fixture carries while CSL keeps ten. Compare is reachable from a fresh sample library again.)*
+**One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads the **ASX golden five**: CSL (the ten-year showcase, an ASX listing reporting in USD), Wesfarmers, Woolworths, JB Hi-Fi, and Cochlear, as `sample: true` records (schema flag per companion §9), each badged, all removable with one action in S11. *(Amended twice on 2026-07-18 with the ASX-first steer: first the original US trio, Apple, Coca-Cola, and Costco, retired per companion §12 D1's amendment, leaving CSL alone; then the owner amended the companion's depth rule the same day so the four six-year ASX fixtures join, their sparklines showing the six years each fixture carries while CSL keeps ten. Compare is reachable from a fresh sample library again.)* *(2026-07-19: samples load pre-classified per companion §12 D3's mapping: CSL and Cochlear under Healthcare; Wesfarmers, Woolworths and JB Hi-Fi under Retail.)*
 
 Rationale: a library that starts full lies about whose research it is: ownership of the analysis *is* the product's psychology, and an auto-populated home undermines it. The one-tap path preserves the five-second "living dashboard" wow while keeping the default state honest. Mechanics: fixtures are a lazy ~30KB JSON chunk generated from the Phase 0 golden files, meaning the demo data is *real, hand-verified* data, and the sample dashboard doubles as an acceptance test of the whole render path. Sample records sync and export like any data; they're just flagged.
 
@@ -192,7 +194,7 @@ Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-co
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 
-S2: rows are single buttons with composite labels ("Apple, 2 flags, updated yesterday"). S3/S4/S7: every chart has the table-fallback toggle; values announced via `StatusValue`'s text form ("not meaningful: negative equity"), never symbol-only. S4/S12/S8-history: focus moves into the sheet on open, returns to trigger on close (`SheetShell` owns this). S5/S6: full arrow-key spreadsheet navigation, Enter commits-and-moves-down, live region announces autosave and extraction-job stages. S1/iOS card: dismissible, non-modal, focus-order-neutral. `prefers-reduced-motion`: all sheet/stagger animation becomes ≤150ms fades (main plan §4).
+S2: rows are single buttons with composite labels ("Apple, 2 flags, updated yesterday"); sector section headers are group headings announced before their rows (2026-07-19). S3: the hero button's accessible name is "Edit company details" (2026-07-19). S3/S4/S7: every chart has the table-fallback toggle; values announced via `StatusValue`'s text form ("not meaningful: negative equity"), never symbol-only. S4/S12/S8-history: focus moves into the sheet on open, returns to trigger on close (`SheetShell` owns this). S5/S6: full arrow-key spreadsheet navigation, Enter commits-and-moves-down, live region announces autosave and extraction-job stages. S1/iOS card: dismissible, non-modal, focus-order-neutral. `prefers-reduced-motion`: all sheet/stagger animation becomes ≤150ms fades (main plan §4).
 
 ## 9. Frontend folder structure
 
