@@ -318,10 +318,63 @@ describe('the worker walk (backend spec §6 stages)', () => {
     ]);
     const job = store.jobs.get('job-1');
     expect(job?.review?.result).toEqual(REVIEW_RESULT);
+    // A clean extraction carries no gate findings at all: absent means all clear.
+    expect(job?.review?.gateFindings).toBeUndefined();
     expect(job?.attempts[0]).toMatchObject({
       provider: 'anthropic-haiku-4.5',
       outcome: 'extracted'
     });
+  });
+
+  it('the validating stage runs the pinned gates and hands the reviewer their findings', async () => {
+    const store = new FakeJobStore();
+    seedQueued(store);
+    const outcome = await runUploadJob(
+      workerDeps(store, {
+        extract: async () =>
+          ({
+            ok: true,
+            result: {
+              years: [
+                {
+                  fy: 'FY2024',
+                  endDate: '2024-06-30',
+                  currency: 'AUD',
+                  scale: 'millions',
+                  // Printed negative on an unsigned magnitude: refused at
+                  // conversion exactly as the canonical pipeline refuses it.
+                  fields: { revenue: { value: -50, confidence: 0.9 } }
+                },
+                {
+                  fy: 'FY2025',
+                  endDate: '2025-06-30',
+                  currency: 'AUD',
+                  scale: 'millions',
+                  // Assets 1000 against 400 + 500: beyond the pinned tolerance.
+                  fields: {
+                    totalAssets: { value: 1000, confidence: 0.95 },
+                    totalLiabilities: { value: 400, confidence: 0.95 },
+                    totalEquity: { value: 500, confidence: 0.95 }
+                  }
+                }
+              ]
+            },
+            provenance: { provider: 'p', model: 'm', promptVersion: 'v' },
+            attempts: [{ rungId: 'p', model: 'm' }]
+          }) as unknown as LadderOutcome
+      }),
+      'job-1'
+    );
+    // The user is the reviewer: findings never fail the job, and nothing is
+    // dropped from the result; the reviewer sees the document as extracted
+    // with the gates' verdicts beside it.
+    expect(outcome.outcome).toBe('review_required');
+    const review = store.jobs.get('job-1')?.review;
+    expect(review?.result.years).toHaveLength(2);
+    expect(review?.gateFindings).toEqual([
+      { fy: 'FY2024', reasons: [expect.stringContaining('unsigned magnitude')] },
+      { fy: 'FY2025', reasons: [expect.stringContaining('cross-foot')] }
+    ]);
   });
 
   it('a refused preprocess fails plainly', async () => {

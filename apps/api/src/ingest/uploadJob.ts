@@ -5,7 +5,7 @@
  * figures anywhere canonical; the result waits on the job for the reviewer,
  * and the confirmed data lands in the client's own library.
  */
-import type { ExtractionAttempt } from '@plainsight/api-contract';
+import type { ExtractionAttempt, ExtractionGateFinding } from '@plainsight/api-contract';
 import {
   extractionProvenanceSchema,
   extractionResultSchema,
@@ -14,7 +14,9 @@ import {
   type PreparedDocument
 } from '@plainsight/extraction-core';
 import type { PreprocessOutcome } from '@plainsight/extraction-core/pdf';
+import { convertExtraction } from '../asx/convert.js';
 import type { JobStore } from '../db/jobStore.js';
+import { runGates } from './gates.js';
 
 export interface UploadJobDeps {
   jobs: JobStore;
@@ -93,10 +95,29 @@ export async function runUploadJob(deps: UploadJobDeps, jobId: string): Promise<
     return fail('The extraction answered outside the pinned schema.', attempts);
   }
 
+  // The same gates the canonical pipeline runs (backend spec section 5),
+  // over the same minor-unit conversion the ASX path uses (the converter's
+  // module names its first consumer, not a market assumption). Uploads have
+  // no quarantine because nothing here is served unreviewed: the verdicts
+  // ride the review payload instead, so the reviewer sees exactly what the
+  // gates saw, year by year.
+  const converted = convertExtraction(result.data);
+  const { quarantined } = runGates(
+    [...converted.years].sort((a, b) => a.fy.localeCompare(b.fy))
+  );
+  const gateFindings: ExtractionGateFinding[] = [
+    ...converted.failures,
+    ...quarantined.map((verdict) => ({ fy: verdict.year.fy, reasons: verdict.reasons }))
+  ].sort((a, b) => a.fy.localeCompare(b.fy));
+
   await deps.jobs.patchJob(jobId, {
     state: 'review_required',
     attempts,
-    review: { result: result.data, provenance: provenance.data }
+    review: {
+      result: result.data,
+      provenance: provenance.data,
+      ...(gateFindings.length > 0 ? { gateFindings } : {})
+    }
   });
   return { outcome: 'review_required', jobId };
 }

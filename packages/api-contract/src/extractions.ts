@@ -70,6 +70,19 @@ export const extractionAttemptSchema = z.object({
 
 export type ExtractionAttempt = z.infer<typeof extractionAttemptSchema>;
 
+/**
+ * One year the validating stage's gates flagged (the backend spec section 5
+ * gates, run over uploads by the section 6 worker). Uploads have no
+ * quarantine because nothing is served unreviewed; the verdicts travel to
+ * the reviewer instead, naming the year and every reason.
+ */
+export const extractionGateFindingSchema = z.object({
+  fy: nonEmpty,
+  reasons: z.array(nonEmpty).min(1)
+});
+
+export type ExtractionGateFinding = z.infer<typeof extractionGateFindingSchema>;
+
 export const extractionJobSchema = z
   .object({
     jobId: nonEmpty,
@@ -83,7 +96,9 @@ export const extractionJobSchema = z
     review: z
       .object({
         result: extractionResultSchema,
-        provenance: extractionProvenanceSchema
+        provenance: extractionProvenanceSchema,
+        /** Present only when the gates flagged years; absent means all clear. */
+        gateFindings: z.array(extractionGateFindingSchema).min(1).optional()
       })
       .optional(),
     /** The failure, plainly named, with the next rung where one exists. */
