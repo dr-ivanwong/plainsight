@@ -107,6 +107,7 @@ export function Dashboard({
             currency={company.currency}
             spark={spark}
             delta={series.delta ?? undefined}
+            healthDirection={def.healthDirection}
           />
         </Link>
       );
@@ -127,6 +128,7 @@ export function Dashboard({
           currency={company.currency}
           spark={spark}
           delta={series.delta ?? undefined}
+          healthDirection={def.healthDirection}
           footnote={valuation && price !== null ? `as of ${price.asOf}` : undefined}
           stale={valuation && priceIsStale}
         />

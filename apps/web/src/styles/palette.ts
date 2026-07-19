@@ -61,6 +61,15 @@ export interface ThemePalette {
   healthy: string;
   /** Semantic: worth investigating. */
   investigate: string;
+  /**
+   * Text-grade variants of the two trend colours, for 13px delta-chip figures
+   * (dashboard design plan §4.3): held to 4.5:1 on every rendered background,
+   * where the base pair is held to 3:1 as graphics (dots, sparklines). Dark
+   * mode's base pair already clears the text floor, so the variants alias it;
+   * light healthy needs a darker step.
+   */
+  healthyText: string;
+  investigateText: string;
   /** Semantic: red flag. */
   flag: string;
   /** Compare-trend series ramp, darkest first: slot colours for up to four company lines. */
@@ -84,6 +93,8 @@ export const lightPalette: ThemePalette = {
   onAccent: '#FFFFFF',
   healthy: '#248A3D',
   investigate: '#C93400',
+  healthyText: '#1E7A33',
+  investigateText: '#C93400',
   flag: '#D70015',
   chartSeries1: '#082F63',
   chartSeries2: '#0A4C96',
@@ -105,6 +116,8 @@ export const darkPalette: ThemePalette = {
   onAccent: '#FFFFFF',
   healthy: '#30DB5B',
   investigate: '#FFB340',
+  healthyText: '#30DB5B',
+  investigateText: '#FFB340',
   flag: '#FF6961',
   chartSeries1: '#2E77CE',
   chartSeries2: '#4E97E8',

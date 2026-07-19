@@ -117,6 +117,14 @@ for (const [themeName, palette] of themes) {
       }
     });
 
+    it('the text-grade trend colours reach 4.5:1 on their rendered backgrounds', () => {
+      // Delta chips render 13px figures on cards, the table (page background)
+      // and sheets, so the text floor applies (dashboard design plan §4.3).
+      for (const semantic of ['healthyText', 'investigateText'] as const) {
+        expect(contrastShortfalls(palette[semantic], palette, 4.5), semantic).toEqual([]);
+      }
+    });
+
     it('the label on accent-filled controls reaches 4.5:1', () => {
       expect(contrastRatio(palette.onAccent, palette.accentFill)).toBeGreaterThanOrEqual(4.5);
     });

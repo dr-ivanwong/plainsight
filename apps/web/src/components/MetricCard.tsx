@@ -23,6 +23,7 @@ export function MetricCard({
   currency,
   spark,
   delta,
+  healthDirection,
   footnote,
   stale = false
 }: {
@@ -32,6 +33,8 @@ export function MetricCard({
   currency: CurrencyCode;
   spark?: readonly SparkPoint[];
   delta?: MetricDelta;
+  /** The pinned own-trend direction, forwarded to the delta chip's colour. */
+  healthDirection?: 'up' | 'down';
   footnote?: string;
   stale?: boolean;
 }): ReactElement {
@@ -40,7 +43,14 @@ export function MetricCard({
       <h3 className={styles.label}>{label}</h3>
       <div className={styles.valueRow}>
         <StatusValue value={value} kind={kind} currency={currency} />
-        {delta === undefined ? null : <DeltaChip delta={delta} kind={kind} currency={currency} />}
+        {delta === undefined ? null : (
+          <DeltaChip
+            delta={delta}
+            kind={kind}
+            currency={currency}
+            healthDirection={healthDirection}
+          />
+        )}
       </div>
       {spark === undefined ? null : <Sparkline points={spark} />}
       {footnote === undefined ? null : (

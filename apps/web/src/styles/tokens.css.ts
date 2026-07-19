@@ -31,6 +31,8 @@ const contractShape: Record<keyof ThemePalette, null> = {
   onAccent: null,
   healthy: null,
   investigate: null,
+  healthyText: null,
+  investigateText: null,
   flag: null,
   chartSeries1: null,
   chartSeries2: null,

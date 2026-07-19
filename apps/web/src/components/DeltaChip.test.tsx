@@ -46,4 +46,49 @@ describe('DeltaChip', () => {
       'unchanged 0.00, FY2019 to FY2024'
     );
   });
+
+  it('wears healthy when the move matches the pinned direction', () => {
+    render(
+      <DeltaChip
+        delta={{ fromFy: 'FY2019', toFy: 'FY2024', change: 0.052, direction: 'up' }}
+        kind="percent"
+        currency="USD"
+        healthDirection="up"
+      />
+    );
+    expect(screen.getByText(/5\.2 pp/).className).toContain('chipHealthy');
+  });
+
+  it('wears investigate when the move runs against it (leverage rising)', () => {
+    render(
+      <DeltaChip
+        delta={{ fromFy: 'FY2019', toFy: 'FY2024', change: 0.4, direction: 'up' }}
+        kind="ratio"
+        currency="USD"
+        healthDirection="down"
+      />
+    );
+    expect(screen.getByText(/0\.40/).className).toContain('chipInvestigate');
+  });
+
+  it('stays neutral without a pinned direction, and on a flat move with one', () => {
+    render(
+      <DeltaChip
+        delta={{ fromFy: 'FY2019', toFy: 'FY2024', change: 3.1, direction: 'up' }}
+        kind="ratio"
+        currency="USD"
+      />
+    );
+    expect(screen.getByText(/3\.10/).className).not.toMatch(/chipHealthy|chipInvestigate/);
+
+    render(
+      <DeltaChip
+        delta={{ fromFy: 'FY2019', toFy: 'FY2024', change: 0, direction: 'flat' }}
+        kind="percent"
+        currency="USD"
+        healthDirection="up"
+      />
+    );
+    expect(screen.getByText(/0\.0 pp/).className).not.toMatch(/chipHealthy|chipInvestigate/);
+  });
 });

@@ -187,7 +187,12 @@ export function MetricSheet({
               <span className={styles.basisBadge}>{latest.basis} basis</span>
             ) : null}
             {series.delta === null ? null : (
-              <DeltaChip delta={series.delta} kind={def.format} currency={company.currency} />
+              <DeltaChip
+                delta={series.delta}
+                kind={def.format}
+                currency={company.currency}
+                healthDirection={def.healthDirection}
+              />
             )}
           </div>
         )}
