@@ -8,6 +8,11 @@
 
 **Severity ladder.** P0: the product's credibility, data, or security is broken now. P1: breaks the next scheduled step, or violates a pinned contract in a user-reachable way. P2: robustness, honesty, or maintainability debt that will bite. P3: polish and hygiene.
 
+**Update, 2026-07-19, after owner review.** Two follow-ups have already changed what this review describes. Recorded here rather than by overwriting the findings, so the original assessment stays legible.
+
+1. **UI-1 (the P0) is fixed.** The detail sheet now substitutes the arithmetic the engine actually performed on both denominator bases, lists the prior-year balance, states the ROIC and FCF intermediates as their dictionary notes require, and carries a guard test that evaluates every emitted equation against the engine's own result for all fourteen metrics on both bases (commits `08ba083`, `41837c3`). The finding below stands as the record of what was wrong.
+2. **Single-device operation is the owner's posture; the backend stays the source of truth.** The owner runs one device and is not converging a second. Sign-in and the backend-of-record (decision §12.9) stay, so the findings on the sign-in and upload legs are untouched: **INFRA-1 and FE-2 stay P1** (sign-in still happens) and **BE-2 stays P1** (live whenever a filing is uploaded). What re-scores is the sync-*convergence* cluster, which needs a concurrent second writer to bite: **BE-1 P1 → P2, BE-3 P2 → P3, BE-4 P2 → P3, FE-4 P2 → P3**, each latent and reactivating to its original severity the day a second device syncs. **X-1 narrows** from a four-leg journey to sign-in → first sync → upload. This posture also descopes the pinned two-device Phase 3 exit criterion (main plan §8; CLAUDE.md still reads "awaiting the owner's two real devices"), which should get its own decision-log entry; the sync protocol itself stays correct-by-design and tested, so nothing here is deleted, only deferred.
+
 ---
 
 ## 1. Verdict
@@ -16,13 +21,13 @@ Plainsight is an unusually disciplined codebase, and most of what its documents 
 
 Three things cut against that baseline.
 
-**First, one P0.** The metric detail sheet substitutes the wrong inputs into its formula whenever the engine used an averaged denominator (UI-1). For every multi-year company, including all five ASX samples, the ROE and ROIC sheets print an equation that does not equal the displayed value, and the prior-year balance the computation actually used appears nowhere on the sheet. The product's own success criterion (main plan §13) defines exactly this, a displayed number the owner cannot reproduce by hand from its sheet, as a P0 regardless of size. It survived a green 100%-coverage suite because the test fixtures for the substituted formula stop at one year.
+**First, one P0 (now fixed).** The metric detail sheet substituted the wrong inputs into its formula whenever the engine used an averaged denominator (UI-1). For every multi-year company, including all five ASX samples, the ROE and ROIC sheets printed an equation that did not equal the displayed value, and the prior-year balance the computation actually used appeared nowhere on the sheet. The product's own success criterion (main plan §13) defines exactly this, a displayed number the owner cannot reproduce by hand from its sheet, as a P0 regardless of size. It survived a green 100%-coverage suite because the test fixtures for the substituted formula stopped at one year. *Fixed 2026-07-19 (commits `08ba083`, `41837c3`); see the update note above.*
 
-**Second, the untrodden path.** Eleven P1 findings, and nearly all of them sit on the same walk: the one the runbook schedules next. Create the Cognito account, sign in, sync, sign in the second device, upload a filing. On that walk, in order: the deployed CSP blocks the sign-in token exchange outright (INFRA-1); a network blip during token refresh silently signs the device out and stops the write-retry obligation (FE-2); the sync protocol has three real races against DynamoDB's actual concurrency and consistency model that the hermetic fake-store tests structurally cannot see (BE-1, BE-3, BE-4); and the upload pipeline reports a validation stage it does not perform (BE-2). The pattern is precise: every box is verified hermetically and excellently, and every break lives at a seam between boxes (deployed config versus shipped client, fake store versus DynamoDB, OIDC trust versus workflow trigger, a cost-alert chain that has never once fired end to end). The repo verifies units; nothing yet rehearses the journey.
+**Second, the unrehearsed path.** After the single-device re-score (update note above), the imminent walk is the runbook's next steps minus the second device: create the Cognito account, sign in, first sync, upload a filing. The P1s still cluster there. In order: the deployed CSP blocks the sign-in token exchange outright (INFRA-1); a network blip during token refresh silently signs the device out and stops the write-retry obligation (FE-2); and the upload pipeline reports a validation stage it does not perform (BE-2). The three sync-convergence races (BE-1, BE-3, BE-4) and the wire-parse wedge (FE-4) are real but now latent, waiting on a second device this posture does not add. The pattern is unchanged: every box is verified hermetically and excellently, and every break lives at a seam between boxes (deployed config versus shipped client, OIDC trust versus workflow trigger, a cost-alert chain that has never once fired end to end). The repo verifies units; nothing yet rehearses the journey.
 
 **Third, contract maintenance.** The repo's method is documents-as-contracts, and the two same-day decision passes of 2026-07-18 (the source-of-truth migration, then the gate retirement) each left an incomplete wake. The README still describes a three-phases-old, superseded architecture; the first-run screen tells the user "no account and no server" one day after the backend became the source of truth; CLAUDE.md, the main plan, the cdk spec, the runbook, and ADR 0001 currently disagree about whether a stateful approval gate exists (X-2). Separately, several pinned capabilities shipped quietly narrower than their specs (BE-6, FE-8, FE-9, UI-3) with no amendment recording the staging.
 
-None of this is rot, and none of it is negligence; it is the specific residue of building fast against strong specs with hermetic tests. The recommended sequence in §11 is ordered so that the next runbook steps stop being the place the latent defects live. Until the CSP fix and the sync-race fixes land, do not create the Cognito account expecting sign-in to work, and do not sign in a second device.
+None of this is rot, and none of it is negligence; it is the specific residue of building fast against strong specs with hermetic tests. The recommended sequence in §11 is ordered so that the next runbook steps stop being the place the latent defects live. Until the CSP fix lands (INFRA-1), do not create the Cognito account expecting sign-in to work; the sync-convergence fixes are no longer go-live blockers under single-device operation, but they remain the pre-condition for ever adding a second device.
 
 ---
 
@@ -48,13 +53,13 @@ Evidence-backed, not aspirational:
 
 ## 3. Findings at a glance
 
-41 findings: 1 P0, 11 P1, 17 P2, 12 P3.
+41 findings. After the 2026-07-19 single-device re-score (update note at the top): UI-1 fixed, and four sync-convergence findings deferred. Open: 0 P0, 10 P1, 15 P2, 15 P3.
 
 | Code | Sev | Finding |
 |---|---|---|
-| UI-1 | P0 | Detail sheet substitutes wrong inputs for averaged-denominator metrics; equation shown does not equal the value |
-| X-1 | P1 | The sign-in → sync → second-device → upload path has never been walked; every lens found a latent break on it |
-| BE-1 | P1 | Sync pull checkpoint can permanently skip committed records (non-atomic seq, eventually consistent feed) |
+| UI-1 | P0 (fixed) | Detail sheet substitutes wrong inputs for averaged-denominator metrics; equation shown does not equal the value. Fixed 2026-07-19 (`08ba083`, `41837c3`) |
+| X-1 | P1 | The sign-in → first-sync → upload path is unrehearsed; INFRA-1, FE-2, BE-2 sit on it (second-device leg descoped under single-device operation) |
+| BE-1 | P2 (was P1) | Sync pull checkpoint can permanently skip committed records (non-atomic seq, eventually consistent feed); needs a concurrent second writer |
 | BE-2 | P1 | Upload job's "validating" stage never runs the pinned cross-footing gates |
 | FE-1 | P1 | No error boundaries anywhere; the pinned message/retry/export escape hatch does not exist |
 | FE-2 | P1 | Transient network failure during token refresh signs the device out and halts write retries silently |
@@ -65,11 +70,11 @@ Evidence-backed, not aspirational:
 | INFRA-2 | P1 | PR-triggered diff job cannot assume the deploy role (OIDC subject mismatch); "the diff is the review" never runs |
 | INFRA-3 | P1 | Cost-anomaly monitor likely filters on a non-existent tag key; the whole kill-switch chain has never fired and fails silent |
 | X-2 | P2 | Documentation drift cluster from the two 2026-07-18 decision passes (README, runbook, main plan, cdk spec, CLAUDE.md, ADR 0001, code comments) |
-| BE-3 | P2 | Watermark advance can clobber concurrently appended tombstone marks (lost purge signal, silent resurrection) |
-| BE-4 | P2 | Client full resync never reconciles server-absent records; ghost rows persist after a 90-day purge |
+| BE-3 | P3 (was P2) | Watermark advance can clobber concurrently appended tombstone marks (lost purge signal); needs a concurrent second writer |
+| BE-4 | P3 (was P2) | Client full resync never reconciles server-absent records; the purge that creates the ghost needs a second device |
 | BE-5 | P2 | Extraction quota (10/month) is consumed by attempts that cannot succeed and never refunded; no reset procedure |
 | BE-6 | P2 | Pinned upload/proxy capabilities shipped narrower than spec, unamended (keep-source, streaming, PDF-only, presigned size claim) |
-| FE-4 | P2 | One unparseable pulled record wedges sync permanently; envelope `schemaVersion` is written but never read |
+| FE-4 | P3 (was P2) | One unparseable pulled record wedges sync permanently; the cross-version record needs a second device (cheap to fix regardless) |
 | FE-5 | P2 | Extraction review seeds "not reported, treat as zero" from the model's claim; the data model reserves that assertion for the user |
 | FE-6 | P2 | Review-mode save is non-atomic while its failure banner says "Nothing was stored" |
 | FE-7 | P2 | Entry commits read-modify-write from render state; rapid commits can drop an earlier field |
@@ -98,11 +103,13 @@ Evidence-backed, not aspirational:
 
 ## 4. Cross-cutting
 
-### X-1 · P1 · The go-live path is unrehearsed, and it is where the defects live
+### X-1 · P1 · The go-live path is unrehearsed (single-device scope)
 
-Phase 3 is code-complete and the runbook's next steps are: create the owner account, sign in, sync, then converge two real devices. In order along that path: INFRA-1 blocks sign-in at the first fetch; FE-2 can silently sign the device back out; BE-1, BE-3, and BE-4 are races in exactly the two-device concurrent window; FE-4 can wedge the feed; BE-2 and BE-5 degrade the first uploads. Each lens found its break independently, and each break lives at a seam no hermetic suite covers: deployed CSP versus shipped client, fake store versus DynamoDB's consistency model, OIDC trust versus workflow trigger, a budget-to-kill-switch chain that has never fired.
+*Re-scored 2026-07-19: the owner runs one device (update note at the top), so the second-device convergence leg is descoped and its findings (BE-1, BE-3, BE-4, FE-4) are deferred as latent. What remains on the imminent path is below.*
 
-**Direction:** treat go-live as a rehearsed journey, not a checklist. After the P1 fixes: one integration pass of the sync store against DynamoDB Local (or a fake injecting feed lag and interleaving) covering push/pull/tombstone/resync; one scripted walk of sign-in → push → second-device pull on the rehearsal overlay; one deliberate firing of the budget kill chain. The cheapest insurance in the repo.
+Phase 3 is code-complete and the runbook's next steps are: create the owner account, sign in, first sync, upload a filing. In order along that path: INFRA-1 blocks sign-in at the first fetch; FE-2 can silently sign the device back out on a network blip; BE-2 reports a validation stage the upload worker does not perform, and BE-5 spends a quota unit on failed attempts. Each break lives at a seam no hermetic suite covers: deployed CSP versus shipped client, OIDC trust versus workflow trigger, a budget-to-kill-switch chain that has never fired. The single writer removes the concurrency races from this walk, but not the seams between deployed config, client, and the untested cost chain.
+
+**Direction:** treat go-live as a rehearsed journey, not a checklist. After INFRA-1: one scripted walk of sign-in → first sync → upload against the real backend; token-refresh tolerance (FE-2) so a bad network moment cannot sign the device out mid-drain; one deliberate firing of the budget kill chain. If a second device is ever added, the deferred convergence work (below) becomes the pre-condition, with a DynamoDB Local pass covering push/pull/tombstone/resync.
 
 ### X-2 · P2 · The 2026-07-18 decision passes left the contracts disagreeing
 
@@ -127,7 +134,9 @@ At this commit, a cold-cache `pnpm -r test` fails: the two snapshot tests and th
 
 ## 5. Backend and sync
 
-### BE-1 · P1 · Pull can permanently skip committed records
+### BE-1 · P2 (re-scored from P1) · Pull can permanently skip committed records
+
+*Single-device re-score (2026-07-19): every loss path here needs a concurrent second writer (inverted commit order) or a cross-device skip. With one writer the device already holds its own writes locally, so this cannot lose data single-device. It stays worth fixing before any second device, and it remains a standing deviation from the spec's transact-write wording (backend spec §4); reactivates to P1 the day a second device syncs.*
 
 `runPush` assigns `seq` via a separate unconditional counter update, then commits with a conditional put (`apps/api/src/sync/core.ts:53-57`, `apps/api/src/db/syncStore.ts:130-173`); commit order can invert seq order. Independently, pull reads an eventually consistent GSI with no cross-item ordering guarantee and advances the checkpoint to the last seq returned. Either way a pull can observe seq N+1 without N and checkpoint past it; because burnt seqs are legal ("monotonicity, not density"), a gap is indistinguishable from a hole and the skipped record is never served again. The LWW winner then exists on the server while the other device never receives it: permanent divergence with both devices showing zero pending, in exactly the window backend spec §4 exists to serve. The fake-store tests are single-threaded and strongly consistent, so they cannot exhibit it. **Direction:** honour the spec's wording: assign seq atomically with the accept (TransactWriteItems: condition-checked counter increment plus the conditional put), making seqs contiguous so gaps are pure feed lag; then have pull either refuse to advance past a gap or re-serve an overlap window (the client already treats echoes as no-ops).
 
@@ -135,11 +144,15 @@ At this commit, a cold-cache `pnpm -r test` fails: the two snapshot tests and th
 
 The stage patched as `validating` performs only Zod shape parses; `runGates` (cross-footing, scale-jump) is imported by the EDGAR and ASX paths but never by the upload path (`apps/api/src/ingest/uploadJob.ts:89-94` versus `ingest/core.ts:70` and `ingest/asxCore.ts:149`). Backend spec §6 pins "the same gates as §5" for this stage, and the job's honest-stage-labels contract is broken by a stage that reports work it did not do; a filing whose balance sheet does not cross-foot reaches review unflagged by the server. The client's review grid does run identity gates and nothing saves unconfirmed, so user harm is bounded; the spec violation stands. **Direction:** run the gates over the converted figures in the worker and surface failures on the job, or amend the spec if client-side gating is the deliberate design.
 
-### BE-3 · P2 · Watermark advance can clobber tombstone marks
+### BE-3 · P3 (re-scored from P2) · Watermark advance can clobber tombstone marks
+
+*Single-device re-score (2026-07-19): the race is a concurrent push landing during a pull; one device runs one sync at a time, so it cannot occur without a second device. Latent; reactivates to P2 the day a second device syncs.*
 
 `runPull` reads the marks list, filters expired, then SETs `tombstoneMarks` wholesale from that stale read, while a concurrent push appends marks via `list_append` (`apps/api/src/sync/core.ts:99-108`, `apps/api/src/db/syncStore.ts:202-243`). A delete pushed during a pull loses its mark; its eventual TTL purge then never advances the purge watermark, so a long-offline device is never told to full-resync for it and resurrects the deleted record silently. **Direction:** optimistic concurrency on the SEQ item (version attribute, retry) or store marks as individual items so append and prune never contend.
 
-### BE-4 · P2 · Full resync never reconciles absence
+### BE-4 · P3 (re-scored from P2) · Full resync never reconciles absence
+
+*Single-device re-score (2026-07-19): the purged-elsewhere record that becomes a ghost requires another device to have deleted it; single-device, the deleter is the same device that already dropped the row. Latent; reactivates to P2 the day a second device syncs.*
 
 On `full_resync_required` the engine resets the checkpoint and re-pulls, but never notes which records the full feed contained (`apps/web/src/sync/engine.ts:143-147`). A record deleted and purged server-side (the exact case the watermark signal exists for) survives locally forever: clean, never pending, no tombstone ever coming. Backend spec §4 says the client re-pulls everything and reconciles by LWW; absence is part of what needs reconciling. **Direction:** during a resync run, collect seen record keys; afterwards delete clean local rows absent from the feed (dirty rows correctly re-push).
 
@@ -181,7 +194,9 @@ Frontend spec §2 and main plan §5 pin per-feature-region boundaries with a fri
 
 `main.tsx` says "updates apply on the next launch, with no update ceremony", but the Workbox config sets `registerType: 'autoUpdate'` with `skipWaiting: true` and `clientsClaim: true` (`apps/web/vite.config.ts:45-53`), and the installed register client reloads the window on update. A deploy landing mid-entry reloads the page under the owner, dropping focused uncommitted field text and up to 900 ms of thesis draft, against the no-lost-work discipline (main plan §4). **Direction:** make the comment true (drop skipWaiting/clientsClaim so the waiting worker activates next launch), or keep autoUpdate and flush pending commits in an update hook; fix the comment either way.
 
-### FE-4 · P2 · One unparseable pulled record wedges sync permanently
+### FE-4 · P3 (re-scored from P2) · One unparseable pulled record wedges sync permanently
+
+*Single-device re-score (2026-07-19): the device only pulls back its own pushes, which it can parse; the wedge needs a record written by a different app version (a second device on a newer build) or storage corruption. Latent; reactivates to P2 the day a second device syncs. Cheap enough (a `schemaVersion` check) to fold in with FE-10 regardless.*
 
 `applyRecord` parses with `.parse()` inside a run with no per-record catch; the checkpoint persists only at run end (`apps/web/src/sync/engine.ts:62-89, 143-175`). Any corrupt payload, or a record pushed by a newer app version, fails every subsequent run at the same point forever while reads silently stale. The envelope's `schemaVersion` is written but never read; the Dexie layer has quarantine machinery for exactly this class, the wire has none. **Direction:** check `schemaVersion` before parsing; on parse failure quarantine the raw record, advance past it, and surface it in settings beside the existing read-quarantine count.
 
@@ -311,7 +326,7 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 
 ## 10. Forward risks
 
-1. **The two-device window.** The owner's second device is about to exercise exactly the concurrency the fake-store tests cannot see (BE-1, BE-3, BE-4, FE-2, FE-4). A DynamoDB Local integration pass plus one rehearsed two-device walk is the cheapest insurance available.
+1. **The dormant second device.** Single-device operation (owner posture, 2026-07-19) keeps BE-1, BE-3, BE-4, and FE-4 latent, but they reactivate the instant a second device syncs, and the fake-store tests cannot see any of them. If a second device is ever added, a DynamoDB Local integration pass plus one rehearsed two-device walk is the pre-condition, not an afterthought.
 2. **Silent sync-health degradation.** Failure surfacing is deliberately quiet (a settings row), so a wedged or signed-out sync looks identical to a healthy idle one. A staleness surface (the library noting "last synced N days ago" past a threshold) would cap the blast radius of every future sync bug, including the ones not yet written.
 3. **The cost chain fires for the first time in production.** Arming Phase 2.5 keys converts INFRA-3 and INFRA-5 from latent to live on the same day, and the alert email subscription is still unconfirmed. Fire the chain once on purpose before the keys exist.
 4. **Traceability has no automated guard.** UI-1 survived a green 100%-branch suite because nothing asserts the sheet's substituted arithmetic equals the displayed value. As benchmark lines, the library table, and deeper provenance land, that guard becomes the product's central regression test.
@@ -322,9 +337,9 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 
 ## 11. Recommended sequence
 
-1. **Restore the trust invariant (UI-1).** Substitute the averaged denominator, list the prior-year input, render the ROIC intermediates, and add the evaluate-the-substitution test. This is the product's founding promise; it outranks everything else here.
-2. **Unblock sign-in (INFRA-1).** Cognito origin into connect-src, spec §6 formula and invariant expectation amended in the same commit. Nothing on the Phase 3 path proceeds without it.
-3. **Pre-flight the two-device walk (BE-1, BE-3, BE-4, FE-2, FE-4, X-1).** The transactional seq assignment with gap-safe pull, the marks race, resync reconciling absence, refresh-failure tolerance, and wire-record quarantine; then the DynamoDB Local pass and one rehearsed sign-in → push → second-device pull before the owner's real second device signs in.
+1. **Restore the trust invariant (UI-1). Done 2026-07-19 (`08ba083`, `41837c3`).** Substituted the averaged denominator, listed the prior-year input, rendered the ROIC intermediates, and added the evaluate-the-substitution test across all fourteen metrics on both bases. This was the product's founding promise; it outranked everything else.
+2. **Unblock sign-in (INFRA-1).** Cognito origin into connect-src, spec §6 formula and invariant expectation amended in the same commit. Now the top remaining go-live blocker: nothing on the single-device path proceeds without it.
+3. **Rehearse the single-device path (X-1, FE-2).** After INFRA-1, walk sign-in → first sync → upload once against the real backend, and make token refresh tolerant of a network blip (FE-2) so a bad moment cannot silently sign the device out mid-drain. The sync-convergence fixes (BE-1, BE-3, BE-4, FE-4) are deferred under single-device operation; schedule them as the pre-condition for ever adding a second device, not for this go-live.
 4. **Protect unsaved work (FE-3, FE-1).** Settle the service-worker update posture and land the designed error boundaries; both defend the same asset, the owner's in-flight keystrokes.
 5. **Make uploads honest before they are used (BE-2, BE-5, FE-5, FE-6, BE-6).** Gates in the worker, quota refunds plus a runbook reset, user-only known-zero minting, the atomic review save, and the keep-source decision.
 6. **Close the pipeline's own gaps (INFRA-2, INFRA-4, INFRA-3).** The read-only diff role, drop the dead environment trust, and the cost-chain verification steps tied to the tag-activation runbook step.
