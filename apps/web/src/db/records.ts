@@ -262,6 +262,9 @@ export const metaRecordSchema = z.discriminatedUnion('key', [
   z.object({ key: z.literal('sampleBannerDismissed'), value: z.boolean() }),
   z.object({ key: z.literal('iosInstallDismissed'), value: z.boolean() }),
   z.object({ key: z.literal('thesisSerif'), value: z.boolean() }),
+  // The dashboard's cards-or-table choice (dashboard design plan §5.4).
+  // Device preference like the serif toggle: not in the export allowlist.
+  z.object({ key: z.literal('dashboardTableView'), value: z.boolean() }),
   // The sync engine's device-local facts (backend spec §4): the device id,
   // the Lamport clock, the pull checkpoint, and the quiet status line. None
   // sit in the export allowlist; they describe this device, not the library.

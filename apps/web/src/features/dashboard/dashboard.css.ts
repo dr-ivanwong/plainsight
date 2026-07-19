@@ -68,9 +68,18 @@ export const heroFacts = style({
   fontVariantNumeric: 'tabular-nums'
 });
 
-/** Seats the year-range control between the hero and the grid (dashboard design plan §5.5). */
-export const rangeRow = style({
+/** Seats the range and view controls between the hero and the grid (dashboard design plan §5.4, §5.5). */
+export const controlsRow = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: space[12],
   marginBottom: space[16]
+});
+
+/** The cards-or-table toggle keeps the trailing edge whether or not the range control renders. */
+export const viewControl = style({
+  marginLeft: 'auto'
 });
 
 /**

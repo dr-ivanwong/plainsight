@@ -49,6 +49,8 @@ export interface ThemePalette {
   textSecondary: string;
   /** Subtle hairline borders and separators. */
   border: string;
+  /** The practitioner table's section header rows (dashboard design plan §3.4): one step off the app background either side. */
+  tableHeaderBackground: string;
   /** The one accent, as a tint: links, icons, focus rings, selected states. */
   accent: string;
   /** The accent family's filled-control variant, dark enough to carry onAccent at 4.5:1. */
@@ -76,6 +78,7 @@ export const lightPalette: ThemePalette = {
   textPrimary: '#1D1D1F',
   textSecondary: '#65656A',
   border: '#D2D2D7',
+  tableHeaderBackground: '#E8E8ED',
   accent: '#007AFF',
   accentFill: '#0071E3',
   onAccent: '#FFFFFF',
@@ -96,6 +99,7 @@ export const darkPalette: ThemePalette = {
   textPrimary: '#F5F5F7',
   textSecondary: '#98989F',
   border: '#38383A',
+  tableHeaderBackground: '#141416',
   accent: '#0A84FF',
   accentFill: '#0071E3',
   onAccent: '#FFFFFF',

@@ -1,25 +1,21 @@
-import {
-  LINE_ITEMS,
-  METRICS,
-  type FyLabel,
-  type LineItemId,
-  type MetricId,
-  type MetricSeries
-} from '@plainsight/calc-engine';
+import { METRICS, type MetricId, type MetricSeries } from '@plainsight/calc-engine';
 import { Link } from '@tanstack/react-router';
-import { Fragment, useState, type FormEvent, type ReactElement } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { Fragment, useState, type ReactElement } from 'react';
 
 import { MetricCard } from '../../components/MetricCard';
-import { parseEntryText } from '../../components/moneyEntry';
 import { RedFlagBanner } from '../../components/RedFlagBanner';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { okPoints, type SparkPoint } from '../../components/Sparkline';
-import { db, putPrice, type CompanyRecord } from '../../db';
+import { db, setMeta } from '../../db';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
+import { entrySearchFor } from './entrySearch';
 import { MetricSheet } from './MetricSheet';
+import { MetricTable } from './MetricTable';
+import { PriceCard } from './PriceCard';
 import { DASHBOARD_SECTIONS } from './sections';
 import { TrendSection } from './TrendSection';
 
@@ -34,93 +30,11 @@ const YEAR_RANGE_OPTIONS: readonly { value: YearRange; label: string }[] = [
   { value: 'all', label: 'All' }
 ];
 
-const localToday = (): string => {
-  const now = new Date();
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
-
-/** The pinned deep link (data-model spec §10): the first missing item, in its home statement. */
-function entrySearchFor(missing: readonly LineItemId[], fy: FyLabel) {
-  const first = missing[0];
-  if (first === undefined) return { fy };
-  return { stmt: LINE_ITEMS[first].statement, fy, focus: first };
-}
-
-/**
- * The two valuation cards collapse into one enter-price card until a price
- * exists (frontend spec §3); on save they expand in place through the live
- * query. Price is a sibling record, not a line item.
- */
-function PriceCard({ company }: { company: CompanyRecord }): ReactElement {
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const parsed = parseEntryText(String(form.get('price') ?? ''), {
-      scale: 'ones',
-      unit: 'money',
-      signed: false
-    });
-    const asOf = String(form.get('asOf') ?? '');
-    if (!parsed.ok || parsed.minor === null || parsed.minor <= 0) {
-      setError('Enter the share price as a positive amount.');
-      return;
-    }
-    try {
-      await putPrice(db, {
-        companyId: company.id,
-        amountMinor: parsed.minor,
-        currency: company.currency,
-        asOf
-      });
-    } catch {
-      setError('Could not save the price.');
-    }
-  }
-
-  return (
-    <article className={styles.priceCard} aria-label="Enter today's price">
-      <h3 className={styles.priceTitle}>Enter today&apos;s price</h3>
-      <p className={styles.priceNote}>
-        The two valuation measures need a share price in {company.currency}, the currency the
-        statements report in. Where the market quotes another currency (CSL trades in AUD and
-        reports in USD), convert before entering: the app never converts for you.
-      </p>
-      <form className={styles.priceForm} onSubmit={(event) => void handleSubmit(event)}>
-        <label className={styles.priceField}>
-          <span className={styles.priceLabel}>Price</span>
-          <input
-            className={styles.priceInput}
-            name="price"
-            inputMode="decimal"
-            autoComplete="off"
-            required
-          />
-        </label>
-        <label className={styles.priceField}>
-          <span className={styles.priceLabel}>As of</span>
-          <input
-            className={styles.priceInput}
-            name="asOf"
-            type="date"
-            defaultValue={localToday()}
-            required
-          />
-        </label>
-        <button type="submit" className={buttons.secondaryAction}>
-          Save
-        </button>
-      </form>
-      {error === null ? null : (
-        <p role="alert" className={styles.priceError}>
-          {error}
-        </p>
-      )}
-    </article>
-  );
-}
+/** The card grid and the practitioner table (dashboard design plan §5.4); cards are the default. */
+const VIEW_OPTIONS: readonly { value: 'cards' | 'table'; label: string }[] = [
+  { value: 'cards', label: 'Cards' },
+  { value: 'table', label: 'Table' }
+];
 
 /**
  * The company dashboard (frontend spec §3): hero facts, then the twelve-card
@@ -149,6 +63,9 @@ export function Dashboard({
     yearRange === 'all'
       ? report.fyLabels
       : report.fyLabels.slice(yearRange === 'last5' ? -5 : -10);
+  // The cards-or-table choice persists beside the theme preference.
+  const tableViewRow = useLiveQuery(() => db.meta.get('dashboardTableView'), []);
+  const view: 'cards' | 'table' = tableViewRow?.value === true ? 'table' : 'cards';
   const hero = [company.sector, report.latestFy, company.currency]
     .filter((part): part is string => typeof part === 'string' && part !== '')
     .join(' · ');
@@ -252,25 +169,37 @@ export function Dashboard({
         </section>
       ) : (
         <>
-          {report.fyLabels.length > 5 ? (
-            <div className={styles.rangeRow}>
+          <div className={styles.controlsRow}>
+            {report.fyLabels.length > 5 ? (
               <SegmentedControl
                 label="Year range"
                 options={YEAR_RANGE_OPTIONS}
                 value={yearRange}
                 onChange={setYearRange}
               />
+            ) : null}
+            <div className={styles.viewControl}>
+              <SegmentedControl
+                label="Dashboard view"
+                options={VIEW_OPTIONS}
+                value={view}
+                onChange={(next) => void setMeta(db, 'dashboardTableView', next === 'table')}
+              />
             </div>
-          ) : null}
+          </div>
 
-          <section className={styles.grid} aria-label="Metrics">
-            {DASHBOARD_SECTIONS.map(({ label, ids }) => (
-              <Fragment key={label}>
-                <h2 className={styles.sectionLabel}>{label}</h2>
-                {ids.map((id) => renderCard(id))}
-              </Fragment>
-            ))}
-          </section>
+          {view === 'table' ? (
+            <MetricTable metrics={metrics} fyLabels={rangedFyLabels} />
+          ) : (
+            <section className={styles.grid} aria-label="Metrics">
+              {DASHBOARD_SECTIONS.map(({ label, ids }) => (
+                <Fragment key={label}>
+                  <h2 className={styles.sectionLabel}>{label}</h2>
+                  {ids.map((id) => renderCard(id))}
+                </Fragment>
+              ))}
+            </section>
+          )}
 
           {report.fyLabels.length === 1 ? (
             <p className={styles.trendHint}>Add more years to see trends.</p>

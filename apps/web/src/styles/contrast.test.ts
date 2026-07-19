@@ -95,6 +95,17 @@ for (const [themeName, palette] of themes) {
       expect(contrastShortfalls(palette.textSecondary, palette, 4.5)).toEqual([]);
     });
 
+    it('text reaches 4.5:1 on the table header background', () => {
+      // Section-label and header text are all that renders there (dashboard
+      // design plan §3.4), so the floor is per-pair, not via renderedBackgrounds.
+      expect(
+        contrastRatio(palette.textPrimary, palette.tableHeaderBackground)
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(palette.textSecondary, palette.tableHeaderBackground)
+      ).toBeGreaterThanOrEqual(4.5);
+    });
+
     it('accent as text reaches 3:1 on background and surface (large text and interactive)', () => {
       expect(contrastRatio(palette.accent, palette.background)).toBeGreaterThanOrEqual(3);
       expect(contrastRatio(palette.accent, palette.surface)).toBeGreaterThanOrEqual(3);

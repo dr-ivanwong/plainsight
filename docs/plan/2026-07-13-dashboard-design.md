@@ -133,6 +133,8 @@ table:
     dark:  '#141416'  (between the pure-black background and surface #1C1C1E)
 ```
 
+**Build note (2026-07-19):** the layout pair ships as a `table` constant in `tokens.css.ts`; the colour ships as `tableHeaderBackground` inside the palette's theme contract, where the contrast test holds textPrimary and textSecondary to 4.5:1 on it in both themes (a per-pair floor: only header text renders there, so it does not join the shared rendered-backgrounds list).
+
 ## 4. Component-level changes
 
 ### 4.1 MetricCard: elevation and hover
@@ -332,6 +334,8 @@ The view choice persists in IndexedDB (`db.meta`, alongside the theme preference
 
 This is the Apple pattern for density adjustment: Health offers "Show All Health Data" as a table; Stocks offers a watchlist as cards or as a compact list. The toggle respects both personas without compromising either.
 
+**Build note (2026-07-19, landed):** four readings settled at build time. The year columns follow the §5.5 range control, whose "All" supersedes this section's own "Show all" toggle (two controls over one axis would fight); the sticky metric column and horizontal scroll remain. The Cards/Table control sits in the controls row beside the range control, not in the chrome this section named: since the rail decision (main plan §12 entry 11) the chrome recedes at rail width, which would have hidden the toggle exactly where the table matters most. Health dots and coloured deltas await their owner review (steps 3 and 4); the delta column ships with the neutral chip until then. Arrow keys move vertically between the metric links, the table's focusable spine; the horizontal half of the entry grid's model waits for focusable cells, which a read-only table does not have, so left and right stay with the scroller.
+
 Accessibility: the table uses semantic `<table>`, `<thead>`, `<th scope="col">`, and `<th scope="row">` markup. Row headers carry the metric label; column headers carry the fiscal year. Screen readers get full cell-by-cell navigation. The table is keyboard-navigable with arrow keys (matching the data-entry grid's keyboard model from S5).
 
 ### 5.5 Year-range control
@@ -497,6 +501,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Accessibility: keyboard navigation, screen-reader-friendly table structure.
 - Add the component to the frontend spec §5 inventory and the toggle to S3's states (§11).
 - This is a large step; it introduces a second rendering mode for the same data.
+- Landed 2026-07-19, readings per the §5.4 build note; the enter-price card moved to its own module so the table's collapsed valuation row seats the same component the grid shows.
 
 ### Step 11: trend chart section
 

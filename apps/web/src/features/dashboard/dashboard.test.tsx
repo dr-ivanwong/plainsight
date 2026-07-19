@@ -323,6 +323,82 @@ describe('the company dashboard', () => {
     expect(await within(section).findByRole('columnheader', { name: 'FY2019' })).toBeVisible();
   });
 
+  it('switches to the practitioner table and persists the choice', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await putPrice(db, { companyId: company.id, amountMinor: 30, currency: 'USD', asOf: '2026-07-10' });
+
+    renderAt(`/company/${company.id}`);
+    await screen.findByRole('article', { name: 'Gross margin' });
+    fireEvent.click(screen.getByRole('radio', { name: 'Table' }));
+
+    const table = await screen.findByRole('table');
+    expect(within(table).getByRole('row', { name: /Gross margin/ })).toHaveTextContent('40.0%');
+    expect(within(table).getByRole('row', { name: /P\/E/ })).toHaveTextContent('20.00');
+    expect(screen.queryByRole('article', { name: 'Gross margin' })).not.toBeInTheDocument();
+    await waitFor(async () => {
+      expect((await db.meta.get('dashboardTableView'))?.value).toBe(true);
+    });
+  });
+
+  it('restores the table view from the stored choice', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await putPrice(db, { companyId: company.id, amountMinor: 30, currency: 'USD', asOf: '2026-07-10' });
+    await setMeta(db, 'dashboardTableView', true);
+
+    renderAt(`/company/${company.id}`);
+
+    const table = await screen.findByRole('table');
+    expect(within(table).getByRole('row', { name: /ROE/ })).toHaveTextContent('37.5%');
+    expect(screen.queryByRole('article', { name: 'Gross margin' })).not.toBeInTheDocument();
+  });
+
+  it('speaks short degenerate cells with the full phrase as the accessible name', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id, -2_000);
+    await putPrice(db, { companyId: company.id, amountMinor: 30, currency: 'USD', asOf: '2026-07-10' });
+    await setMeta(db, 'dashboardTableView', true);
+
+    renderAt(`/company/${company.id}`);
+
+    const table = await screen.findByRole('table');
+    const cell = within(within(table).getByRole('row', { name: /ROE/ })).getByText('n/m');
+    expect(cell).toHaveAttribute('aria-label', 'not meaningful: negative equity');
+  });
+
+  it('collapses the valuation rows into the enter-price row in the table', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+    await setMeta(db, 'dashboardTableView', true);
+
+    renderAt(`/company/${company.id}`);
+
+    const table = await screen.findByRole('table');
+    expect(within(table).getByRole('article', { name: "Enter today's price" })).toBeVisible();
+    expect(within(table).queryByRole('row', { name: /P\/E/ })).not.toBeInTheDocument();
+  });
+
+  it('deep-links an insufficient latest-year cell from the table', async () => {
+    const company = await seedCompany();
+    await upsertStatement(
+      db,
+      yearWrite(company.id, 'income', {
+        revenue: e(100_000),
+        netIncome: e(15_000)
+      })
+    );
+    await setMeta(db, 'dashboardTableView', true);
+
+    renderAt(`/company/${company.id}`);
+
+    const table = await screen.findByRole('table');
+    const roeRow = within(table).getByRole('row', { name: /ROE/ });
+    const link = within(roeRow).getByRole('link', { name: 'Add the 1 missing number' });
+    expect(link).toHaveTextContent('n/a');
+    expect(link.getAttribute('href')).toContain('focus=totalEquity');
+  });
+
   it('fires, dismisses and restores an item to investigate', async () => {
     const company = await seedCompany();
     await upsertStatement(

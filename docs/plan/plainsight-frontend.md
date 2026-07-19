@@ -60,7 +60,7 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 
 ### S3: Company dashboard
 
-Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8.
+Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2) with a cards-or-table view toggle (dashboard design plan §5.4; choice persisted in `meta`), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8.
 
 | State | Rendering |
 |---|---|
@@ -73,6 +73,7 @@ Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card
 | Single year only | Sparklines and delta chips hidden; gentle "Add more years to see trends" hint |
 | 3+ labelled years | Trends section (added 2026-07-19, dashboard design plan §6): five-group segmented control, one small-multiple chart per metric (own y-axis, gaps where a year did not compute, a metric with under two computed years states its latest value in words), "Show table" fallback rendering the group's metrics by fiscal year; absent below three labelled years |
 | 6+ labelled years | Year-range control between hero and grid (added 2026-07-19, dashboard design plan §5.5): Last 5 years (default) / Last 10 years / All, scoping the trends section and the table view; cards and sparklines unaffected; not persisted |
+| Table view picked | The practitioner table replaces the card grid (added 2026-07-19, dashboard design plan §5.4): metrics as rows under the five section bands, ranged fiscal years as columns, the 5-yr delta column (hidden single-year); cells speak "n/m" and "n/a" short with the full pinned phrase as the accessible name; the latest year's insufficient cell deep-links into S5; without a price the valuation rows collapse into the enter-price row; metric links open S4; arrows move between metric links |
 | n/m values | Per companion P-5: "n/m: negative earnings" etc., never blank, never 0 |
 
 ### S4: Metric detail sheet (query-param addressable)
@@ -147,8 +148,9 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `MetricCard` | One metric tile | `label, value: MetricValue, spark?: Series, delta?: Delta, onOpen` |
 | `StatusValue` | Renders the `MetricValue` union (the no-NaN rule lives here) | `value, formatKind` |
 | `Sparkline` / `TrendChart` | 10-yr micro / full chart | `series, currency?, emphasisYear?` |
-| `TrendSection` | S3 trends: group picker, small multiples, table fallback (added 2026-07-19) | `metrics: CompanyMetrics` |
+| `TrendSection` | S3 trends: group picker, small multiples, table fallback (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels` |
 | `TrendMiniChart` | One metric's small-multiple chart for `TrendSection` | `points: TrendPoint[], kind, currency` |
+| `MetricTable` | S3 practitioner table view (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels` |
 | `DeltaChip` | 5-yr direction | `direction, magnitudeLabel` |
 | `RedFlagBanner` | One fired rule | `rule, firedWith, onDismiss, onExplain` |
 | `StatementGrid` | S5/S6 table shell | `rows, years, mode: 'entry'\|'review', onCommit` |

@@ -25,6 +25,7 @@ const contractShape: Record<keyof ThemePalette, null> = {
   textPrimary: null,
   textSecondary: null,
   border: null,
+  tableHeaderBackground: null,
   accent: null,
   accentFill: null,
   onAccent: null,
@@ -185,6 +186,16 @@ export const scrim = 'rgba(0, 0, 0, 0.4)';
 
 /** Minimum touch target on every interactive element (main plan §4). */
 export const touchTarget = '44px';
+
+/**
+ * The practitioner table's layout (dashboard design plan §3.4): rows at the
+ * touch-target floor, cells padded tight. Its header-row colour lives in the
+ * palette as tableHeaderBackground, inside the theme contract.
+ */
+export const table = {
+  rowHeight: touchTarget,
+  cellPadding: `${space[4]} ${space[12]}`
+} as const;
 
 /** Focus rings are designed, not stripped; their colour is colour.accent. */
 export const focusRing = {
