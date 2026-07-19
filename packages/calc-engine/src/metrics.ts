@@ -38,12 +38,21 @@ export interface MetricDef {
   /** For the two detail-sheet metrics, the card whose sheet hosts them. */
   readonly detailHostId?: MetricId;
   /**
-   * Display hint for the dashboard delta chip's improving/deteriorating
-   * mapping. Not a pinned dictionary field; the pinned content is the
-   * formula and the edge cases. Lower is better for leverage and for the
-   * price paid per dollar of earnings.
+   * The compare screen's best-in-row preference: which end wins when ranking
+   * peers at a point in time. Lower is better for leverage and for the price
+   * paid per dollar of earnings. Distinct from healthDirection below: a
+   * group's best price is a ranking, not a health claim.
    */
   readonly higherIsBetter: boolean;
+  /**
+   * The pinned own-trend health direction (data-model section 6, health
+   * direction note): the direction a healthy trend moves. Absent where the
+   * dictionary claims none: the current ratio (an ever-fatter one is not
+   * obviously healthier) and the price-driven valuation metrics (their moves
+   * describe the price paid, not the business). The dashboard's delta
+   * colour, health dots, and sparkline colour all read this field.
+   */
+  readonly healthDirection?: 'up' | 'down';
 }
 
 const def = (
@@ -51,7 +60,12 @@ const def = (
   label: string,
   formula: string,
   format: MetricFormat,
-  opts: { card?: boolean; detailHostId?: MetricId; higherIsBetter?: boolean } = {}
+  opts: {
+    card?: boolean;
+    detailHostId?: MetricId;
+    higherIsBetter?: boolean;
+    healthDirection?: 'up' | 'down';
+  } = {}
 ): MetricDef => ({
   id,
   label,
@@ -59,7 +73,8 @@ const def = (
   format,
   card: opts.card ?? true,
   ...(opts.detailHostId === undefined ? {} : { detailHostId: opts.detailHostId }),
-  higherIsBetter: opts.higherIsBetter ?? true
+  higherIsBetter: opts.higherIsBetter ?? true,
+  ...(opts.healthDirection === undefined ? {} : { healthDirection: opts.healthDirection })
 });
 
 /** Dictionary order (data-model section 6), which is also dashboard card order. */
@@ -81,22 +96,36 @@ export const METRIC_IDS: readonly MetricId[] = [
 ];
 
 export const METRICS: Readonly<Record<MetricId, MetricDef>> = {
-  grossMargin: def('grossMargin', 'Gross margin', 'grossProfit ÷ revenue', 'percent'),
-  operatingMargin: def('operatingMargin', 'Operating margin', 'operatingIncome ÷ revenue', 'percent'),
-  netMargin: def('netMargin', 'Net margin', 'netIncome ÷ revenue', 'percent'),
-  roe: def('roe', 'ROE', 'netIncome ÷ totalEquity', 'percent'),
-  roic: def('roic', 'ROIC', 'NOPAT ÷ invested capital', 'percent'),
+  grossMargin: def('grossMargin', 'Gross margin', 'grossProfit ÷ revenue', 'percent', {
+    healthDirection: 'up'
+  }),
+  operatingMargin: def('operatingMargin', 'Operating margin', 'operatingIncome ÷ revenue', 'percent', {
+    healthDirection: 'up'
+  }),
+  netMargin: def('netMargin', 'Net margin', 'netIncome ÷ revenue', 'percent', {
+    healthDirection: 'up'
+  }),
+  roe: def('roe', 'ROE', 'netIncome ÷ totalEquity', 'percent', { healthDirection: 'up' }),
+  roic: def('roic', 'ROIC', 'NOPAT ÷ invested capital', 'percent', { healthDirection: 'up' }),
   debtToEquity: def('debtToEquity', 'Debt-to-equity', '(shortTermDebt + longTermDebt) ÷ totalEquity', 'ratio', {
-    higherIsBetter: false
+    higherIsBetter: false,
+    healthDirection: 'down'
   }),
   currentRatio: def('currentRatio', 'Current ratio', 'currentAssets ÷ currentLiabilities', 'ratio'),
-  interestCoverage: def('interestCoverage', 'Interest coverage', 'operatingIncome ÷ interestExpense', 'coverage'),
-  fcf: def('fcf', 'Free cash flow', 'operatingCashFlow − capex', 'money'),
+  interestCoverage: def('interestCoverage', 'Interest coverage', 'operatingIncome ÷ interestExpense', 'coverage', {
+    healthDirection: 'up'
+  }),
+  fcf: def('fcf', 'Free cash flow', 'operatingCashFlow − capex', 'money', {
+    healthDirection: 'up'
+  }),
   fcfMargin: def('fcfMargin', 'FCF margin', 'FCF ÷ revenue', 'percent', {
     card: false,
-    detailHostId: 'fcfConversion'
+    detailHostId: 'fcfConversion',
+    healthDirection: 'up'
   }),
-  fcfConversion: def('fcfConversion', 'FCF conversion', 'FCF ÷ netIncome', 'percent'),
+  fcfConversion: def('fcfConversion', 'FCF conversion', 'FCF ÷ netIncome', 'percent', {
+    healthDirection: 'up'
+  }),
   pe: def('pe', 'P/E', 'price ÷ (netIncome ÷ dilutedShares)', 'ratio', { higherIsBetter: false }),
   earningsYield: def('earningsYield', 'Earnings yield', '(netIncome ÷ dilutedShares) ÷ price', 'percent', {
     card: false,

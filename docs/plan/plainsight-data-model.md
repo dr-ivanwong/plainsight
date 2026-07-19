@@ -162,6 +162,8 @@ All inputs by §2 id; basis per P-4; n/m per P-5. Percentages display per P-2. A
 
 **N5: no-debt coverage.** When `interestExpense` is ∅0 or zero, M8 renders "n/m: no interest burden" (a healthy state, the explainer says so) and R4 abstains.
 
+**N6: health direction (pinned 2026-07-19; owner-approved with stage 2 of the finance-look gap plan; main plan §12 entry 13).** The own-trend health direction behind the dashboard's coloured delta chips, health dots, and sparkline colour: up is healthy for M1–M5, M8–M11; down is healthy for M6. M7 carries no direction (an ever-fatter current ratio is not obviously healthier, so its trend never wears colour), and M12–M14 carry none (they move with the price paid; colouring them would read as a view on the price, which this product does not offer). In code the field is the dictionary's optional `healthDirection`. It is deliberately distinct from the compare screen's best-in-row preference (`higherIsBetter`), which ranks peers at a point in time (S7 keeps ticking the group's lowest P/E as its best price); this note governs a company's own trend only.
+
 ## 7. Red-flag rules R1–R7 (thresholds pinned; owner-confirmed 2026-07-11)
 
 Common contract: each rule emits `{ ruleId, severity: 'orange' | 'red', firedWith, explanation, whatToCheck }`, phrased as items to investigate, never verdicts (main plan non-goal 2). A rule whose data window is not covered **abstains silently** (abstention is not a pass). Dismissals are keyed `(companyId, ruleId, latestFy)`: adding a new fiscal year invalidates the dismissal and the rule re-evaluates (frontend S3 "dismissible-but-persistent").

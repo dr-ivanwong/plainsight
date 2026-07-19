@@ -28,6 +28,28 @@ describe('the metric dictionary (14 pinned, 12 cards)', () => {
     expect(cards).toHaveLength(12);
   });
 
+  it('pins the own-trend health directions (data-model section 6, health direction note)', () => {
+    const directions = Object.fromEntries(
+      METRIC_IDS.map((id) => [id, METRICS[id].healthDirection])
+    );
+    expect(directions).toStrictEqual({
+      grossMargin: 'up',
+      operatingMargin: 'up',
+      netMargin: 'up',
+      roe: 'up',
+      roic: 'up',
+      debtToEquity: 'down',
+      currentRatio: undefined,
+      interestCoverage: 'up',
+      fcf: 'up',
+      fcfMargin: 'up',
+      fcfConversion: 'up',
+      pe: undefined,
+      earningsYield: undefined,
+      fcfYield: undefined
+    });
+  });
+
   it('hosts FCF margin in FCF conversion and earnings yield in P/E', () => {
     expect(METRICS.fcfMargin).toMatchObject({ card: false, detailHostId: 'fcfConversion' });
     expect(METRICS.earningsYield).toMatchObject({ card: false, detailHostId: 'pe' });
