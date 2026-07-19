@@ -21,6 +21,7 @@ import * as buttons from '../../styles/buttons.css';
 import * as styles from './dashboard.css';
 import { entrySearchFor } from './entrySearch';
 import { cardHealth } from './healthSignal';
+import { KeyStats } from './KeyStats';
 import { MetricSheet } from './MetricSheet';
 import { MetricTable } from './MetricTable';
 import { PriceCard } from './PriceCard';
@@ -211,6 +212,8 @@ export function Dashboard({
         </section>
       ) : (
         <>
+          <KeyStats metrics={metrics} />
+
           <div className={styles.controlsRow}>
             {report.fyLabels.length > 5 ? (
               <SegmentedControl

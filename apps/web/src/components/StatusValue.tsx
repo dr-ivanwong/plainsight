@@ -27,14 +27,12 @@ export function StatusValue({
   value: MetricValue;
   kind: MetricFormat;
   currency: CurrencyCode;
-  scale?: 'display' | 'table';
+  scale?: 'display' | 'table' | 'stat';
 }): ReactElement {
   if (value.status === 'ok') {
-    return (
-      <span className={scale === 'table' ? styles.okTable : styles.ok}>
-        {formatMetricValue(value, kind, currency)}
-      </span>
-    );
+    const okClass =
+      scale === 'table' ? styles.okTable : scale === 'stat' ? styles.okStat : styles.ok;
+    return <span className={okClass}>{formatMetricValue(value, kind, currency)}</span>;
   }
   if (value.status === 'not_meaningful') {
     const phrase = NOT_MEANINGFUL_PHRASES[value.reason];

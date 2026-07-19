@@ -517,6 +517,34 @@ describe('the company dashboard', () => {
     expect(within(gross).queryByText('2024')).not.toBeInTheDocument();
   });
 
+  it('leads with the four key stats, each opening its sheet', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+
+    const stats = await screen.findByRole('region', { name: 'Key stats' });
+    expect(within(stats).getByText('ROE')).toBeVisible();
+    expect(within(stats).getByText('37.5%')).toBeVisible();
+    expect(within(stats).getByText('Net margin')).toBeVisible();
+    expect(within(stats).getByText('Debt-to-equity')).toBeVisible();
+    expect(within(stats).getByText('Free cash flow')).toBeVisible();
+
+    fireEvent.click(within(stats).getByText('37.5%'));
+    expect(await screen.findByRole('dialog', { name: 'ROE' })).toBeVisible();
+  });
+
+  it('speaks the pinned phrase on a degenerate key stat', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id, -2_000);
+
+    renderAt(`/company/${company.id}`);
+
+    const stats = await screen.findByRole('region', { name: 'Key stats' });
+    // Both ROE and debt-to-equity divide by the same negative equity.
+    expect(within(stats).getAllByText('n/m: negative equity').length).toBeGreaterThan(0);
+  });
+
   it('fires, dismisses and restores an item to investigate', async () => {
     const company = await seedCompany();
     await upsertStatement(

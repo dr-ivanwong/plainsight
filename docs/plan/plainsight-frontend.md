@@ -60,11 +60,12 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 
 ### S3: Company dashboard
 
-Purpose: the heart; hero header (name, sector, latest FY, currency), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2) with a cards-or-table view toggle (dashboard design plan §5.4; choice persisted in `meta`), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8.
+Purpose: the heart; hero header (name, sector, latest FY, currency), key-stats header (dashboard design plan §5.3, added 2026-07-19), metric-card grid (12 cards grouped under five quiet section labels per the dashboard design plan §5.2; M10 and M13 render in their siblings' detail sheets per companion §12 D2) with a cards-or-table view toggle (dashboard design plan §5.4; choice persisted in `meta`), trends section between the grid and the flags (dashboard design plan §6), red-flag section, entry points to S4/S5/S8.
 
 | State | Rendering |
 |---|---|
 | Complete years | Cards: label (13px secondary), value (34px tabular), sparkline, 5-yr delta chip; from 2026-07-19 the chip, a 6px label dot and the sparkline wear the computed health signal (main plan §12 entry 13): a fired rule wins, then the delta against the pinned direction; current ratio and valuation stay neutral. From three labelled years each card face also carries its multi-year row (main plan §12 entry 14; dashboard design plan §4.6): the latest five years as bare-year labels over 11px tabular figures, short degenerate forms with full phrases as accessible names, wrapping naturally where figures outgrow the card |
+| Any labelled year | Key-stats header between hero and controls (main plan §12 entry 14; dashboard design plan §5.3): ROE, net margin, debt-to-equity and free cash flow at 22px semibold tabular, each opening its detail sheet; a degenerate stat speaks its pinned phrase; renders in both views |
 | Partial year(s) | Affected cards render `insufficient_data` as "Add the 2 missing numbers"; tappable, deep-links into S5 at those fields (companion §10) |
 | No price entered | The two valuation cards (M12, M14) collapse into one "Enter today's price" card; on entry, they expand in place |
 | Stale price | Valuation cards show "as of ⟨YYYY-MM-DD⟩" badge; amber past 90 days |
@@ -150,7 +151,8 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `Sparkline` / `TrendChart` | 10-yr micro / full chart | `series, currency?, emphasisYear?`; Sparkline adds `health?` (2026-07-19), wearing the card's signal as its colour |
 | `TrendSection` | S3 trends: group picker, small multiples, table fallback (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels` |
 | `TrendMiniChart` | One metric's small-multiple chart for `TrendSection` | `points: TrendPoint[], kind, currency` |
-| `MetricTable` | S3 practitioner table view (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels` |
+| `MetricTable` | S3 practitioner table view (added 2026-07-19) | `metrics: CompanyMetrics, fyLabels, activeRuleIds` |
+| `KeyStats` | S3 headline figures (added 2026-07-19) | `metrics: CompanyMetrics` |
 | `DeltaChip` | 5-yr direction | `direction, magnitudeLabel, healthDirection?` (2026-07-19: colours by the pinned own-trend direction, data-model §6 N6; neutral without one; supersedes the always-neutral contract, main plan §12 entry 13) |
 | `RedFlagBanner` | One fired rule | `rule, firedWith, onDismiss, onExplain` |
 | `StatementGrid` | S5/S6 table shell | `rows, years, mode: 'entry'\|'review', onCommit` |

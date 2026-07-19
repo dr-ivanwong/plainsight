@@ -21,6 +21,16 @@ export const okTable = style({
   color: colour.textPrimary
 });
 
+/** The key-stats scale (dashboard design plan §5.3): four headline figures between hero and grid. */
+export const okStat = style({
+  fontSize: fontSize.title2,
+  fontWeight: fontWeight.semibold,
+  letterSpacing: tracking.display,
+  lineHeight: lineHeight.display,
+  fontVariantNumeric: 'tabular-nums',
+  color: colour.textPrimary
+});
+
 /** Degenerate and incomplete states speak quietly, in words. */
 export const quiet = style({
   fontSize: fontSize.subhead,

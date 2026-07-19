@@ -305,6 +305,8 @@ The key-stats header is suppressed when no fiscal years exist (the dashboard sho
 
 This replaces the "summary health bar" concept (which counted improving metrics and flags). The meta-health information ("8 improving, 2 flags") is secondary to the actual numbers; the health dots on each card (§4.2) already communicate trend direction at the card level. A financial user wants to see ROE: 22.4% before they want to know that 8 metrics are improving.
 
+**Build note (2026-07-19, landed):** as specified: four stats at 22px semibold tabular through the shared value renderer's new stat scale, each opening its sheet through the same search param as its card; a degenerate stat speaks its pinned phrase. The row renders in both views, above the range and view controls.
+
 ### 5.4 Practitioner table view
 
 **Current:** the dashboard has one view: the card grid. The practitioner persona (main plan §3: "knows the ratios already, wants a fast, clean tool to run the numbers") is served by the same layout as the learner. The education layer is dismissible (settings), but the visual density is not adjustable.
@@ -358,7 +360,7 @@ Implementation: a segmented control with three options, stored in component stat
 
 This is a standard financial dashboard control. Morningstar, Koyfin, and Bloomberg all default to 5 years and let the user expand.
 
-**Build note (2026-07-19):** landed with the trends section (step 11) as its first consumer, seated between the hero and the grid: the key-stats header this section placed it under is later staged work and does not exist yet. It scopes the trends charts and table today, the practitioner table when step 10 lands, and the multi-year card row when step 6 unblocks.
+**Build note (2026-07-19):** landed with the trends section (step 11) as its first consumer, seated between the hero and the grid: the key-stats header this section placed it under is later staged work and does not exist yet. It scopes the trends charts and table today, the practitioner table when step 10 lands, and the multi-year card row when step 6 unblocks. *(Same day, stage 3: the key-stats header now exists and the control sits beneath it, as this section drew; the card row's share proved vacuous, per the §4.6 build note.)*
 
 ## 6. Trend chart section
 
@@ -492,6 +494,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - New `KeyStats` component (four values in a flex row, responsive wrap; taps open the detail sheet).
 - Render between the hero and the grid in `Dashboard.tsx`; suppress when `fyLabels.length === 0`.
 - Add the component to the frontend spec §5 inventory.
+- Landed 2026-07-19 with step 6; details per the §5.3 build note.
 
 ### Step 8: grid density
 
