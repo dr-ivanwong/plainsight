@@ -16,6 +16,7 @@ import { lazy, Suspense, useState, type ReactElement } from 'react';
 import { DeltaChip } from '../../components/DeltaChip';
 import { formatEntryText, unitOf } from '../../components/moneyEntry';
 import { SOURCE_WORD } from '../../components/provenanceWords';
+import { RegionBoundary } from '../../components/RegionBoundary';
 import { SheetShell } from '../../components/SheetShell';
 import { okPoints } from '../../components/Sparkline';
 import { StatusValue } from '../../components/StatusValue';
@@ -213,6 +214,10 @@ export function MetricSheet({
         ) : null}
 
         {points.length >= 2 ? (
+          // Its own region inside the sheet: a chart crash degrades to the
+          // fallback while the formula and inputs beneath keep serving the
+          // by-hand contract.
+          <RegionBoundary region="The chart">
           <div className={styles.trend}>
             {view === 'chart' ? (
               <Suspense fallback={null}>
@@ -248,6 +253,7 @@ export function MetricSheet({
               {view === 'chart' ? 'Show table' : 'Show chart'}
             </button>
           </div>
+          </RegionBoundary>
         ) : null}
 
         <section className={styles.block} aria-label="Formula">

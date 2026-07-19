@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 
 import { ComparisonTable } from '../../components/ComparisonTable';
+import { RegionBoundary } from '../../components/RegionBoundary';
 import type { CompanyRecord } from '../../db';
 import { MAX_COMPARE, type Comparison } from '../../hooks/useComparison';
 import * as buttons from '../../styles/buttons.css';
@@ -95,12 +96,14 @@ export function CompareScreen({
                 </p>
               ) : null}
               <ComparisonTable columns={columns} hideAbsolutes={comparison.mixedCurrencies} />
-              <CompareTrend
-                columns={comparison.columns}
-                mixedCurrencies={comparison.mixedCurrencies}
-                metricId={trendMetric}
-                onMetricChange={onTrendMetricChange}
-              />
+              <RegionBoundary region="The comparison charts">
+                <CompareTrend
+                  columns={comparison.columns}
+                  mixedCurrencies={comparison.mixedCurrencies}
+                  metricId={trendMetric}
+                  onMetricChange={onTrendMetricChange}
+                />
+              </RegionBoundary>
             </>
           )}
         </>

@@ -14,6 +14,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 
 
 import type { FieldValue } from '../../components/MoneyField';
 import { SOURCE_WORD } from '../../components/provenanceWords';
+import { RegionBoundary } from '../../components/RegionBoundary';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { SCALE_WORD, StatementGrid, type GridYear } from '../../components/StatementGrid';
 import {
@@ -278,14 +279,18 @@ export function EntryScreen({
           <h1 className={styles.title}>Data entry</h1>
           <p role="status" className={styles.ticker} />
         </header>
-        <ReviewMode
-          company={company}
-          job={job}
-          onDone={() => {
-            dismissJob(job.id);
-            onJobDismiss();
-          }}
-        />
+        {/* Review mode is its own region: a crash here hands back a calm
+            fallback, never a dead entry route holding the user's figures. */}
+        <RegionBoundary region="Review mode">
+          <ReviewMode
+            company={company}
+            job={job}
+            onDone={() => {
+              dismissJob(job.id);
+              onJobDismiss();
+            }}
+          />
+        </RegionBoundary>
       </>
     );
   }
@@ -303,13 +308,17 @@ export function EntryScreen({
       </header>
 
       {job === undefined || onJobDismiss === undefined ? null : (
-        <JobStrip
-          job={job}
-          onDismiss={() => {
-            dismissJob(job.id);
-            onJobDismiss();
-          }}
-        />
+        // The running-job strip is its own region: whatever it does, the
+        // grid beneath keeps the keystrokes (frontend spec section 2).
+        <RegionBoundary region="The import job">
+          <JobStrip
+            job={job}
+            onDismiss={() => {
+              dismissJob(job.id);
+              onJobDismiss();
+            }}
+          />
+        </RegionBoundary>
       )}
 
       <div className={styles.toolbar}>

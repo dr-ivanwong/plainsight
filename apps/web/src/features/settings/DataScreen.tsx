@@ -5,8 +5,9 @@ import { useRef, useState, type ReactElement } from 'react';
 import { SheetShell } from '../../components/SheetShell';
 import {
   applyImport,
-  buildExport,
   db,
+  downloadLibraryExport,
+  downloadText,
   dryRunCounts,
   parseExportFile,
   removeSampleData,
@@ -37,23 +38,6 @@ export function formatBytes(size: number): string {
 
 const plural = (count: number, one: string, many: string): string =>
   `${count} ${count === 1 ? one : many}`;
-
-const localToday = (): string => {
-  const now = new Date();
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
-
-/** Hands a text file to the browser; quietly a no-op where object URLs do not exist (tests). */
-function downloadText(text: string, filename: string): void {
-  if (typeof URL.createObjectURL !== 'function') return;
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
 
 type ImportState =
   | { kind: 'ready'; file: ExportFile; counts: DryRunCounts }
@@ -89,9 +73,9 @@ export function DataScreen(): ReactElement {
 
   async function handleExport(): Promise<void> {
     try {
-      const file = await buildExport(db, __APP_VERSION__);
-      downloadText(JSON.stringify(file, null, 2), `plainsight-export-${localToday()}.json`);
-      await setMeta(db, 'lastExportAt', new Date().toISOString());
+      // The shared path (db/exportDownload): the crash fallback's escape
+      // hatch downloads the identical file, bookkeeping included.
+      await downloadLibraryExport(__APP_VERSION__, db);
       setExportNote(null);
     } catch {
       setExportNote('Could not build the export.');

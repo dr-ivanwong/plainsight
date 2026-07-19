@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 
+import { RegionBoundary } from './RegionBoundary';
 import * as styles from './sheetShell.css';
 
 /**
@@ -42,7 +43,9 @@ export function SheetShell({
         if (event.target === event.currentTarget) ref.current?.close();
       }}
     >
-      {open ? children : null}
+      {/* Every sheet body is a feature region (frontend spec section 2): a
+          crash inside stays inside the dialog, which still closes natively. */}
+      {open ? <RegionBoundary region="This sheet">{children}</RegionBoundary> : null}
     </dialog>
   );
 }

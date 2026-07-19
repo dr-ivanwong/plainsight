@@ -26,6 +26,7 @@ import { MetricSheet } from './MetricSheet';
 import { MetricTable } from './MetricTable';
 import { PriceCard } from './PriceCard';
 import { DASHBOARD_SECTIONS } from './sections';
+import { RegionBoundary } from '../../components/RegionBoundary';
 import { TrendSection } from './TrendSection';
 
 const STALE_PRICE_MS = 90 * 86_400_000;
@@ -250,7 +251,9 @@ export function Dashboard({
             <p className={styles.trendHint}>Add more years to see trends.</p>
           ) : null}
 
-          <TrendSection metrics={metrics} fyLabels={rangedFyLabels} />
+          <RegionBoundary region="The trends">
+            <TrendSection metrics={metrics} fyLabels={rangedFyLabels} />
+          </RegionBoundary>
 
           {flags !== undefined && (flags.active.length > 0 || flags.dismissed.length > 0) ? (
             <section className={styles.flagSection} aria-label="Items to investigate">

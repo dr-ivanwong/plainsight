@@ -37,6 +37,7 @@ export {
   type ExportFile,
   type ParsedImport
 } from './exportFile';
+export { downloadLibraryExport, downloadText } from './exportDownload';
 export { removeSampleData, wipeEverything } from './maintenance';
 export {
   companyRecordSchema,
