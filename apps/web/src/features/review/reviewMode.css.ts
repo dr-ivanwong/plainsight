@@ -101,6 +101,16 @@ export const edited = style({
   color: colour.textSecondary
 });
 
+/** The model's not-printed claim on an empty cell: a hint, never a value. */
+export const hint = style({
+  display: 'inline-flex',
+  marginTop: space[4],
+  fontSize: fontSize.caption2,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary,
+  fontStyle: 'italic'
+});
+
 export const cellExtras = style({
   display: 'inline-flex',
   alignItems: 'center',

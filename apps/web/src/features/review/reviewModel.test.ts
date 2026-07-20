@@ -52,8 +52,21 @@ describe('seedReview', () => {
       kind: 'entered',
       amountMinor: 1_134_028_167
     });
-    expect(year?.fields.interestExpense?.value).toEqual({ kind: 'not_reported_zero' });
     expect(year?.fields.revenue?.page).toBe(84);
+  });
+
+  it('keeps a not-printed claim as a hint, never a value (data-model spec §8)', () => {
+    const [year] = seedReview(result);
+    // Only the user asserts the not-reported-zero state; the model's claim
+    // seeds nothing, so the field is absent and blocks completeness exactly
+    // as any missing figure does.
+    expect(year?.fields.interestExpense).toBeUndefined();
+    expect(year?.notPrinted.has('interestExpense')).toBe(true);
+    expect(effectiveValues(year!, new Map()).interestExpense).toBeUndefined();
+    // And a hint is not a confirmation debt: nothing to confirm on absence.
+    expect(requiredConfirmations([year!], new Map())).not.toContain(
+      fieldKey('FY2024', 'interestExpense')
+    );
   });
 
   it('drops a year whose label the engine cannot speak', () => {
@@ -120,6 +133,37 @@ describe('buildWrites', () => {
       kind: 'entered',
       amountMinor: 2_700_000_000_000
     });
+  });
+
+  it('never writes a not-printed claim, and writes the user’s own assertion without extraction provenance', () => {
+    const years = seedReview(result);
+
+    // Unasserted: the claim saves nothing at all.
+    const untouched = buildWrites({
+      companyId: 'csl',
+      years,
+      edits: new Map(),
+      provenance: { provider: 'p', model: 'm', promptVersion: 'v' },
+      recordedAt: '2026-07-18T01:00:00Z'
+    });
+    const untouchedIncome = untouched.find((write) => write.statement === 'income');
+    expect(untouchedIncome?.values.interestExpense).toBeUndefined();
+    expect(untouchedIncome?.provenance.extraction?.fields?.interestExpense).toBeUndefined();
+
+    // Asserted from the cell menu: the value is the user's own, so it
+    // carries no per-field extraction provenance.
+    const asserted = buildWrites({
+      companyId: 'csl',
+      years,
+      edits: new Map([
+        [fieldKey('FY2024', 'interestExpense'), { kind: 'not_reported_zero' as const }]
+      ]),
+      provenance: { provider: 'p', model: 'm', promptVersion: 'v' },
+      recordedAt: '2026-07-18T01:00:00Z'
+    });
+    const assertedIncome = asserted.find((write) => write.statement === 'income');
+    expect(assertedIncome?.values.interestExpense).toEqual({ kind: 'not_reported_zero' });
+    expect(assertedIncome?.provenance.extraction?.fields?.interestExpense).toBeUndefined();
   });
 
   it('drops a cleared field from the write entirely', () => {

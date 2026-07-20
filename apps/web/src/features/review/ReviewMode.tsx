@@ -90,6 +90,10 @@ export function ReviewMode({
   }, [job.id, peek]);
 
   const gates = useMemo(() => gatesFor(model, edits), [model, edits]);
+  const notPrintedCount = useMemo(
+    () => model.reduce((count, year) => count + year.notPrinted.size, 0),
+    [model]
+  );
   const pending = useMemo(
     () => requiredConfirmations(model, edits).filter((key) => !confirmedKeys.has(key)),
     [model, edits, confirmedKeys]
@@ -192,7 +196,19 @@ export function ReviewMode({
         </span>
       );
     }
-    if (field === undefined) return null;
+    if (field === undefined) {
+      // The model's not-printed claim stays a hint on an empty cell: only
+      // the user asserts the not-reported-zero state (data-model spec §8),
+      // through this cell's own menu.
+      if (year?.notPrinted.has(id) === true) {
+        return (
+          <span className={styles.cellExtras}>
+            <span className={styles.hint}>not printed, per the model</span>
+          </span>
+        );
+      }
+      return null;
+    }
     return (
       <span className={styles.cellExtras}>
         <ConfidenceBadge
@@ -242,6 +258,13 @@ export function ReviewMode({
             {warning}
           </p>
         ))}
+        {notPrintedCount === 0 ? null : (
+          <p className={styles.warning}>
+            The model reads {notPrintedCount} {notPrintedCount === 1 ? 'line' : 'lines'} as not
+            printed in this document. Each stays empty unless you mark it yourself: Not reported
+            → 0, in the field&apos;s menu.
+          </p>
+        )}
       </section>
 
       <div className={styles.toolbar}>

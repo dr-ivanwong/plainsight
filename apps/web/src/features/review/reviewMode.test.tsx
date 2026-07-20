@@ -45,6 +45,7 @@ const outcome: LadderOutcome = {
           revenue: { value: 44_189, page: 84, confidence: 0.97 },
           costOfRevenue: { value: 30_000, confidence: 0.82 },
           netIncome: { value: 2_557, confidence: 0.55 },
+          interestExpense: { notPrinted: true, confidence: 0.93 },
           totalAssets: { value: 27_000, confidence: 0.96 },
           totalLiabilities: { value: 17_000, confidence: 0.96 },
           totalEquity: { value: 10_000, confidence: 0.96 }
@@ -124,6 +125,61 @@ describe('extraction review mode', () => {
     // Revenue (0.97) now wears its tick; the amber 0.82 keeps its number.
     expect((await screen.findAllByText('✓ confirmed')).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: /Accept Cost of revenue, FY2024/ })).toBeVisible();
+    dismissJob(id);
+  });
+
+  it('keeps a not-printed claim empty until the reviewer asserts it themselves', async () => {
+    const company = await seedCompany();
+    const { id } = await openReview(company);
+
+    // The claim surfaces as a hint beside an empty cell, never as a value
+    // (data-model spec §8: only the user asserts not-reported-zero).
+    expect(screen.getByText(/reads 1 line as not printed/)).toBeVisible();
+    expect(screen.getByText('not printed, per the model')).toBeVisible();
+    expect(screen.getByLabelText('Interest expense, FY2024')).toHaveValue('');
+
+    // The reviewer agrees, through the cell's own menu: the assertion is
+    // now theirs, shown as the not-reported chip.
+    fireEvent.click(screen.getByRole('button', { name: 'Interest expense, FY2024, options' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Not reported → 0' }));
+    expect(
+      screen.getByRole('button', {
+        name: 'Interest expense, FY2024, not reported, counted as zero'
+      })
+    ).toBeVisible();
+
+    // Saved, the figure is the user's own: stored as not-reported-zero with
+    // no per-field extraction provenance.
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Net income, FY2024/ }));
+    const save = screen.getByRole('button', { name: 'Save to the library' });
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+    await waitFor(async () => {
+      const income = (await db.statements.where('companyId').equals(company.id).toArray()).find(
+        (row) => row.statement === 'income'
+      );
+      expect(income?.values.interestExpense).toEqual({ kind: 'not_reported_zero' });
+      expect(income?.provenance.extraction?.fields?.interestExpense).toBeUndefined();
+    });
+    dismissJob(id);
+  });
+
+  it('saves nothing at all for an unasserted not-printed claim', async () => {
+    const company = await seedCompany();
+    const { id } = await openReview(company);
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Net income, FY2024/ }));
+    const save = screen.getByRole('button', { name: 'Save to the library' });
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+
+    await waitFor(async () => {
+      const income = (await db.statements.where('companyId').equals(company.id).toArray()).find(
+        (row) => row.statement === 'income'
+      );
+      expect(income).toBeDefined();
+      expect(income?.values.interestExpense).toBeUndefined();
+    });
     dismissJob(id);
   });
 

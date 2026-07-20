@@ -38,24 +38,34 @@ export interface ReviewYearModel {
   readonly currency: string;
   readonly scale: StatementYear['entryScale'];
   readonly fields: Partial<Readonly<Record<LineItemId, ReviewField>>>;
+  /**
+   * Line items the model read as not printed in the document. A claim, not
+   * a value: only the user asserts the not-reported-zero state (data-model
+   * spec §8), so these seed nothing, gate nothing, and save nothing. The
+   * grid shows the claim beside the empty cell, and the cell's own menu is
+   * where the user agrees.
+   */
+  readonly notPrinted: ReadonlySet<LineItemId>;
 }
 
 /**
  * Printed values to stored units: money at the printed scale, share counts
  * exact (the schema pins that), everything rounded to the integer the store
- * demands. A year whose label the engine cannot speak is dropped rather
- * than guessed.
+ * demands. A `notPrinted` claim stays absent-with-a-hint rather than
+ * becoming a value. A year whose label the engine cannot speak is dropped
+ * rather than guessed.
  */
 export function seedReview(result: ExtractionResult): ReviewYearModel[] {
   return result.years.flatMap((year) => {
     if (!isFyLabel(year.fy)) return [];
     const fields: Partial<Record<LineItemId, ReviewField>> = {};
+    const notPrinted = new Set<LineItemId>();
     for (const [id, field] of Object.entries(year.fields) as [
       LineItemId,
       NonNullable<ExtractionResult['years'][number]['fields'][LineItemId]>
     ][]) {
       if ('notPrinted' in field) {
-        fields[id] = { value: { kind: 'not_reported_zero' }, confidence: field.confidence };
+        notPrinted.add(id);
         continue;
       }
       const perUnit = unitOf(id) === 'count' ? 1 : scaleUnitMinor(year.scale);
@@ -65,7 +75,9 @@ export function seedReview(result: ExtractionResult): ReviewYearModel[] {
         page: field.page
       };
     }
-    return [{ fy: year.fy, endDate: year.endDate, currency: year.currency, scale: year.scale, fields }];
+    return [
+      { fy: year.fy, endDate: year.endDate, currency: year.currency, scale: year.scale, fields, notPrinted }
+    ];
   });
 }
 
