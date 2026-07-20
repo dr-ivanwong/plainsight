@@ -302,59 +302,133 @@ describe('CSP (spec §6: the BYOK allowlist can never silently widen)', () => {
   });
 });
 
-describe('OIDC deploy role (spec §2: assume the CDK roles, nothing else)', () => {
+describe('OIDC pipeline roles (spec §2: one assume grant each, nothing else)', () => {
+  const repo = `${prod.github.owner}/${prod.github.repo}`;
   const cdkBootstrapRoles = `arn:aws:iam::${prod.account}:role/cdk-*`;
-  const expectedStatement = {
+  const cdkLookupRole = `arn:aws:iam::${prod.account}:role/cdk-hnb659fds-lookup-role-${prod.account}-${prod.region}`;
+  const deployStatement = {
     Action: 'sts:AssumeRole',
     Effect: 'Allow',
     Resource: cdkBootstrapRoles,
     Sid: 'AssumeCdkBootstrapRolesOnly',
   };
+  const diffStatement = {
+    Action: 'sts:AssumeRole',
+    Effect: 'Allow',
+    Resource: cdkLookupRole,
+    Sid: 'AssumeCdkLookupRoleOnly',
+  };
 
-  it('trusts only this repository, on main or a deploy environment', () => {
-    const repo = `${prod.github.owner}/${prod.github.repo}`;
-    githubOidc.hasResourceProperties(
-      'AWS::IAM::Role',
-      Match.objectLike({
-        AssumeRolePolicyDocument: Match.objectLike({
-          Statement: [
-            Match.objectLike({
-              Action: 'sts:AssumeRoleWithWebIdentity',
-              Condition: {
-                StringEquals: {
-                  'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-                },
-                StringLike: {
-                  'token.actions.githubusercontent.com:sub': [
-                    `repo:${repo}:ref:refs/heads/main`,
-                    `repo:${repo}:environment:*`,
-                  ],
-                },
-              },
-            }),
-          ],
-        }),
+  const roles = githubOidc.findResources('AWS::IAM::Role');
+  const roleEntry = (name: string): [string, any] => {
+    const entry = Object.entries(roles).find(
+      ([, candidate]: [string, any]) => candidate.Properties.RoleName === name,
+    );
+    if (!entry) throw new Error(`GithubOidc must define the ${name} role`);
+    return entry;
+  };
+  const roleNamed = (name: string): any => roleEntry(name)[1];
+  const inlinePolicyFor = (name: string): any => {
+    const [logicalId] = roleEntry(name);
+    const policy = Object.values(githubOidc.findResources('AWS::IAM::Policy')).find(
+      (candidate: any) =>
+        candidate.Properties.Roles.some((reference: any) => reference.Ref === logicalId),
+    );
+    if (!policy) throw new Error(`no inline policy attached to ${name}`);
+    return policy;
+  };
+  const boundaryNamed = (name: string): any => {
+    const boundary = Object.values(githubOidc.findResources('AWS::IAM::ManagedPolicy')).find(
+      (candidate: any) => candidate.Properties.ManagedPolicyName === name,
+    );
+    if (!boundary) throw new Error(`GithubOidc must define the ${name} boundary`);
+    return boundary;
+  };
+
+  it('defines exactly the deploy role and the read-only diff role', () => {
+    expect(
+      Object.values(roles)
+        .map((role: any) => role.Properties.RoleName)
+        .sort(),
+    ).toEqual(['plainsight-github-deploy', 'plainsight-github-diff']);
+  });
+
+  it('the deploy role trusts only this repository, on main or a deploy environment', () => {
+    expect(
+      roleNamed('plainsight-github-deploy').Properties.AssumeRolePolicyDocument.Statement,
+    ).toEqual([
+      expect.objectContaining({
+        Action: 'sts:AssumeRoleWithWebIdentity',
+        Condition: {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          },
+          StringLike: {
+            'token.actions.githubusercontent.com:sub': [
+              `repo:${repo}:ref:refs/heads/main`,
+              `repo:${repo}:environment:*`,
+            ],
+          },
+        },
       }),
+    ]);
+  });
+
+  it('the diff role trusts exactly the pull_request subject, nothing wider', () => {
+    // Full-document equality: no StringLike branch exists at all, so the
+    // trust cannot quietly regrow a wildcard, and a PR run can never present
+    // as a deploy.
+    expect(
+      roleNamed('plainsight-github-diff').Properties.AssumeRolePolicyDocument.Statement,
+    ).toEqual([
+      expect.objectContaining({
+        Action: 'sts:AssumeRoleWithWebIdentity',
+        Condition: {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+            'token.actions.githubusercontent.com:sub': `repo:${repo}:pull_request`,
+          },
+        },
+      }),
+    ]);
+  });
+
+  it('each role carries its own permissions boundary', () => {
+    const deploy = roleNamed('plainsight-github-deploy');
+    const diff = roleNamed('plainsight-github-diff');
+    const boundaryIds = Object.keys(githubOidc.findResources('AWS::IAM::ManagedPolicy'));
+    expect(boundaryIds).toContain(deploy.Properties.PermissionsBoundary.Ref);
+    expect(boundaryIds).toContain(diff.Properties.PermissionsBoundary.Ref);
+    expect(deploy.Properties.PermissionsBoundary.Ref).not.toBe(
+      diff.Properties.PermissionsBoundary.Ref,
     );
   });
 
-  it('carries the permissions boundary', () => {
-    const role: any = only(githubOidc.findResources('AWS::IAM::Role'));
-    const boundaryIds = Object.keys(githubOidc.findResources('AWS::IAM::ManagedPolicy'));
-    expect(boundaryIds).toContain(role.Properties.PermissionsBoundary.Ref);
-  });
-
-  it('holds exactly one grant: sts:AssumeRole on the cdk-* roles', () => {
-    const inlinePolicy: any = only(githubOidc.findResources('AWS::IAM::Policy'));
-    expect(inlinePolicy.Properties.PolicyDocument.Statement).toEqual([expectedStatement]);
-    const role: any = only(githubOidc.findResources('AWS::IAM::Role'));
+  it('the deploy role holds exactly one grant: sts:AssumeRole on the cdk-* roles', () => {
+    expect(
+      inlinePolicyFor('plainsight-github-deploy').Properties.PolicyDocument.Statement,
+    ).toEqual([deployStatement]);
+    const role = roleNamed('plainsight-github-deploy');
     expect(role.Properties.ManagedPolicyArns).toBeUndefined();
     expect(role.Properties.Policies).toBeUndefined();
   });
 
-  it('the boundary pins the same ceiling', () => {
-    const boundary: any = only(githubOidc.findResources('AWS::IAM::ManagedPolicy'));
-    expect(boundary.Properties.PolicyDocument.Statement).toEqual([expectedStatement]);
+  it('the diff role holds exactly one grant: sts:AssumeRole on the lookup role alone', () => {
+    expect(inlinePolicyFor('plainsight-github-diff').Properties.PolicyDocument.Statement).toEqual([
+      diffStatement,
+    ]);
+    const role = roleNamed('plainsight-github-diff');
+    expect(role.Properties.ManagedPolicyArns).toBeUndefined();
+    expect(role.Properties.Policies).toBeUndefined();
+  });
+
+  it('each boundary pins the same ceiling as its role', () => {
+    expect(
+      boundaryNamed('plainsight-deploy-boundary').Properties.PolicyDocument.Statement,
+    ).toEqual([deployStatement]);
+    expect(boundaryNamed('plainsight-diff-boundary').Properties.PolicyDocument.Statement).toEqual([
+      diffStatement,
+    ]);
   });
 });
 

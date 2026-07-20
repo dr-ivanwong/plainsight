@@ -10,16 +10,21 @@ export interface GithubOidcStackProps extends StackProps {
 
 /**
  * GithubOidc (spec §3, Phase 0, one-time scaffolding): the GitHub Actions
- * OIDC provider and the deploy role the pipelines assume. No long-lived
+ * OIDC provider and the roles the pipelines assume. No long-lived
  * credentials exist anywhere in this project (spec §7).
  *
- * The role deliberately holds no service permissions of its own: its only
- * grant is sts:AssumeRole on the CDK bootstrap roles (deploy, file-publishing,
- * lookup), and a permissions boundary repeats that ceiling so a future
- * "just add s3:PutObject" edit cannot widen it (belt and braces, spec §2).
+ * Two roles, two triggers, two ceilings. The deploy role serves pushes to
+ * main and may assume the CDK bootstrap roles. The diff role serves
+ * pull_request runs (whose OIDC subject the deploy role deliberately
+ * refuses, keeping deploys main-only) and may assume only the read-side
+ * lookup role, so a PR's diff can describe the deployed state and nothing
+ * more. Neither holds service permissions of its own, and a permissions
+ * boundary repeats each ceiling so a future "just add s3:PutObject" edit
+ * cannot widen it (belt and braces, spec §2).
  */
 export class GithubOidcStack extends Stack {
   readonly deployRole: iam.Role;
+  readonly diffRole: iam.Role;
   /** The OIDC provider ARN, consumed by StaticSite's app-deploy role. */
   readonly providerArn: string;
 
@@ -109,10 +114,55 @@ export class GithubOidcStack extends Stack {
         'defeat the boundary.',
     );
 
+    // The PR diff job authenticates separately: a pull_request-triggered run
+    // presents the exact OIDC subject `repo:<repo>:pull_request`, which the
+    // deploy role's trust deliberately does not match. Rather than widen the
+    // deploy trust to PRs (anyone who can open a PR could then deploy), the
+    // diff rides a read-only role whose entire reach is the CDK lookup role:
+    // enough for `cdk diff` to read the deployed templates, not enough to
+    // change anything. The lookup role's name is deterministic (default
+    // bootstrap qualifier, as the smoke check in infra.yml already pins).
+    const cdkLookupRole = `arn:aws:iam::${config.account}:role/cdk-hnb659fds-lookup-role-${config.account}-${config.region}`;
+    const assumeCdkLookupRoleOnly = () =>
+      new iam.PolicyStatement({
+        sid: 'AssumeCdkLookupRoleOnly',
+        effect: iam.Effect.ALLOW,
+        actions: ['sts:AssumeRole'],
+        resources: [cdkLookupRole],
+      });
+
+    const diffBoundary = new iam.ManagedPolicy(this, 'DiffRoleBoundary', {
+      managedPolicyName: 'plainsight-diff-boundary',
+      description:
+        'Permissions boundary for the GitHub Actions PR diff role: sts:AssumeRole on the CDK lookup role and nothing else.',
+      statements: [assumeCdkLookupRoleOnly()],
+    });
+
+    this.diffRole = new iam.Role(this, 'DiffRole', {
+      roleName: 'plainsight-github-diff',
+      description: `GitHub Actions OIDC read-only diff role for ${repo} pull requests; may only assume the CDK lookup role.`,
+      assumedBy: new iam.WebIdentityPrincipal(githubProvider.attrArn, {
+        // The pull_request subject is a fixed string (no ref, no wildcard),
+        // so the trust is an exact StringEquals, tighter than the deploy
+        // role's StringLike.
+        StringEquals: {
+          'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          'token.actions.githubusercontent.com:sub': `repo:${repo}:pull_request`,
+        },
+      }),
+      permissionsBoundary: diffBoundary,
+    });
+    this.diffRole.addToPolicy(assumeCdkLookupRoleOnly());
+
     new CfnOutput(this, 'DeployRoleArn', {
       value: this.deployRole.roleArn,
       description:
         'Set the GitHub repository variable AWS_DEPLOY_ROLE_ARN to this value to activate the workflows.',
+    });
+    new CfnOutput(this, 'DiffRoleArn', {
+      value: this.diffRole.roleArn,
+      description:
+        'Set the GitHub repository variable AWS_DIFF_ROLE_ARN to this value to activate the PR diff job.',
     });
   }
 }

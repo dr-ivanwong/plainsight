@@ -39,7 +39,8 @@ Phase 2 go-live and the operational procedures (the rebuild drill, DLQ drain, qu
    ```
 
 5. Set the GitHub repository variables from the stack outputs so the workflows activate:
-   - `AWS_DEPLOY_ROLE_ARN` = the `DeployRoleArn` output of `GithubOidc` (infra pipeline: diff, deploy, drift)
+   - `AWS_DEPLOY_ROLE_ARN` = the `DeployRoleArn` output of `GithubOidc` (infra pipeline: deploy, drift)
+   - `AWS_DIFF_ROLE_ARN` = the `DiffRoleArn` output of `GithubOidc` (the PR diff job; read-only, since a pull_request run's OIDC subject is deliberately refused by the deploy role)
    - `AWS_SITE_DEPLOY_ROLE_ARN` = the `SiteDeployRoleArn` output of `StaticSite` (app pipeline)
    - `SITE_BUCKET` = the `SiteBucketName` output, `DISTRIBUTION_ID` = the `DistributionId` output
    - optionally `SITE_ORIGIN` = `https://` plus the `DistributionDomainName` output, which turns on the post-deploy smoke check

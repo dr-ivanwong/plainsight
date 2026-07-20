@@ -2,8 +2,9 @@
 # design. On PR: invariant tests + cdk-nag + synth always run with no
 # credentials; the cdk diff against prod posts as a PR comment once OIDC is
 # wired. On merge to main: deploy. Weekly: a drift check that opens an issue
-# on any non-empty diff. Deploy, diff, and drift jobs stay dormant until the
-# repository variable AWS_DEPLOY_ROLE_ARN is set (see infra/README.md).
+# on any non-empty diff. Deploy and drift stay dormant until the repository
+# variable AWS_DEPLOY_ROLE_ARN is set; the PR diff job has its own read-only
+# role and activates with AWS_DIFF_ROLE_ARN (see infra/README.md).
 #
 # The stateful-stack approval gate was removed by owner decision 2026-07-18
 # (spec section 7, amended): the structural protections carry the load
@@ -59,11 +60,14 @@ jobs:
       - name: Synth (features-on overlay, bundles every handler)
         run: pnpm -C infra exec cdk synth --quiet --context features=all
 
-  # The diff is the review artefact (cdk spec section 7). Needs credentials to
-  # compare against the deployed state, so it activates with the OIDC role.
+  # The diff is the review artefact (cdk spec section 7). It needs credentials
+  # to read the deployed state, but a pull_request run presents an OIDC
+  # subject the deploy role deliberately refuses (deploys stay main-only), so
+  # the job rides its own read-only role, which may only assume the CDK
+  # lookup role.
   diff:
     needs: verify
-    if: github.event_name == 'pull_request' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    if: github.event_name == 'pull_request' && vars.AWS_DIFF_ROLE_ARN != ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -80,14 +84,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_DIFF_ROLE_ARN }}
           aws-region: ap-southeast-2
       - name: cdk diff against prod
+        # --no-change-set: changeset analysis would need the deploy role,
+        # which this read-only job cannot (and should not) assume; the
+        # template diff is the review artefact.
         run: |
           {
             echo '## `cdk diff` against prod'
             echo '```'
-            pnpm -C infra exec cdk diff --no-color 2>&1
+            pnpm -C infra exec cdk diff --no-change-set --no-color 2>&1
             echo '```'
           } > diff.md
       - name: Post the diff as a PR comment
