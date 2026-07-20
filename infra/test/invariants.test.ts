@@ -1,5 +1,7 @@
 // Assertion tests pinning the spec §6 invariants. These must survive any
 // refactor; loosening one is a spec change, not a test fix.
+import { createHash } from 'node:crypto';
+
 import { featuresOff, testApp } from './util';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
@@ -1248,6 +1250,16 @@ describe('rehearsal overlay (spec §2: same code, prefixed names, disposable dat
     expect(JSON.parse(monitor.Properties.MonitorSpecification)).toEqual({
       Tags: { Key: 'project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
     });
+    // The name must carry a digest of the specification, not a fixed string:
+    // MonitorSpecification is create-only, so a fixed name collides with the
+    // torn-down monitor on every spec change (AlreadyExists). Pinning the
+    // spec-derived name keeps that replacement collision-free and stops a
+    // future "tidy the name" from reintroducing the failed-deploy trap.
+    const digest = createHash('sha256')
+      .update(monitor.Properties.MonitorSpecification)
+      .digest('hex')
+      .slice(0, 8);
+    expect(monitor.Properties.MonitorName).toBe(`plainsight-project-costs-${digest}`);
     expect(Object.keys(foundation.findResources('AWS::CE::AnomalySubscription'))).toHaveLength(1);
   });
 });

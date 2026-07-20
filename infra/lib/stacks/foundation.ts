@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { CfnOutput, Duration, Stack, Validations, type StackProps } from 'aws-cdk-lib';
 import * as budgets from 'aws-cdk-lib/aws-budgets';
 import * as ce from 'aws-cdk-lib/aws-ce';
@@ -220,18 +222,31 @@ export class FoundationStack extends Stack {
     // Prod only: a rehearsal copy's resources carry the same project tag, so
     // its spend already lands inside this monitor's scope.
     if (config.envName === 'prod') {
+      // Plain 'project', not the budget's 'user:project': the two services
+      // disagree on tag-key form, and each side of this file follows its own
+      // service's documentation. Cost Explorer expressions take the bare key
+      // (every tag-monitor example in the CreateAnomalyMonitor API
+      // reference); a prefixed key would be read literally, match no spend,
+      // and the monitor would watch nothing, silently.
+      const monitorSpecification = JSON.stringify({
+        Tags: { Key: 'project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
+      });
+      // The name carries a short digest of the specification. MonitorSpecification
+      // is create-only, so any change to it forces a replacement, and
+      // CloudFormation replaces create-before-delete; Cost Anomaly Detection
+      // rejects a second monitor whose name already exists, so a fixed name
+      // makes the incoming monitor collide with the one still being torn
+      // down (HandlerErrorCode: AlreadyExists, which is exactly how the first
+      // deploy of this key fix failed). Rotating the name with the spec keeps
+      // every such replacement a clean one pass, while a deterministic digest
+      // (no timestamp, no randomness) keeps the name stable whenever the spec
+      // is unchanged. The subscription tracks the monitor by ARN, updating
+      // with no interruption, so the rotation never touches it.
+      const monitorDigest = createHash('sha256').update(monitorSpecification).digest('hex').slice(0, 8);
       const anomalyMonitor = new ce.CfnAnomalyMonitor(this, 'CostAnomalyMonitor', {
-        monitorName: 'plainsight-project-costs',
+        monitorName: `plainsight-project-costs-${monitorDigest}`,
         monitorType: 'CUSTOM',
-        // Plain 'project', not the budget's 'user:project': the two services
-        // disagree on tag-key form, and each side of this file follows its
-        // own service's documentation. Cost Explorer expressions take the
-        // bare key (every tag-monitor example in the CreateAnomalyMonitor
-        // API reference); a prefixed key would be read literally, match no
-        // spend, and the monitor would watch nothing, silently.
-        monitorSpecification: JSON.stringify({
-          Tags: { Key: 'project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
-        }),
+        monitorSpecification,
       });
       const anomalySubscription = new ce.CfnAnomalySubscription(this, 'CostAnomalySubscription', {
         subscriptionName: 'plainsight-anomaly-alerts',
