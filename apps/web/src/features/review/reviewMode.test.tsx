@@ -8,7 +8,7 @@ import 'fake-indexeddb/auto';
 import { REGISTRY, type LadderOutcome } from '@plainsight/extraction-core';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCompany, db, setMeta, type CompanyRecord } from '../../db';
 import { routeTree } from '../../routeTree.gen';
@@ -270,6 +270,33 @@ describe('extraction review mode', () => {
     );
 
     expect(await screen.findAllByText(/could not be rendered from the PDF/)).toHaveLength(2);
+    dismissJob(id);
+  });
+
+  it('a save that dies midway stores nothing, exactly as the banner claims', async () => {
+    const company = await seedCompany();
+    const { id } = await openReview(company);
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirm Net income, FY2024/ }));
+    const save = screen.getByRole('button', { name: 'Save to the library' });
+    await waitFor(() => expect(save).toBeEnabled());
+
+    // The income statement writes first, then the balance write dies: the
+    // one-transaction save must take the income rows down with it.
+    const original = db.statements.put.bind(db.statements);
+    const spy = vi
+      .spyOn(db.statements, 'put')
+      .mockImplementationOnce(original)
+      .mockImplementationOnce(() => {
+        throw new Error('storage gave out');
+      });
+    fireEvent.click(save);
+
+    expect(await screen.findByText('Could not save. Nothing was stored.')).toBeVisible();
+    spy.mockRestore();
+    expect(await db.statements.where('companyId').equals(company.id).count()).toBe(0);
+    // The company version never bumped either: no memoised metric can go stale.
+    expect((await db.companies.get(company.id))?.dataVersion).toBe(0);
     dismissJob(id);
   });
 

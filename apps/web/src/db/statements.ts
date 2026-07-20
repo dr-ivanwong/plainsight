@@ -25,6 +25,25 @@ export async function upsertStatement(
   return record;
 }
 
+/**
+ * All-or-nothing across several statements. Review mode saves one
+ * confirmation as multiple statement rows, and its failure banner promises
+ * "Nothing was stored"; this enclosing transaction is what makes that
+ * sentence true. Each upsertStatement's own transaction joins this one
+ * (same tables, Dexie nesting), so a failure at any write rolls back every
+ * earlier one.
+ */
+export async function upsertStatements(
+  db: PlainsightDb,
+  inputs: readonly StatementWrite[]
+): Promise<void> {
+  await db.transaction('rw', [db.statements, db.companies], async () => {
+    for (const input of inputs) {
+      await upsertStatement(db, input);
+    }
+  });
+}
+
 /** Every stored statement row for the company; screens group rows by fiscal year. */
 export async function listStatements(
   db: PlainsightDb,

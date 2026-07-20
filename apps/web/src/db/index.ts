@@ -12,7 +12,7 @@ export {
   listCompanies,
   type NewCompany
 } from './companies';
-export { listStatements, upsertStatement, type StatementWrite } from './statements';
+export { listStatements, upsertStatement, upsertStatements, type StatementWrite } from './statements';
 export { getPrice, putPrice, type PriceWrite } from './prices';
 export { getThesis, putThesisDraft, saveThesisVersion, type ThesisVersionWrite } from './theses';
 export { deleteCredential, putCredential, type CredentialWrite } from './credentials';

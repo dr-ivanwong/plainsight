@@ -16,7 +16,7 @@ import type { FieldValue } from '../../components/MoneyField';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { SourcePeek, type SourcePeekState } from '../../components/SourcePeek';
 import { StatementGrid, type GridYear } from '../../components/StatementGrid';
-import { db, upsertStatement, type CompanyRecord } from '../../db';
+import { db, upsertStatements, type CompanyRecord } from '../../db';
 import * as buttons from '../../styles/buttons.css';
 import { sourcePageImage, type ExtractionJob } from './jobStore';
 import * as styles from './reviewMode.css';
@@ -233,9 +233,9 @@ export function ReviewMode({
         provenance: job.provenance,
         recordedAt: new Date().toISOString()
       });
-      for (const write of writes) {
-        await upsertStatement(db, write);
-      }
+      // One transaction across every statement: the failure banner below
+      // says "Nothing was stored", and this is what makes that true.
+      await upsertStatements(db, writes);
       onDone();
     } catch {
       setSaveFailed(true);

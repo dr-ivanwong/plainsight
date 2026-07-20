@@ -6,7 +6,7 @@ import { PlainsightDb } from './db';
 import { getMeta, setMeta } from './meta';
 import { getPrice, putPrice } from './prices';
 import type { MetaRecord } from './records';
-import { listStatements, upsertStatement } from './statements';
+import { listStatements, upsertStatement, upsertStatements } from './statements';
 
 const T1 = '2026-07-11T10:00:00Z';
 const T2 = '2026-07-11T10:01:00Z';
@@ -122,6 +122,32 @@ describe('upsertStatement', () => {
     await upsertStatement(db, writeOf(incomeStatement({ companyId: a.id })));
     await upsertStatement(db, writeOf(incomeStatement({ companyId: b.id })));
     expect(await listStatements(db, a.id)).toHaveLength(1);
+  });
+});
+
+describe('upsertStatements', () => {
+  it('stores every statement in the batch', async () => {
+    const created = await createCompany(db, { name: 'Apple Inc.', currency: 'USD' });
+    await upsertStatements(db, [
+      writeOf(incomeStatement({ companyId: created.id })),
+      writeOf(incomeStatement({ companyId: created.id, fy: 'FY2023' }))
+    ]);
+    expect(await listStatements(db, created.id)).toHaveLength(2);
+    expect((await getCompany(db, created.id))?.dataVersion).toBe(2);
+  });
+
+  it('a failure at any write stores nothing at all (the review banner promise)', async () => {
+    const created = await createCompany(db, { name: 'Apple Inc.', currency: 'USD' });
+    await expect(
+      upsertStatements(db, [
+        writeOf(incomeStatement({ companyId: created.id })),
+        // The second write dies inside the transaction: no such company.
+        writeOf(incomeStatement({ companyId: 'ghost' }))
+      ])
+    ).rejects.toThrow('no company');
+    // The first write rolled back with it: no rows, no version bump.
+    expect(await db.statements.count()).toBe(0);
+    expect((await getCompany(db, created.id))?.dataVersion).toBe(0);
   });
 });
 
