@@ -21,6 +21,7 @@
 9. **INFRA-4 is fixed.** The deploy role no longer trusts `environment:*`, the subject the retired approval gate added; environments auto-create unprotected on first use, so it let any workflow on any ref assume the deploy role. With only the main-push subject left, the trust folds to an exact `StringEquals`, and the invariant test now asserts it by full-document equality so the wildcard cannot return (commit `a6126ab`). The change is an in-place role update on the untouched main-push subject, so the deploy applying it cannot lock the pipeline out.
 10. **BE-5 is fixed.** The extraction quota now counts spend, not tries. A unit is still consumed at job creation, where the 429 answer lives, but it returns whenever the attempt dies before any provider is called: the worker not starting, the kill switch flipping between request and worker, an expired or unreadable upload, a preprocess refusal, or a fully keyless ladder (the deployed no-keys state, where ten tries would otherwise exhaust the month). The refund is a conditional decrement floored at zero, keyed to the month the creation was billed to, so it can never mint headroom or refund the wrong month; once a provider has run, the unit stays consumed whatever the outcome (commit `9f68456`). Backend spec §6 gained the dated amendment and the runbook gained a quota-reset section for the pathological remainder. Deployed to the Api and Ingestion Lambdas via a manual pipeline dispatch (commit `4978f50` added `workflow_dispatch` as the on-demand deploy lever for bundled-handler changes that touch no infra path).
 11. **FE-5 is fixed.** The review model no longer mints the not-reported-zero state from the extraction's `notPrinted` claim. The claim now stays absent-with-a-hint: the field is empty, blocks completeness like any missing figure, computes and gates and writes nothing, and surfaces as a quiet cell note plus one banner line pointing at the field's own menu. Only the user asserts the state, through that menu (the same S5 affordance), and an asserted zero saves as the reviewer's own figure with no per-field extraction provenance, so the provenance trail names who minted it (commit `58be7b5`). This makes the code match the already-pinned data-model §8, so no spec moved. Four tests cover the seed, the writes, and the full assert-through-the-menu journey.
+12. **FE-6 is fixed.** The review save is now all-or-nothing: a new `upsertStatements` wraps the per-statement loop in one Dexie read-write transaction, so a failure at any write rolls back every earlier one, `dataVersion` bumps included, and the failure banner's "Nothing was stored" is true by construction (commit `d289b98`). The existing single-write entry-screen path is untouched. This makes the code match copy that was already pinned, so no spec moved. A db-layer test proves the batch is atomic, and a component test drives a mid-save failure through the real router and Dexie to an empty library and an unbumped company version.
 
 ---
 
@@ -62,7 +63,7 @@ Evidence-backed, not aspirational:
 
 ## 3. Findings at a glance
 
-41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5 and FE-5 fixed, and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 3 P1, 12 P2, 15 P3.
+41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5 and FE-6 fixed, and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 3 P1, 11 P2, 15 P3.
 
 | Code | Sev | Finding |
 |---|---|---|
@@ -85,7 +86,7 @@ Evidence-backed, not aspirational:
 | BE-6 | P2 | Pinned upload/proxy capabilities shipped narrower than spec, unamended (keep-source, streaming, PDF-only, presigned size claim) |
 | FE-4 | P3 (was P2) | One unparseable pulled record wedges sync permanently; the cross-version record needs a second device (cheap to fix regardless) |
 | FE-5 | P2 (fixed) | Extraction review seeds "not reported, treat as zero" from the model's claim; the data model reserves that assertion for the user. Fixed 2026-07-20 (`58be7b5`) |
-| FE-6 | P2 | Review-mode save is non-atomic while its failure banner says "Nothing was stored" |
+| FE-6 | P2 (fixed) | Review-mode save is non-atomic while its failure banner says "Nothing was stored". Fixed 2026-07-20 (`d289b98`) |
 | FE-7 | P2 | Entry commits read-modify-write from render state; rapid commits can drop an earlier field |
 | FE-8 | P2 | Two pinned CI stages do not exist (lint; Lighthouse/size-limit budgets), with a vestigial eslint-disable in source |
 | FE-9 | P2 | Proxy-mode extraction has no client path despite the pinned hook contract and the Phase 3 completeness claim |
@@ -225,7 +226,9 @@ Frontend spec §2 and main plan §5 pin per-feature-region boundaries with a fri
 
 The review model maps the model's `notPrinted` claim to the known-zero state, and at confidence ≥ 0.7 no individual confirmation is required (`apps/web/src/features/review/reviewModel.ts:57-58, 96-105`). Data-model §8 pins that only the user asserts that state and extraction never invents one. A whole-review save can therefore store a zero the user never explicitly asserted, which then feeds computations. **Direction:** seed `notPrinted` fields as absent-with-a-hint, or force per-field confirmation for every such claim; the entry grid's overflow menu stays the only minting path.
 
-### FE-6 · P2 · Review save is non-atomic while claiming "Nothing was stored"
+### FE-6 · P2 (fixed) · Review save is non-atomic while claiming "Nothing was stored"
+
+*Fixed 2026-07-20 (`d289b98`): `upsertStatements` wraps the per-statement loop in one Dexie read-write transaction over `[statements, companies]`, and each inner write's own transaction joins it, so a failure at any write rolls back every earlier one, `dataVersion` bumps included. The banner's "Nothing was stored" is now true by construction. The original finding follows.*
 
 Confirmed review figures save via sequential per-statement transactions; a failure at write N leaves earlier statements persisted while the banner asserts nothing was stored (`apps/web/src/features/review/ReviewMode.tsx:220-227, 304`). A direct honesty bug in the product whose credo is trustworthy numbers. **Direction:** one Dexie read-write transaction across the loop so the message becomes true.
 
@@ -370,7 +373,7 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 2. **Unblock sign-in (INFRA-1). Done 2026-07-19 (`b306b74`).** Cognito origin into connect-src, the spec §6 formula and invariant expectation amended in the same commit, verified live on the edge.
 3. **Rehearse the single-device path (X-1; FE-2 done `d1af36e`).** Token refresh is now blip-tolerant (FE-2 fixed 2026-07-19), so what remains is the walk itself: sign-in → first sync → upload once against the real backend, then one deliberate firing of the budget kill chain. The sync-convergence fixes (BE-1, BE-3, BE-4, FE-4) are deferred under single-device operation; schedule them as the pre-condition for ever adding a second device, not for this go-live.
 4. **Protect unsaved work (FE-1 done `d51f4cd`; FE-3 done `2d100f1`).** The designed error boundaries landed (per-region plus a router backstop, message/retry/export), and the service worker now waits for the next launch instead of reloading mid-session. Both defences of the owner's in-flight keystrokes are in place.
-5. **Make uploads honest before they are used (BE-2 done `4288746`; BE-5 done `9f68456`; FE-5 done `58be7b5`; FE-6, BE-6 remain).** Gates in the worker, quota refunds plus the runbook reset, and user-only known-zero minting are all done. What remains is the atomic review save (FE-6) and the keep-source decision (BE-6).
+5. **Make uploads honest before they are used (BE-2 done `4288746`; BE-5 done `9f68456`; FE-5 done `58be7b5`; FE-6 done `d289b98`; BE-6 remains).** Gates in the worker, quota refunds plus the runbook reset, user-only known-zero minting, and the atomic review save are all done. What remains is the keep-source decision (BE-6).
 6. **Close the pipeline's own gaps (INFRA-2 done `97d407b`; INFRA-3 done `36e4a4f`; INFRA-4 done `a6126ab`).** The read-only diff role landed, so the diff-is-the-review control can run once its variable is set; the anomaly monitor now watches a tag key that exists, with the chain-firing written up as a runbook drill; and the deploy role has shed the retired gate's `environment:*` trust. The pipeline-gaps group is closed.
 7. **One documentation commit (X-2, UI-2's spec half, FE-9's claim, plan tensions 4–6).** Sweep README, runbook, main plan §7 and epigraph, cdk spec §7, CLAUDE.md, ADR 0001 (or a superseding ADR), infra README, and the two stale code headers; align the spec copy passages with the source-of-truth decision.
 8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Infra test timeout, size-limit on the shell, the lint decision (install or record), the migration upgrade-fixture pattern, and the all-stacks Lambda sweep.
