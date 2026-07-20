@@ -117,9 +117,17 @@ describe('the compare screen', () => {
     const label = await screen.findByRole('rowheader', { name: 'Net margin' });
     const row = label.closest('tr');
     expect(row).not.toBeNull();
+    // The row header renders with the table skeleton, but each company's
+    // cell value fills from its own Dexie live query, which can resolve a
+    // tick later; wait for the values before reading them, or a loaded
+    // runner sees the "No data" placeholder and the row's "best" badge is
+    // not yet placed.
+    await waitFor(() => {
+      const pending = within(row as HTMLElement).getAllByRole('cell');
+      expect(pending[0]).toHaveTextContent('20.0%');
+      expect(pending[1]).toHaveTextContent('10.0%');
+    });
     const cells = within(row as HTMLElement).getAllByRole('cell');
-    expect(cells[0]).toHaveTextContent('20.0%');
-    expect(cells[1]).toHaveTextContent('10.0%');
     expect(within(cells[0] as HTMLElement).getByText('Best of the group')).toBeInTheDocument();
     expect(
       within(cells[1] as HTMLElement).queryByText('Best of the group')
