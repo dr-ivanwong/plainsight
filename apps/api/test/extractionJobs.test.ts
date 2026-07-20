@@ -22,6 +22,7 @@ const PDF_BYTES = new TextEncoder().encode('%PDF-1.7 rest of file');
 class FakeJobStore implements JobStore {
   jobs = new Map<string, StoredJob>();
   quota = new Map<string, number>();
+  refunds: Array<{ userId: string; month: string }> = [];
   responses = new Map<string, { userId: string; body: string }>();
   patches: Array<{ jobId: string; patch: JobPatch }> = [];
 
@@ -47,6 +48,14 @@ class FakeJobStore implements JobStore {
     if (used >= limit) return false;
     this.quota.set(key, used + 1);
     return true;
+  }
+
+  async refundQuota(userId: string, month: string): Promise<void> {
+    this.refunds.push({ userId, month });
+    const key = `${userId}#${month}`;
+    const used = this.quota.get(key) ?? 0;
+    // The real store floors at zero with a conditional write.
+    if (used > 0) this.quota.set(key, used - 1);
   }
 
   async getStoredResponse(idempotencyKey: string, userId: string): Promise<string | undefined> {
@@ -202,7 +211,7 @@ describe('starting a job (backend spec §6 controls, in order)', () => {
     expect(body.error.details[0]).toMatchObject({ reason: 'quota', limit: 10, resetsAt: '2026-08-01' });
   });
 
-  it('a worker that will not start fails the job visibly', async () => {
+  it('a worker that will not start fails the job visibly and returns the quota unit', async () => {
     const store = new FakeJobStore();
     const handler = createExtractionHandler(
       extractionDeps(store, {
@@ -217,6 +226,9 @@ describe('starting a job (backend spec §6 controls, in order)', () => {
     const job = extractionJobSchema.parse(JSON.parse(response.body ?? ''));
     expect(job.state).toBe('failed');
     expect(job.failure?.detail).toContain('did not start');
+    // Nothing ran, nothing was spent: the month's count is back where it was.
+    expect(store.refunds).toEqual([{ userId: 'user-1', month: '2026-07' }]);
+    expect(store.quota.get('user-1#2026-07')).toBe(0);
   });
 
   it('requires the Idempotency-Key header', async () => {
@@ -324,6 +336,8 @@ describe('the worker walk (backend spec §6 stages)', () => {
       provider: 'anthropic-haiku-4.5',
       outcome: 'extracted'
     });
+    // The extraction happened, so the consumed unit stays consumed.
+    expect(store.refunds).toEqual([]);
   });
 
   it('the validating stage runs the pinned gates and hands the reviewer their findings', async () => {
@@ -377,20 +391,67 @@ describe('the worker walk (backend spec §6 stages)', () => {
     ]);
   });
 
-  it('a refused preprocess fails plainly', async () => {
+  it('a refused preprocess fails plainly and returns the quota unit', async () => {
     const store = new FakeJobStore();
     seedQueued(store);
+    store.quota.set('user-1#2026-07', 1);
     const outcome = await runUploadJob(
       workerDeps(store, { preprocess: async () => ({ ok: false, reason: 'scanned_document' }) as never }),
       'job-1'
     );
     expect(outcome.outcome).toBe('failed');
     expect(store.jobs.get('job-1')?.failure?.detail).toContain('scanned_document');
+    // No provider was reached, so the unit consumed at creation comes back.
+    expect(store.quota.get('user-1#2026-07')).toBe(0);
   });
 
-  it('an exhausted ladder fails with the attempts named', async () => {
+  it('an unreadable upload fails plainly and returns the quota unit', async () => {
     const store = new FakeJobStore();
     seedQueued(store);
+    store.quota.set('user-1#2026-07', 1);
+    const outcome = await runUploadJob(
+      workerDeps(store, {
+        getObject: async () => {
+          throw new Error('NoSuchKey');
+        }
+      }),
+      'job-1'
+    );
+    expect(outcome.outcome).toBe('failed');
+    expect(store.jobs.get('job-1')?.failure?.detail).toContain('expired');
+    expect(store.quota.get('user-1#2026-07')).toBe(0);
+  });
+
+  it('a keyless ladder returns the unit for the month the job was billed to', async () => {
+    const store = new FakeJobStore();
+    // Created in June, worker running in July: the refund must land on the
+    // month the creation consumed, not on the wall clock.
+    store.jobs.set('job-1', {
+      jobId: 'job-1',
+      state: 'queued',
+      createdAt: '2026-06-30T23:59:00.000Z',
+      confidential: false,
+      attempts: [],
+      userId: 'user-1',
+      objectKey: 'uploads/user-1/a/r.pdf'
+    });
+    store.quota.set('user-1#2026-06', 1);
+    const outcome = await runUploadJob(
+      workerDeps(store, {
+        extract: async () => ({ ok: false, attempts: [] }) as unknown as LadderOutcome
+      }),
+      'job-1'
+    );
+    expect(outcome.outcome).toBe('failed');
+    expect(store.jobs.get('job-1')?.failure?.detail).toContain('No provider rung');
+    expect(store.refunds).toEqual([{ userId: 'user-1', month: '2026-06' }]);
+    expect(store.quota.get('user-1#2026-06')).toBe(0);
+  });
+
+  it('an exhausted ladder fails with the attempts named, and the spend stays consumed', async () => {
+    const store = new FakeJobStore();
+    seedQueued(store);
+    store.quota.set('user-1#2026-07', 1);
     const outcome = await runUploadJob(
       workerDeps(store, {
         extract: async () =>
@@ -406,20 +467,27 @@ describe('the worker walk (backend spec §6 stages)', () => {
     expect(outcome.outcome).toBe('failed');
     const job = store.jobs.get('job-1');
     expect(job?.attempts[0]?.outcome).toBe('provider_error');
+    // A provider ran: money may have moved, so no refund.
+    expect(store.refunds).toEqual([]);
+    expect(store.quota.get('user-1#2026-07')).toBe(1);
   });
 
-  it('the kill switch fails a job visibly, and non-queued jobs never re-run', async () => {
+  it('the kill switch fails a job visibly with a refund, and non-queued jobs never re-run', async () => {
     const store = new FakeJobStore();
     seedQueued(store);
+    store.quota.set('user-1#2026-07', 1);
     const disabled = await runUploadJob(
       workerDeps(store, { extractionEnabled: async () => false }),
       'job-1'
     );
     expect(disabled.outcome).toBe('disabled');
     expect(store.jobs.get('job-1')?.state).toBe('failed');
+    expect(store.quota.get('user-1#2026-07')).toBe(0);
 
     const rerun = await runUploadJob(workerDeps(store), 'job-1');
     expect(rerun.outcome).toBe('already_started');
+    // The non-queued guard also guards the refund: still exactly one.
+    expect(store.refunds).toHaveLength(1);
     const missing = await runUploadJob(workerDeps(store), 'job-0');
     expect(missing.outcome).toBe('job_missing');
   });

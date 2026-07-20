@@ -38,6 +38,12 @@ export interface JobStore {
   patchJob(jobId: string, patch: JobPatch): Promise<void>;
   /** True when this month's count was below the limit and is now consumed. */
   tryConsumeQuota(userId: string, month: string, limit: number): Promise<boolean>;
+  /**
+   * Returns one unit to a month whose attempt died before any provider was
+   * called (backend spec §6: the quota counts spend, not tries). Floors at
+   * zero, and refunding a month with no counter is a no-op.
+   */
+  refundQuota(userId: string, month: string): Promise<void>;
   getStoredResponse(idempotencyKey: string, userId: string): Promise<string | undefined>;
   storeResponse(
     idempotencyKey: string,
@@ -119,6 +125,26 @@ export class TableJobStore implements JobStore {
       return true;
     } catch (error) {
       if ((error as { name?: string }).name === 'ConditionalCheckFailedException') return false;
+      throw error;
+    }
+  }
+
+  async refundQuota(userId: string, month: string): Promise<void> {
+    try {
+      await this.client.send(
+        new UpdateCommand({
+          TableName: this.tableName,
+          Key: { PK: userPartition(userId), SK: quotaSortKey(month) },
+          UpdateExpression: 'ADD jobs :minusOne',
+          // The floor: a refund may only undo a recorded consume, never
+          // mint headroom. A conditional failure means there is nothing to
+          // give back, which is a fine answer, not an error.
+          ConditionExpression: 'attribute_exists(jobs) AND jobs > :zero',
+          ExpressionAttributeValues: { ':minusOne': -1, ':zero': 0 }
+        })
+      );
+    } catch (error) {
+      if ((error as { name?: string }).name === 'ConditionalCheckFailedException') return;
       throw error;
     }
   }

@@ -58,8 +58,18 @@ export async function runUploadJob(deps: UploadJobDeps, jobId: string): Promise<
     return { outcome: 'failed', jobId };
   };
 
+  // A quota unit was consumed when this job was created; a path that dies
+  // before any provider is called spent nothing, so it returns the unit
+  // (backend spec section 6: the quota counts spend, not tries). The month
+  // comes from the job's own creation time, so a job that straddles a month
+  // boundary refunds the month it was billed to. Once a provider has run,
+  // the unit stays consumed whatever the outcome: the spend happened.
+  const refundUnspentUnit = (): Promise<void> =>
+    deps.jobs.refundQuota(job.userId, job.createdAt.slice(0, 7));
+
   if (!(await deps.extractionEnabled())) {
     await fail('Extraction is disabled at the budget kill switch.');
+    await refundUnspentUnit();
     return { outcome: 'disabled', jobId };
   }
 
@@ -68,24 +78,35 @@ export async function runUploadJob(deps: UploadJobDeps, jobId: string): Promise<
   try {
     bytes = await deps.getObject(job.objectKey);
   } catch {
-    return fail('The upload could not be read; it may have expired from the seven-day bucket.');
+    const failed = await fail(
+      'The upload could not be read; it may have expired from the seven-day bucket.'
+    );
+    await refundUnspentUnit();
+    return failed;
   }
 
   const prepared = await deps.preprocess(bytes);
   if (!prepared.ok) {
-    return fail(`Preprocessing refused the document: ${prepared.reason}.`);
+    const failed = await fail(`Preprocessing refused the document: ${prepared.reason}.`);
+    await refundUnspentUnit();
+    return failed;
   }
 
   await deps.jobs.patchJob(jobId, { state: 'extracting' });
   const outcome = await deps.extract(prepared.document, job.confidential);
   const attempts = attemptsWire(outcome);
   if (!outcome.ok) {
-    return fail(
-      attempts.length === 0
-        ? 'No provider rung was available: no key parameters are configured.'
-        : 'Every available ladder rung failed; the attempts name each outcome.',
-      attempts
-    );
+    if (attempts.length === 0) {
+      // Every rung was skipped for want of a key parameter: nothing was
+      // called, nothing was spent. Without the refund, ten keyless tries
+      // would silently exhaust the month.
+      const failed = await fail(
+        'No provider rung was available: no key parameters are configured.'
+      );
+      await refundUnspentUnit();
+      return failed;
+    }
+    return fail('Every available ladder rung failed; the attempts name each outcome.', attempts);
   }
 
   await deps.jobs.patchJob(jobId, { state: 'validating', attempts });

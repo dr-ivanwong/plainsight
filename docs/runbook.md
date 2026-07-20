@@ -149,6 +149,19 @@ aws dynamodb query --table-name <TableName> \
 
 Each item records the fiscal year, the failure reasons, and the rows as mapped. If the filing is genuinely inconsistent, leave it: the blast radius is that one year, and the served years name the gap. If the mapping misread the filing, fix the mapping in `apps/api` (golden tests first, bump the mapping version), re-ingest the ticker, and delete the quarantine item.
 
+## Extraction quota reset
+
+The 10-per-month upload-extraction quota refunds itself when an attempt dies before any provider is called (backend spec §6, amended 2026-07-20), so keyless or misconfigured tries do not eat the month. The manual reset exists for the pathological remainder: a crash losing a refund, or a month burnt by real provider failures that spent money but produced nothing worth keeping. Zero the month's counter (`<sub>` is the Cognito user id from the ID token; the month is `YYYY-MM`):
+
+```sh
+aws dynamodb update-item --table-name <TableName> \
+  --key '{"PK":{"S":"USER#<sub>"},"SK":{"S":"QUOTA#<YYYY-MM>"}}' \
+  --update-expression 'SET jobs = :zero' \
+  --expression-attribute-values '{":zero":{"N":"0"}}'
+```
+
+The counter also resets itself by construction on the first of each month (the key carries the month), so doing nothing is always an option.
+
 ## Kill-chain drill (fire it once on purpose)
 
 The protection chain (budget threshold → kill topic → flipper → SSM flag → extraction declining → relay email) has several links that fail silent, so it is not trusted until it has been watched firing. Delivery is the signal and the flipper parses nothing, so a hand-published message is indistinguishable from the real event and drills every link downstream of Budgets:

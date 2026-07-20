@@ -189,6 +189,9 @@ export function createExtractionHandler(deps: CreateExtractionDeps) {
         });
         job.state = 'failed';
         job.failure = { detail: 'The extraction worker did not start; try again.', nextRung: null };
+        // No worker means no provider call and no spend, so the unit goes
+        // back (backend spec §6: the quota counts spend, not tries).
+        await deps.jobs.refundQuota(userId, month);
       }
 
       const body = wireJobOf(job);
