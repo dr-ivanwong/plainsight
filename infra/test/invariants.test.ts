@@ -355,7 +355,11 @@ describe('OIDC pipeline roles (spec §2: one assume grant each, nothing else)', 
     ).toEqual(['plainsight-github-deploy', 'plainsight-github-diff']);
   });
 
-  it('the deploy role trusts only this repository, on main or a deploy environment', () => {
+  it('the deploy role trusts exactly this repository on main, nothing wider', () => {
+    // Full-document equality: no StringLike branch exists at all. The
+    // retired approval gate's environment:* subject must never return;
+    // environments auto-create unprotected, so it would let any workflow on
+    // any ref assume the deploy role.
     expect(
       roleNamed('plainsight-github-deploy').Properties.AssumeRolePolicyDocument.Statement,
     ).toEqual([
@@ -364,12 +368,7 @@ describe('OIDC pipeline roles (spec §2: one assume grant each, nothing else)', 
         Condition: {
           StringEquals: {
             'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-          },
-          StringLike: {
-            'token.actions.githubusercontent.com:sub': [
-              `repo:${repo}:ref:refs/heads/main`,
-              `repo:${repo}:environment:*`,
-            ],
+            'token.actions.githubusercontent.com:sub': `repo:${repo}:ref:refs/heads/main`,
           },
         },
       }),

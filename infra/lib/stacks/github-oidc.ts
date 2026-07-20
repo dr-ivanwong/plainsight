@@ -78,16 +78,15 @@ export class GithubOidcStack extends Stack {
       roleName: 'plainsight-github-deploy',
       description: `GitHub Actions OIDC deploy role for ${repo}; may only assume the CDK bootstrap roles.`,
       assumedBy: new iam.WebIdentityPrincipal(githubProvider.attrArn, {
+        // Trust ONLY this repository's pushes to main (the deploy trigger),
+        // as an exact match. The retired stateful-stack approval gate used
+        // to add an environment:* subject here; environments auto-create
+        // unprotected on first use, so that pattern let any workflow on any
+        // ref reach this role, and it left with the gate (spec §7,
+        // amendment 2026-07-18).
         StringEquals: {
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-        },
-        // Trust ONLY this repository: pushes to main (the deploy trigger) and
-        // GitHub-environment jobs (the stateful-stack approval gate, spec §7).
-        StringLike: {
-          'token.actions.githubusercontent.com:sub': [
-            `repo:${repo}:ref:refs/heads/main`,
-            `repo:${repo}:environment:*`,
-          ],
+          'token.actions.githubusercontent.com:sub': `repo:${repo}:ref:refs/heads/main`,
         },
       }),
       permissionsBoundary: deployBoundary,
@@ -143,8 +142,8 @@ export class GithubOidcStack extends Stack {
       description: `GitHub Actions OIDC read-only diff role for ${repo} pull requests; may only assume the CDK lookup role.`,
       assumedBy: new iam.WebIdentityPrincipal(githubProvider.attrArn, {
         // The pull_request subject is a fixed string (no ref, no wildcard),
-        // so the trust is an exact StringEquals, tighter than the deploy
-        // role's StringLike.
+        // so the trust is an exact StringEquals, the same shape as the
+        // deploy role's.
         StringEquals: {
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
           'token.actions.githubusercontent.com:sub': `repo:${repo}:pull_request`,
