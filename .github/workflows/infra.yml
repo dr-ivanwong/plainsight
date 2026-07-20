@@ -1,10 +1,12 @@
 # The infra pipeline (cdk spec section 7), separate from the app pipeline by
 # design. On PR: invariant tests + cdk-nag + synth always run with no
 # credentials; the cdk diff against prod posts as a PR comment once OIDC is
-# wired. On merge to main: deploy. Weekly: a drift check that opens an issue
-# on any non-empty diff. Deploy and drift stay dormant until the repository
-# variable AWS_DEPLOY_ROLE_ARN is set; the PR diff job has its own read-only
-# role and activates with AWS_DIFF_ROLE_ARN (see infra/README.md).
+# wired. On merge to main: deploy. On manual dispatch: the same deploy of
+# current main, for shipping a bundled-handler change that touched no infra
+# path. Weekly: a drift check that opens an issue on any non-empty diff.
+# Deploy and drift stay dormant until the repository variable
+# AWS_DEPLOY_ROLE_ARN is set; the PR diff job has its own read-only role and
+# activates with AWS_DIFF_ROLE_ARN (see infra/README.md).
 #
 # The stateful-stack approval gate was removed by owner decision 2026-07-18
 # (spec section 7, amended): the structural protections carry the load
@@ -33,6 +35,14 @@ on:
     # Weekly drift check (spec section 7): Sunday 19:00 UTC is Monday 05:00
     # or 06:00 in Sydney.
     - cron: '0 19 * * 0'
+  # On-demand deploy. The stacks bundle apps/api and the packages at deploy
+  # time, but only infra paths trigger the push deploy above, so a change to
+  # a bundled handler (say a apps/api fix) does not ship until an infra
+  # change next lands. This lever redeploys current main deliberately:
+  # `gh workflow run infra --ref main`. Dispatched on main, the OIDC subject
+  # is the trusted ref:refs/heads/main, so it assumes the deploy role like
+  # any push.
+  workflow_dispatch:
 
 jobs:
   # No credentials: the invariant suite, cdk-nag, and a full synth must pass
@@ -104,7 +114,7 @@ jobs:
 
   deploy:
     needs: verify
-    if: github.event_name == 'push' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.AWS_DEPLOY_ROLE_ARN != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
