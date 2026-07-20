@@ -23,6 +23,18 @@ The one-time sequence, which is also the first run of the rebuild drill below. T
 6. **Ship the app shell**: push to main (or re-run the app workflow); from here on, infra changes ride `infra.yml` with the one-click environment gate on the stateful stacks.
 7. **Subscribe an email** to the `AlertTopicArn` output; the DLQ, sweep, budget, and anomaly alarms all land there.
 8. **Activate the cost-allocation tag** once the first tagged spend appears in Billing (the key only becomes activatable after it first lands, and activation reaches filters within a day): `aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=project,Status=Active`. The budget and the anomaly monitor are tag-scoped on the shared account (ADR 0001 amendment) and measure nothing until this runs.
+9. **A day after activation, verify the scoping bites**, one call per key form. The two services disagree on tag-key shape (Budgets wants `user:project`, Cost Explorer expressions the bare `project`; both forms are pinned in code and test), and a wrong key fails silent by matching nothing, so trust neither until each has matched real spend:
+
+   ```sh
+   aws ce get-cost-and-usage --time-period Start=<first-of-month>,End=<tomorrow> \
+     --granularity MONTHLY --metrics UnblendedCost \
+     --filter '{"Tags":{"Key":"project","Values":["plainsight"],"MatchOptions":["EQUALS"]}}'
+   aws budgets describe-budget --account-id <account-id> --budget-name plainsight-prod-monthly \
+     --query 'Budget.CalculatedSpend.ActualSpend'
+   ```
+
+   Non-zero from the first proves the bare key matches in Cost Explorer, which is what the anomaly monitor filters by; non-zero from the second proves the prefixed key matches in Budgets. Zero from either means activation has not reached that filter yet (give it its day) or the key form regressed.
+10. **Fire the kill chain once on purpose** (the drill in the kill-switch section below): every link downstream of Budgets runs for real, and the relay email arriving doubles as proof of the step 7 subscription.
 
 ### The exit-criteria smoke (main plan §8, Phase 2 row)
 
@@ -136,6 +148,17 @@ aws dynamodb query --table-name <TableName> \
 ```
 
 Each item records the fiscal year, the failure reasons, and the rows as mapped. If the filing is genuinely inconsistent, leave it: the blast radius is that one year, and the served years name the gap. If the mapping misread the filing, fix the mapping in `apps/api` (golden tests first, bump the mapping version), re-ingest the ticker, and delete the quarantine item.
+
+## Kill-chain drill (fire it once on purpose)
+
+The protection chain (budget threshold → kill topic → flipper → SSM flag → extraction declining → relay email) has several links that fail silent, so it is not trusted until it has been watched firing. Delivery is the signal and the flipper parses nothing, so a hand-published message is indistinguishable from the real event and drills every link downstream of Budgets:
+
+```sh
+aws sns publish --topic-arn arn:aws:sns:ap-southeast-2:<account-id>:plainsight-prod-kill-switch \
+  --message 'deliberate kill-chain drill (runbook)'
+```
+
+Within a minute, confirm all three effects: the flag flipped (`aws ssm get-parameter --name /app/prod/features/extraction --query Parameter.Value` reads `false`), the relay email from the alert topic arrived (which also proves the email subscription), and an extraction request answers with the feature-disabled envelope. Then reset per the section below. The one link the drill cannot exercise is Budgets itself publishing at threshold: that is AWS-managed delivery against real spend, and its side of the contract (the topic policy granting `budgets.amazonaws.com` publish) is pinned by the invariant suite.
 
 ## Kill-switch reset
 

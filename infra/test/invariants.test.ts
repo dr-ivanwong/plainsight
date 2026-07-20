@@ -507,6 +507,9 @@ describe('budget (spec §8: staged alerts on the converted AUD figure)', () => {
   });
 
   it('counts only the project tag on the shared account (ADR 0001 amendment)', () => {
+    // The prefixed key is Budgets' documented form for user-defined tags;
+    // the anomaly monitor deliberately differs (bare 'project': Cost
+    // Explorer's form). Neither may be "unified" to match the other.
     expect(budget.Properties.Budget.FilterExpression).toEqual({
       Tags: { Key: 'user:project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
     });
@@ -1238,8 +1241,12 @@ describe('rehearsal overlay (spec §2: same code, prefixed names, disposable dat
     // project tag, so it already lands inside this scope.
     const monitor: any = only(foundation.findResources('AWS::CE::AnomalyMonitor'));
     expect(monitor.Properties.MonitorType).toBe('CUSTOM');
+    // Bare 'project', never the budget's 'user:project': Cost Explorer
+    // expressions take the unprefixed key, and a prefixed one is read
+    // literally, matching no spend, silently. Each service keeps its own
+    // documented form.
     expect(JSON.parse(monitor.Properties.MonitorSpecification)).toEqual({
-      Tags: { Key: 'user:project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
+      Tags: { Key: 'project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
     });
     expect(Object.keys(foundation.findResources('AWS::CE::AnomalySubscription'))).toHaveLength(1);
   });

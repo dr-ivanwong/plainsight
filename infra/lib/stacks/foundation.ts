@@ -195,6 +195,12 @@ export class FoundationStack extends Stack {
         // (ADR 0001, amendment 2026-07-18): the budget counts this project's
         // tagged spend, never theirs. The scoping bites once the
         // cost-allocation tag is activated (runbook, go-live step 8).
+        // 'user:project', prefixed, unlike the anomaly monitor's bare
+        // 'project' below: Budgets requires the user: prefix on user-defined
+        // tag keys (its filter documentation), Cost Explorer expressions
+        // take the bare key. The asymmetry is each service's documented
+        // form, not a typo; the runbook's tag-activation step verifies both
+        // against real spend.
         filterExpression: {
           tags: { key: 'user:project', values: ['plainsight'], matchOptions: ['EQUALS'] },
         },
@@ -217,8 +223,14 @@ export class FoundationStack extends Stack {
       const anomalyMonitor = new ce.CfnAnomalyMonitor(this, 'CostAnomalyMonitor', {
         monitorName: 'plainsight-project-costs',
         monitorType: 'CUSTOM',
+        // Plain 'project', not the budget's 'user:project': the two services
+        // disagree on tag-key form, and each side of this file follows its
+        // own service's documentation. Cost Explorer expressions take the
+        // bare key (every tag-monitor example in the CreateAnomalyMonitor
+        // API reference); a prefixed key would be read literally, match no
+        // spend, and the monitor would watch nothing, silently.
         monitorSpecification: JSON.stringify({
-          Tags: { Key: 'user:project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
+          Tags: { Key: 'project', Values: ['plainsight'], MatchOptions: ['EQUALS'] },
         }),
       });
       const anomalySubscription = new ce.CfnAnomalySubscription(this, 'CostAnomalySubscription', {
