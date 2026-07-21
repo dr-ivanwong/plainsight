@@ -188,7 +188,7 @@ Strict smart/presentational split, with the container role played by hooks:
 
 ### Performance engineering
 
-Budgets set now, enforced in CI (Lighthouse CI + `size-limit`):
+Budgets set now, enforced in CI (Lighthouse CI + `size-limit`) *(amended 2026-07-22: the initial-JS budget is enforced by a hand-rolled, dependency-free check (`scripts/check-bundle.mjs`) that gzips the built entry module and its modulepreload graph, the same zero-dep house pattern as the contrast and style gates; Lighthouse CI is not installed and the TTI budget is unenforced, recorded here rather than implied)*:
 
 - **Initial JS ≤ 180KB gzipped.** Route-level code splitting (Library shell loads first; charts, compare, and thesis editor are lazy chunks). Recharts is the biggest line item; it loads with the dashboard chunk, not the shell.
 - **TTI < 2s on a mid-range Android over 4G; < 1s repeat visits** (service worker shell).

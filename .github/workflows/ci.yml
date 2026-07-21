@@ -28,6 +28,8 @@ jobs:
         run: pnpm -r test
       - name: Build
         run: pnpm -r build
+      - name: Bundle budget (initial JS inside the pinned ceiling, main plan section 5)
+        run: node scripts/check-bundle.mjs
 
   # The Phase 1 exit criterion: Journey A completes in airplane mode, on
   # Chromium and WebKit, against the built app with its service worker.
