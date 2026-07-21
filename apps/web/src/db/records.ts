@@ -24,6 +24,8 @@ import {
 } from '@plainsight/calc-engine';
 import { z } from 'zod';
 
+import { normaliseSector } from './sectors';
+
 /** z.enum over the engine's runtime id lists, which are typed as widened readonly arrays. */
 const enumOf = <T extends string>(values: readonly T[]) => z.enum(values as [T, ...T[]]);
 
@@ -89,7 +91,14 @@ export const companyRecordSchema = z.object({
   name: nonEmpty,
   ticker: nonEmpty.optional(),
   exchange: nonEmpty.optional(),
-  sector: nonEmpty.optional(),
+  /**
+   * An id from the pinned vocabulary or absent (data-model spec §12). The
+   * transform is the normalisation boundary: legacy free-text values map to
+   * their id and unknown strings clear to absent, here rather than per read
+   * site, so Dexie-on-read, sync pull and file import all normalise and none
+   * of them quarantines a row over a cosmetic label.
+   */
+  sector: z.string().transform(normaliseSector).optional(),
   currency: currencyCode,
   sample: z.boolean(),
   createdAt: isoDateTime,

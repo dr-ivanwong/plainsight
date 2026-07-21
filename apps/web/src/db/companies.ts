@@ -7,8 +7,13 @@
 import type { PlainsightDb } from './db';
 import { companyRecordSchema, type CompanyRecord } from './records';
 import { validateRow, validateRows } from './safeRead';
+import type { SectorId } from './sectors';
 
-/** What the add-company form supplies; everything else is set here. */
+/**
+ * What the add-company form supplies; everything else is set here. The sector
+ * arrives as a string because the schema owns normalisation: pickers send an
+ * id through unchanged, and anything older maps or clears (sectors.ts).
+ */
 export interface NewCompany {
   name: string;
   ticker?: string;
@@ -39,6 +44,37 @@ export async function getCompany(db: PlainsightDb, id: string): Promise<CompanyR
 export async function listCompanies(db: PlainsightDb): Promise<CompanyRecord[]> {
   const rows = await db.companies.orderBy('updatedAt').reverse().toArray();
   return validateRows(db, 'companies', rows, companyRecordSchema);
+}
+
+/** The details sheet's editable half (frontend spec §3): name and sector, nothing else. */
+export interface CompanyDetailsEdit {
+  name: string;
+  sector?: SectorId;
+}
+
+/**
+ * The details-sheet edit: name and sector only. Ticker, exchange and currency
+ * stay fixed after creation (a wrong identity or money field is a re-create,
+ * not an edit), and dataVersion stays put, because neither field feeds the
+ * engine and metric memoisation keys on it. Touching updatedAt is what queues
+ * the edit for push (main plan §12.9).
+ */
+export async function updateCompanyDetails(
+  db: PlainsightDb,
+  companyId: string,
+  edit: CompanyDetailsEdit
+): Promise<CompanyRecord | null> {
+  const company = await getCompany(db, companyId);
+  if (company === null) return null;
+  const { sector: _cleared, ...rest } = company;
+  const record = companyRecordSchema.parse({
+    ...rest,
+    ...(edit.sector === undefined ? {} : { sector: edit.sector }),
+    name: edit.name,
+    updatedAt: new Date().toISOString()
+  });
+  await db.companies.put(record);
+  return record;
 }
 
 /**

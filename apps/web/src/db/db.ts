@@ -10,6 +10,8 @@
  * valid IndexedDB keys.
  */
 import Dexie, { type EntityTable, type Table } from 'dexie';
+
+import { normaliseSector } from './sectors';
 import type {
   CompanyRecord,
   FlagDismissalRecord,
@@ -69,6 +71,27 @@ export class PlainsightDb extends Dexie {
     // write path knows it exists.
     this.version(2).stores({
       syncState: 'recordKey'
+    });
+    // The sector vocabulary pass (data-model spec §12): known legacy
+    // free-text sectors rewrite to their pinned id and unknown ones clear to
+    // absent, ready for one-tap reassignment through the details sheet.
+    // Rewritten rows bump updatedAt, so each one diffs against its sync
+    // shadow and pushes like an ordinary edit; the server copy converges
+    // (main plan §12.9). Rows already carrying an id, or nothing, stay
+    // untouched and quiet.
+    this.version(3).upgrade(async (tx) => {
+      const now = new Date().toISOString();
+      await tx
+        .table('companies')
+        .toCollection()
+        .modify((row: { sector?: string; updatedAt?: string }) => {
+          if (typeof row.sector !== 'string') return;
+          const normalised = normaliseSector(row.sector);
+          if (normalised === row.sector) return;
+          if (normalised === undefined) delete row.sector;
+          else row.sector = normalised;
+          row.updatedAt = now;
+        });
     });
   }
 }

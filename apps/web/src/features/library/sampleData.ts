@@ -17,7 +17,7 @@ export const SAMPLE_COMPANIES: readonly SampleCompany[] = [
     "name": "CSL",
     "ticker": "CSL",
     "exchange": "ASX",
-    "sector": "Healthcare",
+    "sector": "healthcare",
     "currency": "USD",
     "sample": true
   },
@@ -26,7 +26,7 @@ export const SAMPLE_COMPANIES: readonly SampleCompany[] = [
     "name": "Wesfarmers",
     "ticker": "WES",
     "exchange": "ASX",
-    "sector": "Conglomerate",
+    "sector": "retail",
     "currency": "AUD",
     "sample": true
   },
@@ -35,7 +35,7 @@ export const SAMPLE_COMPANIES: readonly SampleCompany[] = [
     "name": "Woolworths",
     "ticker": "WOW",
     "exchange": "ASX",
-    "sector": "Consumer staples",
+    "sector": "retail",
     "currency": "AUD",
     "sample": true
   },
@@ -44,7 +44,7 @@ export const SAMPLE_COMPANIES: readonly SampleCompany[] = [
     "name": "JB Hi-Fi",
     "ticker": "JBH",
     "exchange": "ASX",
-    "sector": "Retail",
+    "sector": "retail",
     "currency": "AUD",
     "sample": true
   },
@@ -53,7 +53,7 @@ export const SAMPLE_COMPANIES: readonly SampleCompany[] = [
     "name": "Cochlear",
     "ticker": "COH",
     "exchange": "ASX",
-    "sector": "Medical devices",
+    "sector": "healthcare",
     "currency": "AUD",
     "sample": true
   }

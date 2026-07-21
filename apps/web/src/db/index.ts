@@ -10,8 +10,17 @@ export {
   createCompany,
   getCompany,
   listCompanies,
+  updateCompanyDetails,
+  type CompanyDetailsEdit,
   type NewCompany
 } from './companies';
+export {
+  isSectorId,
+  normaliseSector,
+  SECTOR_IDS,
+  SECTOR_LABELS,
+  type SectorId
+} from './sectors';
 export { listStatements, upsertStatement, upsertStatements, type StatementWrite } from './statements';
 export { getPrice, putPrice, type PriceWrite } from './prices';
 export { getThesis, putThesisDraft, saveThesisVersion, type ThesisVersionWrite } from './theses';

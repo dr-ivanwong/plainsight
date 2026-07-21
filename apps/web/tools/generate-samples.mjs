@@ -26,13 +26,18 @@ const outFile = join(here, '..', 'src', 'features', 'library', 'sampleData.ts');
  * trio retired when the owner scoped the product ASX-first; the same day the
  * owner amended the depth rule so the four six-year ASX fixtures join CSL's
  * ten, sparklines showing the years each fixture actually carries.
+ *
+ * Sectors are ids from the pinned vocabulary (data-model spec §12, the
+ * sample-mapping call): the descriptive strings the samples once carried
+ * retired with the grouped library; nuance like "medical devices" belongs in
+ * a thesis, not a label.
  */
 const SAMPLE_SET = [
-  { file: 'csl.json', id: 'sample-csl', sector: 'Healthcare' },
-  { file: 'wes.json', id: 'sample-wesfarmers', sector: 'Conglomerate' },
-  { file: 'wow.json', id: 'sample-woolworths', sector: 'Consumer staples' },
-  { file: 'jbh.json', id: 'sample-jb-hi-fi', sector: 'Retail' },
-  { file: 'coh.json', id: 'sample-cochlear', sector: 'Medical devices' }
+  { file: 'csl.json', id: 'sample-csl', sector: 'healthcare' },
+  { file: 'wes.json', id: 'sample-wesfarmers', sector: 'retail' },
+  { file: 'wow.json', id: 'sample-woolworths', sector: 'retail' },
+  { file: 'jbh.json', id: 'sample-jb-hi-fi', sector: 'retail' },
+  { file: 'coh.json', id: 'sample-cochlear', sector: 'healthcare' }
 ];
 
 const STATEMENT_KINDS = ['income', 'balance', 'cashflow'];

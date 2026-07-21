@@ -14,7 +14,7 @@ import { MetricCard, type HistoryEntry } from '../../components/MetricCard';
 import { RedFlagBanner } from '../../components/RedFlagBanner';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { okPoints, type SparkPoint } from '../../components/Sparkline';
-import { db, setMeta } from '../../db';
+import { db, SECTOR_LABELS, setMeta } from '../../db';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
 import * as buttons from '../../styles/buttons.css';
@@ -76,7 +76,13 @@ export function Dashboard({
   // The cards-or-table choice persists beside the theme preference.
   const tableViewRow = useLiveQuery(() => db.meta.get('dashboardTableView'), []);
   const view: 'cards' | 'table' = tableViewRow?.value === true ? 'table' : 'cards';
-  const hero = [company.sector, report.latestFy, company.currency]
+  // The sector shows its section label; the descriptive free string retired
+  // with the vocabulary (data-model spec §12).
+  const hero = [
+    company.sector === undefined ? undefined : SECTOR_LABELS[company.sector],
+    report.latestFy,
+    company.currency
+  ]
     .filter((part): part is string => typeof part === 'string' && part !== '')
     .join(' · ');
   const priceIsStale =
