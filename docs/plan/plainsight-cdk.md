@@ -101,7 +101,7 @@ Snapshot tests exist for `StaticSite` and `Data` only (the stacks where unnotice
 - **On manual dispatch (`gh workflow run infra --ref main`):** the identical deploy of current main. *(Added 2026-07-20: the stacks bundle `apps/api` and the packages at deploy time, but only infra paths trigger the merge deploy, so a bundled-handler change that touched no infra path does not ship until the next infra change lands. Manual dispatch is the deliberate lever to ship one; dispatched on main, the OIDC subject is the trusted `ref:refs/heads/main`.)*
 - **Weekly drift job:** scheduled `cdk diff` against prod; a non-empty diff opens an issue. Console-clicked infrastructure is technical debt from the moment it's created; this is the tripwire.
 
-Rollback: stacks are small, so rollback = redeploy the previous git ref (< 5 min). Stateful stacks change rarely and behind the approval gate; data-loss-capable operations are structurally blocked by RETAIN + deletion protection.
+Rollback: stacks are small, so rollback = redeploy the previous git ref (< 5 min). Stateful stacks change rarely, and data-loss-capable operations are structurally blocked by RETAIN + deletion protection (the approval gate is gone, per the amendment above; this line lagged it until 2026-07-20).
 
 ## 8. Cost guardrails as code
 

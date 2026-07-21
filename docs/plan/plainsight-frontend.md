@@ -180,7 +180,7 @@ Any component crossing ~8 props triggers the design review per main plan §5.
 | `useRedFlags(companyId)` | S3 | calc-engine rules + `flagDismissals` |
 | `useThesis(companyId)` | S8 | Dexie live query + version writes |
 | `useComparison(ids)` | S7 | `useMetrics` fan-out + P-7 currency check |
-| `useExtractionJob(jobId)` | S6 | client-direct: in-page job runner; proxy: polling `GET /v1/extractions/:id` |
+| `useExtractionJob(jobId)` | S6 | client-direct: in-page job runner; proxy: polling `GET /v1/extractions/:id` (server-ready; the client proxy path is pending, recorded 2026-07-20) |
 | `useProviderKeys()` | S10, S12 | `providerCredentials` table (never leaves device) |
 | `useStorageStatus()` | S11, quota banner | `navigator.storage` persist/estimate |
 | `useOnlineStatus()` | offline pill, feature-hiding | `navigator.onLine` + listener |

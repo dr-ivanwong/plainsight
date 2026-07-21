@@ -1,6 +1,6 @@
 # Runbook
 
-Operational procedures for the deployed backend (backend spec §11 schedules this document with the first Phase 2 deploy; it is the risk register's bus-factor mitigation). One calming fact frames everything here: the client needs none of it to function. A total backend outage degrades the app to its fully working offline core (the binding constraint), so no procedure on this page is ever urgent.
+Operational procedures for the deployed backend (backend spec §11 schedules this document with the first Phase 2 deploy; it is the risk register's bus-factor mitigation). One calming fact frames everything here: a backend outage never interrupts the owner's work. The backend is the source of truth (main plan §12.9), but the client works offline against its synchronised copy and retries every write until the server accepts it, so an outage costs catch-up time, not work; the procedures here matter, and almost none of them are urgent.
 
 Written for the owner-operator. Commands assume the repository root, AWS credentials for the one account (ADR 0001), and the `ap-southeast-2` region. Angle-bracketed values come from stack outputs (`aws cloudformation describe-stacks --stack-name <stack> --query 'Stacks[0].Outputs'`).
 
@@ -20,7 +20,7 @@ The one-time sequence, which is also the first run of the rebuild drill below. T
    ```
 
 5. **Set the GitHub repository variables** from the outputs so the pipelines activate (details in the [infra README](../infra/README.md)): `AWS_DEPLOY_ROLE_ARN`, `AWS_SITE_DEPLOY_ROLE_ARN`, `SITE_BUCKET`, `DISTRIBUTION_ID`, and optionally `SITE_ORIGIN`.
-6. **Ship the app shell**: push to main (or re-run the app workflow); from here on, infra changes ride `infra.yml` with the one-click environment gate on the stateful stacks.
+6. **Ship the app shell**: push to main (or re-run the app workflow); from here on, infra changes ride `infra.yml`. (The one-click gate on the stateful stacks was removed 2026-07-18 by owner decision; the structural protections carry the load, cdk spec §7 as amended.)
 7. **Subscribe an email** to the `AlertTopicArn` output; the DLQ, sweep, budget, and anomaly alarms all land there.
 8. **Activate the cost-allocation tag** once the first tagged spend appears in Billing (the key only becomes activatable after it first lands, and activation reaches filters within a day): `aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=project,Status=Active`. The budget and the anomaly monitor are tag-scoped on the shared account (ADR 0001 amendment) and measure nothing until this runs.
 9. **A day after activation, verify the scoping bites**, one call per key form. The two services disagree on tag-key shape (Budgets wants `user:project`, Cost Explorer expressions the bare `project`; both forms are pinned in code and test), and a wrong key fails silent by matching nothing, so trust neither until each has matched real spend:
@@ -116,7 +116,7 @@ The user pool deployed with `features.auth` (flipped 2026-07-18) through the sta
      --username you@example.com --password '...' --permanent
    ```
 
-3. **Sign-in lives at** `<HostedUiBaseUrl>`; nothing in the app links to it yet. The client wiring and the sync routes are the next slices, and the Cognito authoriser attaches to routes as they arrive (backend spec §2 route table).
+3. **Sign-in lives at** `<HostedUiBaseUrl>`, and in the app at Settings → Sign in. The client wiring and the sync routes landed 2026-07-18, and the Cognito authoriser guards exactly the routes the backend spec §2 table flags.
 
 ## Rebuild from zero (the drill)
 

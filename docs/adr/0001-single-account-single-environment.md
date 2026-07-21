@@ -15,7 +15,7 @@ Run one AWS account with one environment (`prod`). No Organizations, no SCPs, no
 - **CI-blocking invariant tests + cdk-nag**: security posture enforced structurally, not by a reviewer's memory.
 - **IAM permission boundary** on the OIDC deploy role, standing in for SCPs.
 - **Ephemeral rehearsal stacks** (`--context env=rehearsal`): a prefixed throwaway copy deployed for a day when a change deserves rehearsal, then destroyed.
-- **GitHub environment gate** (one click) on changes touching the stateful `Data`/`Auth` stacks; PITR + RETAIN + deletion protection on stateful resources.
+- **GitHub environment gate** (one click) on changes touching the stateful `Data`/`Auth` stacks *(retired 2026-07-18; second amendment below)*; PITR + RETAIN + deletion protection on stateful resources.
 
 ## Alternatives considered
 
@@ -42,3 +42,15 @@ At go-live the account (679345828813) turned out to carry the owner's other proj
 Revisit toward a dedicated account if the tenants multiply, the free-tier contention materialises on a bill, or any tenant's blast radius reaches another in practice.
 
 **Full argument:** [plan/plainsight-cdk.md](../plan/plainsight-cdk.md) §2, §9.6.
+
+## Amendment: the environment gate is retired (2026-07-18, recorded 2026-07-20)
+
+The fifth compensating control above, the one-click gate on stateful-stack deploys, was built with the Auth stack, exercised twice, and removed the same day by owner decision: a gate that the sole operator always clicks themselves protects nothing and adds a pause to every `Data`/`Auth` deploy. What carries the load instead:
+
+- **The structural protections on the stateful stacks**: RETAIN, deletion protection, and PITR, so data-loss-capable operations are blocked by construction rather than by review.
+- **The CI-blocking invariant suite and cdk-nag**, unchanged, plus the weekly drift check.
+- **The deploy role's trust**: exactly pushes to `main` of this repository. (The `environment:*` trust subject the gate needed was dropped on 2026-07-20 once nothing legitimate used it.)
+
+Two facts recorded plainly rather than implied. First, `main` carries no branch protection (verified 2026-07-20), so the effective control on what reaches the deploy role is that only the owner can push to this repository: the single-user posture, priced here with eyes open, and the first thing to change if anyone else ever gets push access. Second, the Context paragraph's insurance ("a bad backend deploy... cannot break the app or touch on-device data") describes the local-first era; since the backend became the source of truth (main plan §12.9), that insurance is instead the client's synchronised working copy, its retry-until-accepted writes, and the structural protections above.
+
+This amendment also settles the question the 2026-07-19 review posed as a plan tension: no human checkpoint exists on stateful deploys, deliberately, and this document now says so in the same breath as what replaced it.

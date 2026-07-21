@@ -1,7 +1,8 @@
 /**
  * The Dexie database: version 1 of the pinned client storage schema
- * (data-model spec §9). IndexedDB is the source of truth, not a cache; every
- * table's record shape is validated on read by records.ts via safeRead.ts.
+ * (data-model spec §9). IndexedDB holds the synchronised working copy; the
+ * backend is the source of truth (main plan §12.9), and every table's record
+ * shape is validated on read by records.ts via safeRead.ts.
  *
  * Indexes are deliberately minimal: the library sorts companies by updatedAt,
  * per-company lookups go through companyId, and everything else queries by
