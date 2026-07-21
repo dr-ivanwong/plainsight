@@ -42,11 +42,16 @@ describe('the settings root', () => {
     );
   });
 
-  it('offers sign-in while signed out, and everything still works without it', async () => {
+  it('offers sign-in while signed out, with the source-of-truth wording', async () => {
     renderAt('/settings');
     expect(await screen.findByRole('heading', { name: 'Sync' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeVisible();
-    expect(screen.getByText(/works on this device without it/)).toBeVisible();
+    // The note tells the §12.9 truth: the device holds a working copy, the
+    // durable copy is behind sign-in. The old "nothing needs it" soft-pedal
+    // must not resurface.
+    const note = screen.getByText(/works on this device's copy without it/);
+    expect(note).toHaveTextContent(/durable copy on the server/);
+    expect(note).not.toHaveTextContent(/keep each other in step/);
   });
 
   it('shows who is signed in and signs out to the signed-out row', async () => {

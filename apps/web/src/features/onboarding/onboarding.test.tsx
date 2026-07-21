@@ -39,7 +39,7 @@ describe('first run', () => {
     await screen.findByRole('heading', { name: PANE_ONE });
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(await screen.findByRole('heading', { name: 'Your data lives here' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Where your data lives' })).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(await screen.findByRole('heading', { name: 'Choose your start' })).toBeVisible();
@@ -47,6 +47,23 @@ describe('first run', () => {
     expect(screen.getByRole('button', { name: 'Add a company' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'See it with sample data' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Import a file' })).toBeVisible();
+  });
+
+  it('pane two states the source-of-truth contract, not the superseded one', async () => {
+    renderAt('/onboarding');
+    await screen.findByRole('heading', { name: PANE_ONE });
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await screen.findByRole('heading', { name: 'Where your data lives' });
+
+    // The current contract (main plan section 12.9): the app works offline
+    // against a device copy, the durable copy lives behind sign-in, and
+    // export is portability. This pin exists because the previous copy
+    // ("no account and no server") outlived the architecture by a day.
+    const body = screen.getByText(/works offline against a copy kept on this device/);
+    expect(body).toHaveTextContent(/durable home on the server/);
+    expect(body).toHaveTextContent(/exports the whole library/);
+    expect(body).not.toHaveTextContent(/no account and no server/);
+    expect(body).not.toHaveTextContent(/nothing leaves without you/i);
   });
 
   it('choosing to import a file carries the intent through the add sheet to the upload picker', async () => {

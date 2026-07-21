@@ -43,7 +43,7 @@ Format per screen: purpose → key elements → states. Design language per main
 
 ### S1: First-run (onboarding)
 
-Three panes, hard-capped, skippable, never shown twice (flag in `meta`), re-openable from S9 → About. Pane 1: what this is (read statements like an owner, one paragraph, no feature tour). Pane 2: where your data lives (on this device, exportable anytime, nothing leaves without you). Pane 3: choose your start. **"Add a company"** / **"See it with sample data"** / "Import a file" (Phase 3+, hidden before). Exit lands on S2 in the corresponding state.
+Three panes, hard-capped, skippable, never shown twice (flag in `meta`), re-openable from S9 → About. Pane 1: what this is (read statements like an owner, one paragraph, no feature tour). Pane 2: where your data lives (a working copy on this device so the app works offline; sign-in gives the library its durable home on the server and offline work catches up; exportable anytime; amended 2026-07-20 to the source-of-truth posture, main plan §12.9, superseding the on-device-only wording, and the copy claims are pinned by test). Pane 3: choose your start. **"Add a company"** / **"See it with sample data"** / "Import a file" (Phase 3+, hidden before). Exit lands on S2 in the corresponding state.
 
 ### S2: Library
 
@@ -124,7 +124,7 @@ Four structured sections (business / moat / valuation / what kills it), distract
 
 ### S9: Settings root
 
-Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **Sync** (signed out: a sign-in row stating plainly that nothing needs it, online-only; signed in: the email, a sign-out, and the quiet sync line: the last-synced time, or the live count of changes waiting to sync while local writes await the server (main plan §12.9: pending is surfaced, never silently equal); the hosted UI does the password handling, and the session lives in device-local meta outside the export allowlist. Amendments 2026-07-18 with the Phase 3 sign-in slice and the server-wins reconciliation slice), **About** (version, licences, replay onboarding).
+Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **Sync** (signed out: a sign-in row stating plainly that the app works on the device copy while the durable copy needs sign-in, online-only (amended 2026-07-20, main plan §12.9; previously "nothing needs it", the local-first wording); signed in: the email, a sign-out, and the quiet sync line: the last-synced time, or the live count of changes waiting to sync while local writes await the server (main plan §12.9: pending is surfaced, never silently equal); the hosted UI does the password handling, and the session lives in device-local meta outside the export allowlist. Amendments 2026-07-18 with the Phase 3 sign-in slice and the server-wins reconciliation slice), **About** (version, licences, replay onboarding).
 
 ### S10: Settings → Providers (BYOK)
 

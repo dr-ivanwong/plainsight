@@ -23,11 +23,15 @@ const PANES = [
       'traceable to the exact figures you entered. It explains; it never advises.'
   },
   {
-    heading: 'Your data lives here',
+    // The source-of-truth contract (main plan §12.9): a working copy on the
+    // device, the durable copy behind sign-in, export as portability. A test
+    // pins these claims so the copy cannot quietly outlive the architecture
+    // again.
+    heading: 'Where your data lives',
     body:
-      'Everything you enter stays on this device, no account and no server, and the app works ' +
-      'fully offline. When you want a copy or a move, one tap exports the whole library to a ' +
-      'file. Nothing leaves without you.'
+      'The app works offline against a copy kept on this device. Signing in, from Settings, ' +
+      'gives the library its durable home on the server, and anything entered offline catches ' +
+      'up when you reconnect. One tap exports the whole library to a file, any time.'
   },
   {
     heading: 'Choose your start',

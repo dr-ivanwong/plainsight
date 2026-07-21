@@ -112,8 +112,8 @@ export function SettingsScreen(): ReactElement {
             <div className={styles.rowText}>
               <span className={styles.rowLabel}>Sign in</span>
               <span className={styles.rowNote}>
-                Everything works on this device without it; signing in lets your devices keep
-                each other in step.
+                The app works on this device&apos;s copy without it; signing in keeps the durable
+                copy on the server and catches this device up.
               </span>
             </div>
             {navigator.onLine ? (
