@@ -108,6 +108,38 @@ describe('S3 buckets (spec §6: BLOCK_ALL + encryption + versioning)', () => {
   });
 });
 
+describe('Lambda functions (spec §6 universals: timeout, ARM64, retained logs)', () => {
+  it('every function in every stack declares its timeout, runtime, ARM64, and 30-day log group', () => {
+    const functionsPerStack: Record<string, number> = {};
+    for (const [stackName, template] of Object.entries(templates)) {
+      const resources: Record<string, { Type: string; Properties?: any }> =
+        template.toJSON().Resources ?? {};
+      for (const [logicalId, resource] of Object.entries(resources)) {
+        if (resource.Type !== 'AWS::Lambda::Function') continue;
+        functionsPerStack[stackName] = (functionsPerStack[stackName] ?? 0) + 1;
+        const where = `${stackName}/${logicalId}`;
+        const props = resource.Properties ?? {};
+        // A template only carries Timeout when it was set explicitly, so
+        // presence is the proof the 3-second default was never relied on.
+        expect(props.Timeout, `${where} must declare its timeout`).toEqual(expect.any(Number));
+        expect(props.Architectures, `${where} must run on ARM64`).toEqual(['arm64']);
+        expect(props.Runtime, `${where} must run the pinned runtime`).toBe('nodejs22.x');
+        // The function must name its own log group, in this template, kept
+        // 30 days: a raw function left on default infinite retention (or on
+        // the legacy custom-resource retention) fails right here.
+        const reference = props.LoggingConfig?.LogGroup?.Ref;
+        expect(reference, `${where} must name its own log group`).toBeDefined();
+        const logGroup = resources[reference];
+        expect(logGroup?.Type, `${where} log group`).toBe('AWS::Logs::LogGroup');
+        expect(logGroup?.Properties?.RetentionInDays, `${where} log retention`).toBe(30);
+      }
+    }
+    // The whole fleet, closed: a function appearing in any other stack, or a
+    // stack growing one, is a deliberate decision, exactly like the buckets.
+    expect(functionsPerStack).toEqual({ Foundation: 1, Ingestion: 3, Api: 9 });
+  });
+});
+
 describe('zero compute with every feature off (the Phase 0/1 posture, spec §1.2)', () => {
   it.each(Object.keys(featuresOffTemplates))('%s contains no Lambda functions', (name) => {
     const template = featuresOffTemplates[name] as Template;
@@ -709,6 +741,18 @@ describe('Auth stack (spec §3: single admin-created user, no signup, hosted UI)
     ]);
     expect(client.Properties.LogoutURLs).toEqual(client.Properties.CallbackURLs);
     expect(client.Properties.PreventUserExistenceErrors).toBe('ENABLED');
+  });
+
+  it('accepts the default token lifetimes, deliberately', () => {
+    // 60-minute access and id tokens, 30-day refresh: the Cognito defaults,
+    // relied on rather than overridden (one seat, hosted UI, quiet refresh;
+    // the stack comment records the same call). This pin makes the absence
+    // read as a decision: adding explicit lifetimes is a posture change to
+    // make loudly, not a tidy-up.
+    expect(client.Properties.AccessTokenValidity).toBeUndefined();
+    expect(client.Properties.IdTokenValidity).toBeUndefined();
+    expect(client.Properties.RefreshTokenValidity).toBeUndefined();
+    expect(client.Properties.TokenValidityUnits).toBeUndefined();
   });
 
   it('adds no compute and no custom resources (identity, not behaviour)', () => {

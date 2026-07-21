@@ -96,6 +96,11 @@ export class AuthStack extends Stack {
     // The SPA client: public (no secret), authorisation-code flow only, and
     // redirects pinned to the deployed origin plus the local dev server. The
     // client slice narrows these to the exact callback route when it lands.
+    // Token lifetimes are deliberately left at the Cognito defaults (60-minute
+    // access and id tokens, 30-day refresh): one seat, hosted UI, and the
+    // client refreshes quietly, so shorter lifetimes buy nothing here. An
+    // invariant test records the absence as this decision; setting explicit
+    // lifetimes is a posture change, not a tidy-up.
     const callbackUrls = [config.siteOrigin, 'http://localhost:5173'];
     this.webClient = this.userPool.addClient('WebClient', {
       userPoolClientName: 'plainsight-web',
