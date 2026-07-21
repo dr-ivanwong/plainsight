@@ -27,6 +27,7 @@
 15. **UI-3 is fixed, and plan tension 6 dissolved.** Both pinned storage-pressure states are built. The entry screen now carries a proactive quota-low banner at a four-fifths usage threshold (main plan §14's "before writes begin failing"): non-blocking, an export link, never a modal. A 30-day export nudge, off a pure `exportOverdue` boundary, shows on the data screen and the settings root, both gated on a non-empty library so a fresh install is never nagged (commit `f83e4a1`). The tension I flagged, whether §12.9 demoted these states, turned out already settled: §14 was amended for §12.9 and deliberately kept both mitigations (re-download is friction, unsynced edits are real), so no spec decision moved. Verified live in the browser; the pressure path is pinned by mocked-estimate tests since a real quota cannot be filled in a browser.
 16. **X-2 is fixed, and plan tension 4 is settled.** One documentation commit sweeps every drift instance the finding named into agreement with the 2026-07-18 decisions (commit `ac9bea7`): the README front door, the runbook framing and its gate and next-slices references, the main plan §7 gate line and its epigraph (annotated, not overwritten), the cdk §7 rollback contradiction, CLAUDE.md (both gate mentions, the Zustand pin replaced with the built `useSyncExternalStore` shape, the BYOK proxy annotated server-half/client-pending for FE-9's claim), the db.ts header, and the infra README capacity (the real 15/15 + 5/5 + 5/5). ADR 0001 gains a dated amendment recording the gate's retirement and what carries the load, which settles plan tension 4: no human checkpoint exists on stateful deploys, deliberately, and the document now says so. The amendment also records plainly that `main` carries no branch protection, so the effective control is that only the owner can push, the single-user posture priced with eyes open. The instances already fixed earlier this session (session.ts with FE-2, the spec S1/S9 copy with UI-2, the ETF draft number note) were verified in place. A note added to CLAUDE.md makes its current-state paragraph part of the definition of done for any future decision pass, so this drift is less likely to recur.
 17. **FE-8's size budget is now enforced (lint half still open).** A hand-rolled, dependency-free check (`scripts/check-bundle.mjs`, the contrast-and-style-gate house pattern) gzips the built entry module and its modulepreload graph and fails CI over the pinned 180 KB ceiling; it runs after Build in ci.yml, and main plan §5 records both the mechanism and that Lighthouse CI and the TTI budget stay unenforced (commit `5052970`). The measurement corrected a review error worth noting: the true initial graph is 172.1 KB, not the 78 KB the entry chunk alone suggested (the route definitions statically reach the Dexie layer and the Zod schemas, all modulepreloaded), so the gate is load-bearing from its first run with 7.9 KB of headroom, not a formality. FE-8 stays open for its lint half: no eslint stage exists, and the deliberate install-or-record decision is still owed. This does not change the open counts.
+18. **X-3 is fixed.** The infra Vitest config now sets `testTimeout: 120_000`, so the synth-heavy snapshot and cdk-nag tests (6 to 9 seconds cold, past the old 5-second default) no longer flake on a cold cache, which matters because `pnpm -r test` gates every web deploy (commit `23aa2e3`). The ceiling can only prevent a flake, never cause one; a truly cold CI runner cannot be reproduced locally, so the fix's value is that the budget now exists.
 
 ---
 
@@ -68,7 +69,7 @@ Evidence-backed, not aspirational:
 
 ## 3. Findings at a glance
 
-41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5, FE-6, BE-6, UI-2, UI-3 and X-2 fixed, and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 1 P1, 9 P2, 15 P3.
+41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5, FE-6, BE-6, UI-2, UI-3, X-2 and X-3 fixed (plus FE-8's size half), and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 1 P1, 9 P2, 14 P3.
 
 | Code | Sev | Finding |
 |---|---|---|
@@ -101,7 +102,7 @@ Evidence-backed, not aspirational:
 | INFRA-4 | P2 (fixed) | Dead `environment:*` OIDC trust subject survives the retired gate; any workflow environment on any ref can assume the deploy role. Fixed 2026-07-20 (`a6126ab`) |
 | INFRA-5 | P2 | Canonical ASX extraction spend is reachable unauthenticated once keys land; cdk spec §8's Cognito sentence is half-true |
 | INFRA-6 | P2 | CloudFront invalidation grant is account-wide, justified by a pre-amendment single-tenant claim |
-| X-3 | P3 | Infra test suite has no timeout budget; three synth-heavy tests flake on a cold cache at the 5-second default |
+| X-3 | P3 (fixed) | Infra test suite has no timeout budget; three synth-heavy tests flake on a cold cache at the 5-second default. Fixed 2026-07-22 (`23aa2e3`) |
 | BE-7 | P3 | Idempotency records globally keyed and unconditionally overwritten; user scoping only on read |
 | BE-8 | P3 | LWW tiebreak can order exotic deviceIds differently in JS and DynamoDB; constrain the charset |
 | BE-9 | P3 | One schema-failing year aborts a whole ingest instead of quarantining; a stale DOC# cache row can wedge a ticker |
@@ -143,7 +144,9 @@ The source-of-truth migration (main plan §12.9) and the same-day gate retiremen
 
 **Direction:** one documentation commit sweeping all of the above, plus an ADR 0001 amendment (or ADR 0005) recording the gate's retirement and what carries the load. The user-facing instance is UI-2. Consider adding CLAUDE.md's current-state paragraph to the definition of done for any future decision pass.
 
-### X-3 · P3 · The infra suite has no timeout budget
+### X-3 · P3 (fixed) · The infra suite has no timeout budget
+
+*Fixed 2026-07-22 (`23aa2e3`): `infra/vitest.config.ts` sets `testTimeout: 120_000`, the generous ceiling the direction asked for, with a comment recording that synth runs 6 to 9 seconds cold. A timeout can only prevent the flake, never cause one. The original finding follows.*
 
 At this commit, a cold-cache `pnpm -r test` fails: the two snapshot tests and the all-stacks cdk-nag test each exceed Vitest's default 5-second timeout (they synthesise the full app and bundle handlers; 6–9 seconds observed cold, all 75 tests green warm). `infra/vitest.config.ts` sets no `testTimeout`. CI is currently green because runners squeak under, but `pnpm -r test` gates every web deploy via ci.yml, so the margin is noise-thin. **Direction:** an explicit generous `testTimeout` (synth deserves 120 s) in the infra Vitest config.
 
@@ -391,7 +394,7 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 5. **Make uploads honest before they are used (all done): BE-2 `4288746`, BE-5 `9f68456`, FE-5 `58be7b5`, FE-6 `d289b98`, BE-6 `ae42567`.** Gates in the worker, quota refunds plus the runbook reset, user-only known-zero minting, the atomic review save, and the upload/proxy spec amendments (keep-source removed by owner decision, the rest recorded as staging) are all landed.
 6. **Close the pipeline's own gaps (INFRA-2 done `97d407b`; INFRA-3 done `36e4a4f`; INFRA-4 done `a6126ab`).** The read-only diff role landed, so the diff-is-the-review control can run once its variable is set; the anomaly monitor now watches a tag key that exists, with the chain-firing written up as a runbook drill; and the deploy role has shed the retired gate's `environment:*` trust. The pipeline-gaps group is closed.
 7. **One documentation commit (done `ac9bea7`).** X-2 swept every drift instance into agreement, FE-9's claim was annotated server-half/client-pending in the same pass, and plan tensions 4, 5, and 6 are all settled (4 with X-2, 5 with UI-2's `6989e57`, 6 with UI-3's `f83e4a1`). The only wake left is FE-9's client half itself, which is code, not documentation.
-8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Size-limit on the shell landed 2026-07-22 (`5052970`, FE-8's size half). What remains: the infra test timeout (X-3), FE-8's lint decision (install or record), the migration upgrade-fixture pattern (FE-10), and the all-stacks Lambda sweep (INFRA-7).
+8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Size-limit on the shell landed 2026-07-22 (`5052970`, FE-8's size half), and the infra test timeout landed the same day (`23aa2e3`, X-3). What remains: FE-8's lint decision (install or record), the migration upgrade-fixture pattern (FE-10), and the all-stacks Lambda sweep (INFRA-7).
 
 Then the queue is what it already was: the owner actions (alert email, cost tag, the bake-off and ladder pinning, the ASX interpretation-notes review, account creation) and, when ready, pinning or parking the three direction drafts. The remaining P2/P3 findings (UI-4 through UI-10, BE-7 through BE-9, FE-7, FE-11, INFRA-5, INFRA-6, INFRA-8) slot naturally into the files each touches as that work lands.
 
