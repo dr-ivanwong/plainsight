@@ -28,6 +28,7 @@
 16. **X-2 is fixed, and plan tension 4 is settled.** One documentation commit sweeps every drift instance the finding named into agreement with the 2026-07-18 decisions (commit `ac9bea7`): the README front door, the runbook framing and its gate and next-slices references, the main plan §7 gate line and its epigraph (annotated, not overwritten), the cdk §7 rollback contradiction, CLAUDE.md (both gate mentions, the Zustand pin replaced with the built `useSyncExternalStore` shape, the BYOK proxy annotated server-half/client-pending for FE-9's claim), the db.ts header, and the infra README capacity (the real 15/15 + 5/5 + 5/5). ADR 0001 gains a dated amendment recording the gate's retirement and what carries the load, which settles plan tension 4: no human checkpoint exists on stateful deploys, deliberately, and the document now says so. The amendment also records plainly that `main` carries no branch protection, so the effective control is that only the owner can push, the single-user posture priced with eyes open. The instances already fixed earlier this session (session.ts with FE-2, the spec S1/S9 copy with UI-2, the ETF draft number note) were verified in place. A note added to CLAUDE.md makes its current-state paragraph part of the definition of done for any future decision pass, so this drift is less likely to recur.
 17. **FE-8's size budget is now enforced (lint half still open).** A hand-rolled, dependency-free check (`scripts/check-bundle.mjs`, the contrast-and-style-gate house pattern) gzips the built entry module and its modulepreload graph and fails CI over the pinned 180 KB ceiling; it runs after Build in ci.yml, and main plan §5 records both the mechanism and that Lighthouse CI and the TTI budget stay unenforced (commit `5052970`). The measurement corrected a review error worth noting: the true initial graph is 172.1 KB, not the 78 KB the entry chunk alone suggested (the route definitions statically reach the Dexie layer and the Zod schemas, all modulepreloaded), so the gate is load-bearing from its first run with 7.9 KB of headroom, not a formality. FE-8 stays open for its lint half: no eslint stage exists, and the deliberate install-or-record decision is still owed. This does not change the open counts.
 18. **X-3 is fixed.** The infra Vitest config now sets `testTimeout: 120_000`, so the synth-heavy snapshot and cdk-nag tests (6 to 9 seconds cold, past the old 5-second default) no longer flake on a cold cache, which matters because `pnpm -r test` gates every web deploy (commit `23aa2e3`). The ceiling can only prevent a flake, never cause one; a truly cold CI runner cannot be reproduced locally, so the fix's value is that the budget now exists.
+19. **INFRA-7 is fixed.** An all-stacks Lambda sweep, beside the bucket sweep it mirrors, asserts the §6 universals over every function in every template: explicit timeout, ARM64, the pinned `nodejs22.x` runtime, and its own log group at 30-day retention, so the retention gap the finding named (a raw function elsewhere on default infinite retention passing) now fails by name; it closes on the fleet as a set (`Foundation: 1, Ingestion: 3, Api: 9`). The token-lifetimes half is recorded, not changed: a comment in `auth.ts` states the call (Cognito defaults relied on at one seat) and a test pins the absence of explicit validity, so the defaults read as a decision and adding lifetimes becomes a loud change (commit `2d6b166`). No spec moved.
 
 ---
 
@@ -69,7 +70,7 @@ Evidence-backed, not aspirational:
 
 ## 3. Findings at a glance
 
-41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5, FE-6, BE-6, UI-2, UI-3, X-2 and X-3 fixed (plus FE-8's size half), and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 1 P1, 9 P2, 14 P3.
+41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5, FE-6, BE-6, UI-2, UI-3, X-2, X-3 and INFRA-7 fixed (plus FE-8's size half), and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 1 P1, 9 P2, 13 P3.
 
 | Code | Sev | Finding |
 |---|---|---|
@@ -112,7 +113,7 @@ Evidence-backed, not aspirational:
 | UI-8 | P3 | Motion deviations unrecorded: pinned card stagger unimplemented; first-run reduced-motion replays translate keyframes |
 | UI-9 | P3 | Light mode's segmented control has no visible selection pill (both surfaces are white) |
 | UI-10 | P3 | Token strays: freestyle letter-spacing, tracking at an unpinned size, hard-coded switch geometry and min-widths |
-| INFRA-7 | P3 | Invariant sweep gaps: log retention asserted only for the Api stack's functions; Cognito token lifetimes unpinned |
+| INFRA-7 | P3 (fixed) | Invariant sweep gaps: log retention asserted only for the Api stack's functions; Cognito token lifetimes unpinned. Fixed 2026-07-22 (`2d6b166`) |
 | INFRA-8 | P3 | `localhost:5173` baked into prod Cognito callbacks and uploads CORS, unrecorded |
 
 ---
@@ -350,7 +351,9 @@ The financials route is deliberately unauthenticated (pinned: import works signe
 
 Ingest and extract roles hold `cloudfront:CreateInvalidation` on `distribution/*`, acknowledged as safe because "the account has exactly one distribution", written before ADR 0001's amendment recorded the account as shared with other tenants whose distributions this grant could invalidate (`infra/lib/stacks/ingestion.ts:99-129, 269-274`). **Direction:** scope with a resource-tag condition (verify the action supports it), or at minimum correct the acknowledgement to price the cross-tenant reach honestly.
 
-### INFRA-7 · P3 · Invariant sweep gaps against the cdk spec §6 universals
+### INFRA-7 · P3 (fixed) · Invariant sweep gaps against the cdk spec §6 universals
+
+*Fixed 2026-07-22 (`2d6b166`): the all-stacks sweep the direction asked for now asserts timeout, ARM64, runtime, and own-log-group-at-30-days over every function in every template, closing on the fleet as a set, so the retention gap fails by name. The Cognito token lifetimes are recorded rather than pinned to new values: a stack comment and a pinned-absence test make the defaults a decision. The original finding follows.*
 
 "Every Lambda: timeout, log retention, ARM64" is asserted exhaustively only for the Api stack; the ingestion functions get sizing and tracing checks but no retention assertion, the flipper none; a future raw function with default infinite retention would pass. Cognito token lifetimes are unpinned in code and test (60-minute access, 30-day refresh defaults): defensible at one seat, worth pinning or recording. **Direction:** one all-stacks sweep test in the shape the bucket sweep already uses.
 
@@ -394,7 +397,7 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 5. **Make uploads honest before they are used (all done): BE-2 `4288746`, BE-5 `9f68456`, FE-5 `58be7b5`, FE-6 `d289b98`, BE-6 `ae42567`.** Gates in the worker, quota refunds plus the runbook reset, user-only known-zero minting, the atomic review save, and the upload/proxy spec amendments (keep-source removed by owner decision, the rest recorded as staging) are all landed.
 6. **Close the pipeline's own gaps (INFRA-2 done `97d407b`; INFRA-3 done `36e4a4f`; INFRA-4 done `a6126ab`).** The read-only diff role landed, so the diff-is-the-review control can run once its variable is set; the anomaly monitor now watches a tag key that exists, with the chain-firing written up as a runbook drill; and the deploy role has shed the retired gate's `environment:*` trust. The pipeline-gaps group is closed.
 7. **One documentation commit (done `ac9bea7`).** X-2 swept every drift instance into agreement, FE-9's claim was annotated server-half/client-pending in the same pass, and plan tensions 4, 5, and 6 are all settled (4 with X-2, 5 with UI-2's `6989e57`, 6 with UI-3's `f83e4a1`). The only wake left is FE-9's client half itself, which is code, not documentation.
-8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Size-limit on the shell landed 2026-07-22 (`5052970`, FE-8's size half), and the infra test timeout landed the same day (`23aa2e3`, X-3). What remains: FE-8's lint decision (install or record), the migration upgrade-fixture pattern (FE-10), and the all-stacks Lambda sweep (INFRA-7).
+8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Landed 2026-07-22: size-limit on the shell (`5052970`, FE-8's size half), the infra test timeout (`23aa2e3`, X-3), and the all-stacks Lambda sweep (`2d6b166`, INFRA-7). What remains: FE-8's lint decision (install or record) and the migration upgrade-fixture pattern (FE-10).
 
 Then the queue is what it already was: the owner actions (alert email, cost tag, the bake-off and ladder pinning, the ASX interpretation-notes review, account creation) and, when ready, pinning or parking the three direction drafts. The remaining P2/P3 findings (UI-4 through UI-10, BE-7 through BE-9, FE-7, FE-11, INFRA-5, INFRA-6, INFRA-8) slot naturally into the files each touches as that work lands.
 
