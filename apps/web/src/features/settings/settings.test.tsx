@@ -42,6 +42,30 @@ describe('the settings root', () => {
     );
   });
 
+  it('carries the export nudge on the Data & storage row when a copy is overdue', async () => {
+    await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+    await setMeta(db, 'lastExportAt', '2026-05-01T00:00:00.000Z');
+    renderAt('/settings');
+    expect(
+      await screen.findByText('More than 30 days since the last export.')
+    ).toBeVisible();
+  });
+
+  it('keeps the Data & storage row quiet while the library is empty', async () => {
+    renderAt('/settings');
+    await screen.findByRole('heading', { name: 'Settings' });
+    // Nothing to copy, so nothing to nudge about, even with no export ever.
+    expect(screen.queryByText(/No export taken/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the Data & storage row quiet while the copy is fresh', async () => {
+    await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+    await setMeta(db, 'lastExportAt', new Date().toISOString());
+    renderAt('/settings');
+    await screen.findByRole('heading', { name: 'Settings' });
+    expect(screen.queryByText(/More than 30 days/)).not.toBeInTheDocument();
+  });
+
   it('offers sign-in while signed out, with the source-of-truth wording', async () => {
     renderAt('/settings');
     expect(await screen.findByRole('heading', { name: 'Sync' })).toBeVisible();

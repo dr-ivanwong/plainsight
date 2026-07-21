@@ -7,6 +7,7 @@ import { SegmentedControl } from '../../components/SegmentedControl';
 import { ToggleSwitch } from '../../components/ToggleSwitch';
 import { db, setMeta, type MetaValue } from '../../db';
 import { countPendingWrites } from '../../sync/pending';
+import { exportOverdue } from './exportNudge';
 import * as styles from './settings.css';
 
 type ThemeSetting = MetaValue<'theme'>;
@@ -41,6 +42,13 @@ export function SettingsScreen(): ReactElement {
   // Pending is surfaced, never silently equal (main plan §12.9): the live
   // count of local writes the server has not accepted yet.
   const pendingWrites = useLiveQuery(() => countPendingWrites(db), [], 0);
+  // The 30-day export nudge (main plan §14), gated on a non-empty library.
+  const lastExportRow = useLiveQuery(() => db.meta.get('lastExportAt'), []);
+  const companyCount = useLiveQuery(() => db.companies.count(), [], 0);
+  const hasExported = typeof lastExportRow?.value === 'string';
+  const nudgeDue =
+    companyCount > 0 &&
+    exportOverdue(hasExported ? (lastExportRow?.value as string) : undefined, new Date());
   const sessionEmail =
     sessionRow !== undefined &&
     typeof sessionRow.value === 'object' &&
@@ -98,7 +106,18 @@ export function SettingsScreen(): ReactElement {
 
       <section className={styles.group} aria-label="Data">
         <Link to="/settings/data" className={styles.rowLink}>
-          <span className={styles.rowLabel}>Data &amp; storage</span>
+          <div className={styles.rowText}>
+            <span className={styles.rowLabel}>Data &amp; storage</span>
+            {/* The 30-day nudge's quiet face here at the root (main plan
+                §14), so it is seen without visiting the export screen. */}
+            {nudgeDue ? (
+              <span className={styles.rowNote}>
+                {hasExported
+                  ? 'More than 30 days since the last export.'
+                  : 'No export taken from this device yet.'}
+              </span>
+            ) : null}
+          </div>
           <span className={styles.chevron} aria-hidden="true">
             ›
           </span>

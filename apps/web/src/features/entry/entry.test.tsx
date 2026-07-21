@@ -6,7 +6,7 @@
 import 'fake-indexeddb/auto';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createCompany, db, setMeta, upsertStatement, type CompanyRecord } from '../../db';
 import { routeTree } from '../../routeTree.gen';
@@ -17,6 +17,22 @@ beforeEach(async () => {
   await db.open();
   await setMeta(db, 'onboardingDone', true);
 });
+
+afterEach(() => {
+  Reflect.deleteProperty(navigator, 'storage');
+});
+
+/** jsdom has no navigator.storage; give it one with a chosen fill level. */
+const stubStorageEstimate = (usage: number, quota: number): void => {
+  Object.defineProperty(navigator, 'storage', {
+    configurable: true,
+    value: {
+      estimate: async () => ({ usage, quota }),
+      persisted: async () => false,
+      persist: async () => false
+    }
+  });
+};
 
 const seedCompany = (): Promise<CompanyRecord> =>
   createCompany(db, { name: 'Apple Inc.', ticker: 'AAPL', currency: 'USD' });
@@ -36,6 +52,34 @@ function renderAt(path: string) {
 }
 
 describe('the data entry screen', () => {
+  it('surfaces storage pressure before writes begin failing, quietly', async () => {
+    // 90 of 100: past the four-fifths threshold (main plan section 14).
+    stubStorageEstimate(90, 100);
+    const company = await seedCompany();
+    await seedIncomeRow(company.id);
+    renderAt(`/company/${company.id}/entry`);
+
+    const banner = await screen.findByText(/Storage on this device is nearly full \(90% used\)/);
+    expect(banner).toBeVisible();
+    // The export prompt the state table pins: a link, never a modal.
+    expect(within(banner).getByRole('link', { name: 'Data & storage' })).toHaveAttribute(
+      'href',
+      '/settings/data'
+    );
+    // Non-blocking: the grid is still there beneath it.
+    expect(screen.getByRole('textbox', { name: 'Revenue, FY2024' })).toBeVisible();
+  });
+
+  it('stays silent about storage while there is room', async () => {
+    stubStorageEstimate(10, 100);
+    const company = await seedCompany();
+    await seedIncomeRow(company.id);
+    renderAt(`/company/${company.id}/entry`);
+
+    await screen.findByRole('textbox', { name: 'Revenue, FY2024' });
+    expect(screen.queryByText(/nearly full/)).not.toBeInTheDocument();
+  });
+
   it('asks for the first fiscal year when none exist, and keeps a draft local until a figure commits', async () => {
     const company = await seedCompany();
     renderAt(`/company/${company.id}/entry`);

@@ -27,6 +27,7 @@ import {
 import { useExtractionJob } from '../../hooks/useExtractionJob';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useProviderKeys } from '../../hooks/useProviderKeys';
+import { useStorageStatus } from '../../hooks/useStorageStatus';
 import { dismissJob, startFilingJob } from '../review/jobStore';
 import { JobStrip } from '../review/JobStrip';
 import { ReviewMode } from '../review/ReviewMode';
@@ -135,6 +136,7 @@ export function EntryScreen({
   const online = useOnlineStatus();
   const keys = useProviderKeys();
   const job = useExtractionJob(jobId);
+  const { status: storage } = useStorageStatus();
 
   const credentials = useMemo(
     () => new Map((keys ?? []).map((record) => [record.providerId, record.key])),
@@ -306,6 +308,20 @@ export function EntryScreen({
           {status === null ? '' : status.ok ? 'Saved · just now' : 'Could not save. The value was not stored.'}
         </p>
       </header>
+
+      {storage?.pressure !== true ? null : (
+        // Storage pressure (main plan §14): detected proactively and
+        // surfaced with the export prompt before writes begin failing;
+        // non-blocking, per the entry screen's state table (frontend §3).
+        <p className={styles.storageBanner}>
+          Storage on this device is nearly full (
+          {Math.round((storage.usage / storage.quota) * 100)}% used). Export a copy from{' '}
+          <Link to="/settings/data" className={styles.storageBannerLink}>
+            Data &amp; storage
+          </Link>{' '}
+          before saving starts to fail.
+        </p>
+      )}
 
       {job === undefined || onJobDismiss === undefined ? null : (
         // The running-job strip is its own region: whatever it does, the

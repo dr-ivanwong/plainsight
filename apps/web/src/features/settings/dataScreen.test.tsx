@@ -70,6 +70,29 @@ describe('data and storage', () => {
     expect(await screen.findByText(/Last export \d{4}-\d{2}-\d{2}\./)).toBeVisible();
   });
 
+  it('nudges for a fresh export after 30 days, and for a first one, library permitting', async () => {
+    // A stale stamp with data present: the fresh-copy nudge.
+    await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+    await setMeta(db, 'lastExportAt', '2026-05-01T00:00:00.000Z');
+    renderAt();
+    expect(
+      await screen.findByText('More than 30 days since the last copy; take a fresh export.')
+    ).toBeVisible();
+  });
+
+  it('nudges toward a first export only once there is a library to copy', async () => {
+    // Empty library: never nagged, even with no export on record.
+    renderAt();
+    await screen.findByRole('heading', { name: 'Data & storage' });
+    expect(screen.queryByText(/take a first export/)).not.toBeInTheDocument();
+
+    // With data, the first-copy nudge speaks.
+    await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+    expect(
+      await screen.findByText('No file copy exists yet; take a first export.')
+    ).toBeVisible();
+  });
+
   it('imports through the dry-run sheet, writing nothing before the choice', async () => {
     renderAt();
     await screen.findByRole('heading', { name: 'Data & storage' });

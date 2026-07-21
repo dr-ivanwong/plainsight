@@ -17,6 +17,7 @@ import {
   type ExportFile
 } from '../../db';
 import { needsInstallExplainer } from '../library/iosInstall';
+import { exportOverdue } from './exportNudge';
 import { useCompanies } from '../../hooks/useCompanies';
 import { useStorageStatus } from '../../hooks/useStorageStatus';
 import * as buttons from '../../styles/buttons.css';
@@ -70,6 +71,12 @@ export function DataScreen(): ReactElement {
   const lastExport =
     typeof lastExportRow?.value === 'string' ? lastExportRow.value.slice(0, 10) : null;
   const sampleCount = (companies ?? []).filter((company) => company.sample).length;
+  const nudgeDue =
+    (companies ?? []).length > 0 &&
+    exportOverdue(
+      typeof lastExportRow?.value === 'string' ? lastExportRow.value : undefined,
+      new Date()
+    );
 
   async function handleExport(): Promise<void> {
     try {
@@ -123,6 +130,15 @@ export function DataScreen(): ReactElement {
         <p className={styles.note}>
           {lastExport === null ? 'Never exported from this device.' : `Last export ${lastExport}.`}
         </p>
+        {/* The 30-day nudge (main plan §14), only while there is a library
+            worth copying; a fresh install has nothing to nudge about. */}
+        {nudgeDue ? (
+          <p className={styles.note}>
+            {lastExport === null
+              ? 'No file copy exists yet; take a first export.'
+              : 'More than 30 days since the last copy; take a fresh export.'}
+          </p>
+        ) : null}
         <div className={styles.actions}>
           <button type="button" className={buttons.secondaryAction} onClick={() => void handleExport()}>
             Export the library

@@ -132,7 +132,7 @@ One row per registry provider: name; data-policy label in plain words ("may trai
 
 ### S11: Settings → Data & storage
 
-Export (with last-export date; feeds the 30-day nudge); Import (file → **dry-run summary sheet**: "3 companies, 28 fiscal years, 2 theses: Merge / Replace / Cancel", schema version checked per companion §5); storage status (persisted ✓/✗, usage vs quota bar, iOS install nudge when applicable); remove sample data; quarantined records list (export-raw / discard per record); danger zone: wipe everything, type-the-app-name to confirm.
+Export (with last-export date; feeds the 30-day nudge; placement recorded 2026-07-20 with the build: a quiet line beside this screen's export action and a caption on S9's Data & storage row, both only while the library is non-empty, so a fresh install is never nagged); Import (file → **dry-run summary sheet**: "3 companies, 28 fiscal years, 2 theses: Merge / Replace / Cancel", schema version checked per companion §5); storage status (persisted ✓/✗, usage vs quota bar, iOS install nudge when applicable); remove sample data; quarantined records list (export-raw / discard per record); danger zone: wipe everything, type-the-app-name to confirm.
 
 ### S12: Import pickers (sheets, not routes)
 

@@ -77,6 +77,28 @@ export const tickerError = style([
   }
 ]);
 
+/** The storage-pressure banner (main plan §14): quiet surface, never a modal. */
+export const storageBanner = style({
+  padding: `${space[8]} ${space[16]}`,
+  marginBottom: space[16],
+  backgroundColor: colour.surface,
+  border: `${hairline} solid ${colour.border}`,
+  borderRadius: radius.medium,
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  lineHeight: lineHeight.body,
+  color: colour.textSecondary
+});
+
+export const storageBannerLink = style({
+  color: colour.accent,
+  textDecoration: 'none',
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: 0
+  }
+});
+
 export const toolbar = style({
   display: 'flex',
   alignItems: 'center',
