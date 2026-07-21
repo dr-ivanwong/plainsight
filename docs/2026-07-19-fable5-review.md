@@ -29,6 +29,7 @@
 17. **FE-8's size budget is now enforced (lint half still open).** A hand-rolled, dependency-free check (`scripts/check-bundle.mjs`, the contrast-and-style-gate house pattern) gzips the built entry module and its modulepreload graph and fails CI over the pinned 180 KB ceiling; it runs after Build in ci.yml, and main plan §5 records both the mechanism and that Lighthouse CI and the TTI budget stay unenforced (commit `5052970`). The measurement corrected a review error worth noting: the true initial graph is 172.1 KB, not the 78 KB the entry chunk alone suggested (the route definitions statically reach the Dexie layer and the Zod schemas, all modulepreloaded), so the gate is load-bearing from its first run with 7.9 KB of headroom, not a formality. FE-8 stays open for its lint half: no eslint stage exists, and the deliberate install-or-record decision is still owed. This does not change the open counts.
 18. **X-3 is fixed.** The infra Vitest config now sets `testTimeout: 120_000`, so the synth-heavy snapshot and cdk-nag tests (6 to 9 seconds cold, past the old 5-second default) no longer flake on a cold cache, which matters because `pnpm -r test` gates every web deploy (commit `23aa2e3`). The ceiling can only prevent a flake, never cause one; a truly cold CI runner cannot be reproduced locally, so the fix's value is that the budget now exists.
 19. **INFRA-7 is fixed.** An all-stacks Lambda sweep, beside the bucket sweep it mirrors, asserts the §6 universals over every function in every template: explicit timeout, ARM64, the pinned `nodejs22.x` runtime, and its own log group at 30-day retention, so the retention gap the finding named (a raw function elsewhere on default infinite retention passing) now fails by name; it closes on the fleet as a set (`Foundation: 1, Ingestion: 3, Api: 9`). The token-lifetimes half is recorded, not changed: a comment in `auth.ts` states the call (Cognito defaults relied on at one seat) and a test pins the absence of explicit validity, so the defaults read as a decision and adding lifetimes becomes a loud change (commit `2d6b166`). No spec moved.
+20. **FE-10 is fixed.** The v1-to-v2 migration now lands with the previous-version fixture upgrade test §9 pins. A verbatim copy of the shipped v1 schema (never to be edited to match new code) writes a database, the real `PlainsightDb` opens it so the actual upgrade runs, and the test asserts what an upgrade owes: nothing lost, proven through the validated repositories rather than raw rows; the auto-increment generator survived rather than being reset; and `syncState` arrives empty and writable (commit `3af723f`). The header pins the pattern for every future migration, the sector-vocabulary rewrite (data-model §12 D3) being the known next customer. This also exercises the cross-version upgrade path FE-4 rides on, so it is mild insurance for that deferred finding.
 
 ---
 
@@ -70,7 +71,7 @@ Evidence-backed, not aspirational:
 
 ## 3. Findings at a glance
 
-41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5, FE-6, BE-6, UI-2, UI-3, X-2, X-3 and INFRA-7 fixed (plus FE-8's size half), and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 1 P1, 9 P2, 13 P3.
+41 findings. After the 2026-07-19 pass (update note at the top): UI-1, INFRA-1, FE-2, BE-2, FE-1, FE-3, INFRA-2, INFRA-3, INFRA-4, BE-5, FE-5, FE-6, BE-6, UI-2, UI-3, X-2, X-3, INFRA-7 and FE-10 fixed (plus FE-8's size half), and four sync-convergence findings deferred under single-device operation. Open: 0 P0, 1 P1, 9 P2, 12 P3.
 
 | Code | Sev | Finding |
 |---|---|---|
@@ -107,7 +108,7 @@ Evidence-backed, not aspirational:
 | BE-7 | P3 | Idempotency records globally keyed and unconditionally overwritten; user scoping only on read |
 | BE-8 | P3 | LWW tiebreak can order exotic deviceIds differently in JS and DynamoDB; constrain the charset |
 | BE-9 | P3 | One schema-failing year aborts a whole ingest instead of quarantining; a stale DOC# cache row can wedge a ticker |
-| FE-10 | P3 | Dexie v2 migration landed without the pinned previous-version upgrade-fixture test |
+| FE-10 | P3 (fixed) | Dexie v2 migration landed without the pinned previous-version upgrade-fixture test. Fixed 2026-07-22 (`3af723f`) |
 | FE-11 | P3 | Settings sign-in affordance reads `navigator.onLine` non-reactively |
 | UI-7 | P3 | Table section bands use `scope="colgroup"` where `rowgroup` is correct |
 | UI-8 | P3 | Motion deviations unrecorded: pinned card stagger unimplemented; first-run reduced-motion replays translate keyframes |
@@ -259,7 +260,9 @@ Main plan §7 pins the pipeline as "lint → typecheck → ..." and §5 pins per
 
 No reference to `/v1/uploads`, `/v1/extractions`, or `/v1/proxy` exists anywhere in `apps/web/src` (grep-verified); the provider probe's own comment says the server proxy is awaited, and upload providers filter to keyed, browser-callable entries only. Frontend spec §6 pins the extraction-job hook covering proxy polling, and CLAUDE.md declares the BYOK proxy landed within Phase 3 code-complete: the server half did, the client half did not. **Direction:** land the client path, or annotate CLAUDE.md and the spec's hook row as server-ready, client-pending.
 
-### FE-10 · P3 · Dexie migration shipped without the pinned upgrade-fixture test
+### FE-10 · P3 (fixed) · Dexie migration shipped without the pinned upgrade-fixture test
+
+*Fixed 2026-07-22 (`3af723f`): `migrations.test.ts` writes a database through a verbatim copy of the shipped v1 schema, opens the real db so the upgrade runs, and asserts nothing is lost (through the validated repositories), the auto-increment generator survives, and syncState arrives empty and writable. Its header pins the pattern for migrations from here on. The original finding follows.*
 
 The version-2 migration landed with shape tests only; data-model §9 pins a previous-version fixture upgrade test, and none exists (`apps/web/src/db/db.ts:69-71`). The first cross-version device pair is where this and FE-4 intersect. **Direction:** a fixture-based upgrade test per migration from here on.
 
@@ -397,7 +400,7 @@ Places where a pinned contract itself needs a decision, recorded here rather tha
 5. **Make uploads honest before they are used (all done): BE-2 `4288746`, BE-5 `9f68456`, FE-5 `58be7b5`, FE-6 `d289b98`, BE-6 `ae42567`.** Gates in the worker, quota refunds plus the runbook reset, user-only known-zero minting, the atomic review save, and the upload/proxy spec amendments (keep-source removed by owner decision, the rest recorded as staging) are all landed.
 6. **Close the pipeline's own gaps (INFRA-2 done `97d407b`; INFRA-3 done `36e4a4f`; INFRA-4 done `a6126ab`).** The read-only diff role landed, so the diff-is-the-review control can run once its variable is set; the anomaly monitor now watches a tag key that exists, with the chain-firing written up as a runbook drill; and the deploy role has shed the retired gate's `environment:*` trust. The pipeline-gaps group is closed.
 7. **One documentation commit (done `ac9bea7`).** X-2 swept every drift instance into agreement, FE-9's claim was annotated server-half/client-pending in the same pass, and plan tensions 4, 5, and 6 are all settled (4 with X-2, 5 with UI-2's `6989e57`, 6 with UI-3's `f83e4a1`). The only wake left is FE-9's client half itself, which is code, not documentation.
-8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Landed 2026-07-22: size-limit on the shell (`5052970`, FE-8's size half), the infra test timeout (`23aa2e3`, X-3), and the all-stacks Lambda sweep (`2d6b166`, INFRA-7). What remains: FE-8's lint decision (install or record) and the migration upgrade-fixture pattern (FE-10).
+8. **Harden the gates (X-3, FE-8, FE-10, INFRA-7).** Landed 2026-07-22: size-limit on the shell (`5052970`, FE-8's size half), the infra test timeout (`23aa2e3`, X-3), the all-stacks Lambda sweep (`2d6b166`, INFRA-7), and the migration upgrade-fixture test (`3af723f`, FE-10). What remains is FE-8's lint decision alone (install or record).
 
 Then the queue is what it already was: the owner actions (alert email, cost tag, the bake-off and ladder pinning, the ASX interpretation-notes review, account creation) and, when ready, pinning or parking the three direction drafts. The remaining P2/P3 findings (UI-4 through UI-10, BE-7 through BE-9, FE-7, FE-11, INFRA-5, INFRA-6, INFRA-8) slot naturally into the files each touches as that work lands.
 
