@@ -3,7 +3,7 @@ import { useState, type ReactElement } from 'react';
 
 import { InstallExplainer } from '../../components/InstallExplainer';
 import { okPoints } from '../../components/Sparkline';
-import type { CompanyRecord } from '../../db';
+import { SECTOR_IDS, SECTOR_LABELS, type CompanyRecord, type SectorId } from '../../db';
 import { useMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
 import { AddCompanySheet } from './AddCompanySheet';
@@ -31,11 +31,54 @@ function LibraryRow({ company }: { company: CompanyRecord }): ReactElement {
   );
 }
 
+interface LibrarySection {
+  key: SectorId | 'unclassified';
+  /** Null means no header: the all-unclassified library reads as one flat list. */
+  label: string | null;
+  companies: CompanyRecord[];
+}
+
+/**
+ * Rows group under the pinned vocabulary in vocabulary order, unclassified
+ * gathering last (frontend spec §3, the sector sections). Empty sections
+ * never render, and the Unclassified header renders only when a classified
+ * section also renders: until anything is classified, the library reads
+ * exactly as it always did. Input order (most recently updated first) stands
+ * within each section.
+ */
+function sectionsOf(companies: readonly CompanyRecord[]): LibrarySection[] {
+  const bySector = new Map<SectorId, CompanyRecord[]>();
+  const unclassified: CompanyRecord[] = [];
+  for (const company of companies) {
+    if (company.sector === undefined) {
+      unclassified.push(company);
+      continue;
+    }
+    const bucket = bySector.get(company.sector);
+    if (bucket === undefined) bySector.set(company.sector, [company]);
+    else bucket.push(company);
+  }
+  const sections: LibrarySection[] = [];
+  for (const id of SECTOR_IDS) {
+    const rows = bySector.get(id);
+    if (rows !== undefined) sections.push({ key: id, label: SECTOR_LABELS[id], companies: rows });
+  }
+  if (unclassified.length > 0) {
+    sections.push({
+      key: 'unclassified',
+      label: sections.length === 0 ? null : 'Unclassified',
+      companies: unclassified
+    });
+  }
+  return sections;
+}
+
 /**
  * The library screen (frontend spec §3): the calm home. One row per company,
- * most recently updated first; the filter field stays invisible until the
- * library outgrows a screenful (progressive disclosure). Compare joins the
- * toolbar the moment two companies exist to set side by side, and not before.
+ * grouped under quiet sector section headers, most recently updated first
+ * within a section; the filter field stays invisible until the library
+ * outgrows a screenful (progressive disclosure). Compare joins the toolbar
+ * the moment two companies exist to set side by side, and not before.
  */
 export function Library({
   companies,
@@ -152,11 +195,32 @@ export function Library({
           {visible.length === 0 ? (
             <p className={styles.noMatches}>No companies match.</p>
           ) : (
-            <ul className={styles.rows}>
-              {visible.map((company) => (
-                <LibraryRow key={company.id} company={company} />
-              ))}
-            </ul>
+            // The filter matches rows wherever they sit; a section left with
+            // no matches drops out entirely (frontend spec §3).
+            sectionsOf(visible).map((section) =>
+              section.label === null ? (
+                <ul key={section.key} className={styles.rows}>
+                  {section.companies.map((company) => (
+                    <LibraryRow key={company.id} company={company} />
+                  ))}
+                </ul>
+              ) : (
+                <section key={section.key} className={styles.sectionGroup}>
+                  {/* A group heading announced before its rows (frontend spec §8). */}
+                  <h2 id={`library-section-${section.key}`} className={styles.sectionHeader}>
+                    {section.label}
+                  </h2>
+                  <ul
+                    className={styles.rows}
+                    aria-labelledby={`library-section-${section.key}`}
+                  >
+                    {section.companies.map((company) => (
+                      <LibraryRow key={company.id} company={company} />
+                    ))}
+                  </ul>
+                </section>
+              )
+            )
           )}
         </>
       )}

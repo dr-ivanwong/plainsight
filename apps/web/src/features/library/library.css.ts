@@ -109,6 +109,29 @@ export const rows = style({
 });
 
 /**
+ * The sector sections (frontend spec §3): the dashboard grid's quiet section
+ * label, worn by the library. Groups separate generously so a header sits
+ * closer to its own rows than to the previous group's.
+ */
+export const sectionGroup = style({
+  selectors: {
+    '&:not(:first-of-type)': {
+      marginTop: space[24]
+    }
+  }
+});
+
+export const sectionHeader = style({
+  margin: `0 0 ${space[8]}`,
+  padding: `0 ${space[16]}`,
+  fontSize: fontSize.caption2,
+  fontWeight: fontWeight.semibold,
+  letterSpacing: tracking.sectionLabel,
+  textTransform: 'uppercase',
+  color: colour.textSecondary
+});
+
+/**
  * The library's first catch-up (frontend spec §3): quiet placeholder rows while a
  * signed-in device's first pull is in flight. Motionless by design; the
  * calm is the message.

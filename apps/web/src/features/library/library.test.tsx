@@ -61,6 +61,58 @@ describe('the library', () => {
     expect(labels).toEqual(['Wesfarmers, updated today', 'Woolworths, updated today']);
   });
 
+  it('groups rows under quiet sector headers, vocabulary order, unclassified last', async () => {
+    await createCompany(db, { name: 'JB Hi-Fi', currency: 'AUD', sector: 'retail' });
+    vi.setSystemTime(new Date(T2));
+    await createCompany(db, { name: 'CSL', currency: 'AUD', sector: 'healthcare' });
+    vi.setSystemTime(new Date(T3));
+    await createCompany(db, { name: 'Zeta Holdings', currency: 'AUD' });
+
+    renderLibrary();
+    await screen.findByRole('link', { name: /Zeta Holdings/ });
+    const headers = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(headers).toEqual(['Healthcare', 'Retail', 'Unclassified']);
+
+    // Each section's list is named by its header and holds its own rows.
+    const healthcare = screen.getByRole('list', { name: 'Healthcare' });
+    expect(within(healthcare).getByRole('link', { name: /CSL/ })).toBeVisible();
+    const unclassified = screen.getByRole('list', { name: 'Unclassified' });
+    expect(within(unclassified).getByRole('link', { name: /Zeta Holdings/ })).toBeVisible();
+  });
+
+  it('reads flat, no headers, while nothing is classified', async () => {
+    await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+    await createCompany(db, { name: 'Woolworths', currency: 'AUD' });
+    renderLibrary();
+    await screen.findByRole('link', { name: /Wesfarmers/ });
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
+  it('drops sections the filter empties, headers included', async () => {
+    for (let index = 1; index <= 12; index += 1) {
+      await createCompany(db, { name: `Filler ${index}`, currency: 'AUD' });
+    }
+    await createCompany(db, { name: 'CSL', ticker: 'CSL', currency: 'AUD', sector: 'healthcare' });
+
+    renderLibrary();
+    const filter = await screen.findByRole('searchbox', { name: 'Filter companies' });
+
+    // Matching only the classified row: Unclassified drops with its header.
+    fireEvent.change(filter, { target: { value: 'csl' } });
+    expect(screen.getAllByRole('link', { name: /updated today/ })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 2, name: 'Healthcare' })).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { level: 2, name: 'Unclassified' })
+    ).not.toBeInTheDocument();
+
+    // Matching only unclassified rows: every header goes and the list reads flat.
+    fireEvent.change(filter, { target: { value: 'Filler 3' } });
+    expect(screen.getAllByRole('link', { name: /updated today/ })).toHaveLength(1);
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
   it('offers compare once two companies exist, toolbar and rail alike', async () => {
     await createCompany(db, { name: 'Wesfarmers', ticker: 'WES', currency: 'AUD' });
     renderLibrary();
