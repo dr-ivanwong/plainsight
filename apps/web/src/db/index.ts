@@ -26,6 +26,7 @@ export { getPrice, putPrice, type PriceWrite } from './prices';
 export { getThesis, putThesisDraft, saveThesisVersion, type ThesisVersionWrite } from './theses';
 export { deleteCredential, putCredential, type CredentialWrite } from './credentials';
 export { getMeta, setMeta, type MetaValue } from './meta';
+export { putBenchmark, removeBenchmark } from './benchmarks';
 export { assembleFinancials } from './financials';
 export {
   listDismissals,
@@ -49,6 +50,8 @@ export {
 export { downloadLibraryExport, downloadText } from './exportDownload';
 export { removeSampleData, wipeEverything } from './maintenance';
 export {
+  BENCHMARK_DEFAULTS,
+  benchmarkRecordSchema,
   companyRecordSchema,
   entryValueSchema,
   financialsSnapshotSchema,
@@ -62,6 +65,7 @@ export {
   statementRecordSchema,
   thesisRecordSchema,
   thesisVersionRecordSchema,
+  type BenchmarkRecord,
   type CompanyRecord,
   type FinancialsSnapshot,
   type FlagDismissalRecord,

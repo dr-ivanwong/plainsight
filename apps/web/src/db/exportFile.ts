@@ -11,6 +11,7 @@ import { z } from 'zod';
 import type { PlainsightDb } from './db';
 import { getMeta, setMeta } from './meta';
 import {
+  benchmarkRecordSchema,
   companyRecordSchema,
   flagDismissalRecordSchema,
   priceRecordSchema,
@@ -52,6 +53,9 @@ export const exportFileSchema = z.object({
     theses: z.array(thesisRecordSchema),
     thesisVersions: z.array(thesisVersionRecordSchema),
     flagDismissals: z.array(flagDismissalRecordSchema),
+    // Additive 2026-07-22 (dashboard design plan §6.5): optional so files
+    // from before the reference lines still import; the format version holds.
+    benchmarks: z.array(benchmarkRecordSchema).optional(),
     settings: carriedSettingsSchema
   })
 });
@@ -59,7 +63,7 @@ export const exportFileSchema = z.object({
 export type ExportFile = z.infer<typeof exportFileSchema>;
 
 export async function buildExport(db: PlainsightDb, appVersion: string): Promise<ExportFile> {
-  const [companies, statements, prices, theses, thesisVersions, flagDismissals] =
+  const [companies, statements, prices, theses, thesisVersions, flagDismissals, benchmarks] =
     await Promise.all([
       db.companies.toArray().then((rows) => validateRows(db, 'companies', rows, companyRecordSchema)),
       db.statements.toArray().then((rows) => validateRows(db, 'statements', rows, statementRecordSchema)),
@@ -70,7 +74,10 @@ export async function buildExport(db: PlainsightDb, appVersion: string): Promise
         .then((rows) => validateRows(db, 'thesisVersions', rows, thesisVersionRecordSchema)),
       db.flagDismissals
         .toArray()
-        .then((rows) => validateRows(db, 'flagDismissals', rows, flagDismissalRecordSchema))
+        .then((rows) => validateRows(db, 'flagDismissals', rows, flagDismissalRecordSchema)),
+      db.benchmarks
+        .toArray()
+        .then((rows) => validateRows(db, 'benchmarks', rows, benchmarkRecordSchema))
     ]);
 
   const settings: CarriedSettings = {};
@@ -88,7 +95,16 @@ export async function buildExport(db: PlainsightDb, appVersion: string): Promise
     formatVersion: EXPORT_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
     appVersion,
-    data: { companies, statements, prices, theses, thesisVersions, flagDismissals, settings }
+    data: {
+      companies,
+      statements,
+      prices,
+      theses,
+      thesisVersions,
+      flagDismissals,
+      benchmarks,
+      settings
+    }
   });
 }
 
@@ -151,11 +167,28 @@ export async function applyImport(
   file: ExportFile,
   mode: 'merge' | 'replace'
 ): Promise<void> {
-  const { companies, statements, prices, theses, thesisVersions, flagDismissals, settings } =
-    file.data;
+  const {
+    companies,
+    statements,
+    prices,
+    theses,
+    thesisVersions,
+    flagDismissals,
+    benchmarks,
+    settings
+  } = file.data;
   await db.transaction(
     'rw',
-    [db.companies, db.statements, db.prices, db.theses, db.thesisVersions, db.flagDismissals, db.meta],
+    [
+      db.companies,
+      db.statements,
+      db.prices,
+      db.theses,
+      db.thesisVersions,
+      db.flagDismissals,
+      db.benchmarks,
+      db.meta
+    ],
     async () => {
       if (mode === 'replace') {
         await Promise.all([
@@ -172,6 +205,13 @@ export async function applyImport(
         await db.theses.bulkPut(theses);
         await db.thesisVersions.bulkPut(thesisVersions);
         await db.flagDismissals.bulkPut(flagDismissals);
+        // Benchmarks replace only when the file carries them: a file from
+        // before the reference lines says nothing about them, and replace
+        // should not read silence as an instruction to wipe the user's stance.
+        if (benchmarks !== undefined) {
+          await db.benchmarks.clear();
+          await db.benchmarks.bulkPut(benchmarks);
+        }
       } else {
         for (const row of companies) {
           const existing = await db.companies.get(row.id);
@@ -212,6 +252,12 @@ export async function applyImport(
           const existing = await db.flagDismissals.get([row.companyId, row.ruleId]);
           if (existing === undefined || isNewer(row.dismissedAt, existing.dismissedAt)) {
             await db.flagDismissals.put(row);
+          }
+        }
+        for (const row of benchmarks ?? []) {
+          const existing = await db.benchmarks.get(row.metricId);
+          if (existing === undefined || isNewer(row.updatedAt, existing.updatedAt)) {
+            await db.benchmarks.put(row);
           }
         }
       }

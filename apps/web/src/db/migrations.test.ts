@@ -64,6 +64,32 @@ class V2Db extends Dexie {
   }
 }
 
+/**
+ * The version-3 schema as it shipped: version 2's tables, no new stores. The
+ * shipped version 3 only rewrote sector rows, and a fresh fixture never runs
+ * upgrade callbacks, so an empty one holds the version number honestly.
+ */
+class V3Db extends Dexie {
+  constructor(name: string) {
+    super(name);
+    this.version(1).stores({
+      companies: 'id, updatedAt',
+      statements: '[companyId+fy+statement], companyId',
+      prices: 'companyId',
+      theses: 'companyId',
+      thesisVersions: '++id, companyId',
+      flagDismissals: '[companyId+ruleId], companyId',
+      providerCredentials: 'providerId',
+      quarantine: '++id, table',
+      meta: 'key'
+    });
+    this.version(2).stores({
+      syncState: 'recordKey'
+    });
+    this.version(3).upgrade(async () => {});
+  }
+}
+
 const name = `plainsight-migration-${crypto.randomUUID()}`;
 
 afterEach(async () => {
@@ -87,7 +113,7 @@ describe('the upgrade chain, from a version-1 fixture', () => {
     // The real upgrade runs on open.
     const upgraded = new PlainsightDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(3);
+    expect(upgraded.verno).toBe(4);
     expect(upgraded.tables.map((table) => table.name).sort()).toEqual([...TABLE_NAMES].sort());
 
     // Nothing lost, and still valid under Zod-on-read: the repositories are
@@ -136,7 +162,7 @@ describe('the version-3 upgrade, from a version-2 fixture', () => {
 
     const upgraded = new PlainsightDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(3);
+    expect(upgraded.verno).toBe(4);
 
     // The stored rows themselves are rewritten, not merely normalised on
     // read: raw table dumps are the proof here, deliberately.
@@ -171,5 +197,52 @@ describe('the version-3 upgrade, from a version-2 fixture', () => {
     const readable = await listCompanies(upgraded);
     expect(readable).toHaveLength(5);
     await upgraded.close();
+  });
+});
+
+describe('the version-4 upgrade, from a version-3 fixture', () => {
+  it('adds benchmarks seeded with the two resolved defaults, everything else intact', async () => {
+    const v3 = new V3Db(name);
+    const seeded = company({ id: 'wow', name: 'Woolworths' });
+    await v3.table('companies').put(seeded);
+    await v3.table('meta').put({ key: 'onboardingDone', value: true });
+    await v3.close();
+
+    const upgraded = new PlainsightDb(name);
+    await upgraded.open();
+    expect(upgraded.verno).toBe(4);
+    expect(upgraded.tables.map((table) => table.name).sort()).toEqual([...TABLE_NAMES].sort());
+
+    // The defaults as resolved (finance-look gap plan §6): ROE and the
+    // fragility rule's coverage floor; debt-to-equity deliberately absent.
+    const rows = new Map(
+      (await upgraded.benchmarks.toArray()).map((row) => [row.metricId, row.value] as const)
+    );
+    expect(rows.get('roe')).toBe(0.15);
+    expect(rows.get('interestCoverage')).toBe(3);
+    expect(rows.has('debtToEquity')).toBe(false);
+    expect(rows.size).toBe(2);
+
+    // Nothing lost, and the new table takes ordinary writes.
+    expect(await listCompanies(upgraded)).toEqual([seeded]);
+    await upgraded.benchmarks.put({
+      metricId: 'debtToEquity',
+      value: 1,
+      updatedAt: new Date().toISOString()
+    });
+    expect(await upgraded.benchmarks.count()).toBe(3);
+    await upgraded.close();
+  });
+
+  it('seeds the same defaults on a fresh database, where no upgrade runs', async () => {
+    const fresh = new PlainsightDb(name);
+    await fresh.open();
+    const rows = new Map(
+      (await fresh.benchmarks.toArray()).map((row) => [row.metricId, row.value] as const)
+    );
+    expect(rows.get('roe')).toBe(0.15);
+    expect(rows.get('interestCoverage')).toBe(3);
+    expect(rows.size).toBe(2);
+    await fresh.close();
   });
 });

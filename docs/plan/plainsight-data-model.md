@@ -117,6 +117,7 @@ Illegal states are unrepresentable end to end: a metric on incomplete inputs is 
   "data": {
     "companies": [], "statements": [], "prices": [],
     "theses": [], "thesisVersions": [], "flagDismissals": [],
+    "benchmarks": [],
     "settings": {}
   }
 }
@@ -126,6 +127,7 @@ Illegal states are unrepresentable end to end: a metric on incomplete inputs is 
 - Sample records export like any data, carrying their `sample: true` flag.
 - **Import:** parse → Zod against the versioned schema → dry-run summary (counts per table, shown in S11's sheet) → Merge (per-record, newer `updatedAt` wins) / Replace (wipe then load) / Cancel. Same-major versions accepted; older majors migrate through the same functions as Dexie migrations; newer majors are rejected with "update the app first".
 - `formatVersion` bumps only on breaking shape changes; additive fields never bump it.
+- **Benchmarks joined the enumeration (additive, 2026-07-22).** User-set reference lines (§9) export beside the research tables and merge newer-wins by `updatedAt`. A file from before the reference lines carries no `benchmarks` key and imports unchanged; replace mode touches benchmarks only when the file carries them, never reading silence as an instruction to wipe the user's thresholds. The format version holds, per the additive rule.
 
 ## 6. Metric dictionary (M1–M14, pinned)
 
@@ -212,6 +214,7 @@ meta                  key, value                            // onboardingDone, l
 - **dataVersion** increments in the same Dexie transaction as any `statements`/`prices` write for that company; `useMetrics` memoises on `(companyId, dataVersion)` (main plan §5).
 - **sample flag:** `sample: true` on the company; S11's one-tap removal deletes by flag across all tables via `companyId`.
 - **sector:** an id from the pinned sector vocabulary (§12 D3), absent meaning unclassified. Legacy free-text values normalise through D3's mapping at every read boundary (Dexie-on-read, sync pull, file import) before Zod; a company row never quarantines over a cosmetic label.
+- **benchmarks (Dexie version 4, added 2026-07-22; dashboard design plan §6.5):** `metricId` (primary), `value`, `updatedAt`. One global reference line per metric, the user's stance rather than the company's, in the metric's native unit; it fires nothing, and the rules stay the only authority that raises an item to investigate. Seeded with the two owner-resolved defaults (ROE 0.15; interest coverage 3, the fragility rule's floor) on fresh creates and on upgrade alike, with the standard prior-schema fixture test. Local and exportable (§5), never synced: a wire type would amend the backend spec, deliberately not taken with this table.
 - **Provenance (pinned shape):**
 
 ```ts

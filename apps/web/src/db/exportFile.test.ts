@@ -11,6 +11,7 @@ import {
   thesisVersion,
   T0
 } from '../test/builders';
+import { putBenchmark } from './benchmarks';
 import { PlainsightDb } from './db';
 import { applyImport, buildExport, dryRunCounts, parseExportFile, type ExportFile } from './exportFile';
 import { getMeta, setMeta } from './meta';
@@ -57,6 +58,7 @@ describe('buildExport', () => {
     const file = await buildExport(db, '0.0.0');
 
     expect(Object.keys(file.data).sort()).toEqual([
+      'benchmarks',
       'companies',
       'flagDismissals',
       'prices',
@@ -71,6 +73,35 @@ describe('buildExport', () => {
     expect(text).not.toContain('quarantined-raw-payload');
     expect(file.data.settings.theme).toBe('dark');
     expect(file.data.companies[0]?.sample).toBe(false);
+  });
+
+  it('round-trips a set benchmark threshold, and old files leave local ones alone', async () => {
+    // A user-set line beside the seeded defaults survives export and import.
+    await putBenchmark(db, 'debtToEquity', 1.2);
+    const file = await buildExport(db, '0.0.0');
+    expect(file.data.benchmarks?.find((row) => row.metricId === 'debtToEquity')?.value).toBe(1.2);
+
+    const target = new PlainsightDb(`plainsight-test-${crypto.randomUUID()}`);
+    try {
+      await target.open();
+      await applyImport(target, file, 'replace');
+      const rows = new Map(
+        (await target.benchmarks.toArray()).map((row) => [row.metricId, row.value] as const)
+      );
+      expect(rows.get('debtToEquity')).toBe(1.2);
+      expect(rows.get('roe')).toBe(0.15);
+
+      // A file from before the reference lines carries no benchmarks key;
+      // replace must not read that silence as an instruction to wipe.
+      const legacy = {
+        ...file,
+        data: { ...file.data, benchmarks: undefined }
+      } as ExportFile;
+      await applyImport(target, legacy, 'replace');
+      expect((await target.benchmarks.toArray()).length).toBeGreaterThan(0);
+    } finally {
+      await target.delete();
+    }
   });
 });
 

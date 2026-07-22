@@ -11,8 +11,10 @@
  */
 import Dexie, { type EntityTable, type Table } from 'dexie';
 
+import { BENCHMARK_DEFAULTS } from './records';
 import { normaliseSector } from './sectors';
 import type {
+  BenchmarkRecord,
   CompanyRecord,
   FlagDismissalRecord,
   MetaRecord,
@@ -35,7 +37,8 @@ export const TABLE_NAMES = [
   'providerCredentials',
   'quarantine',
   'meta',
-  'syncState'
+  'syncState',
+  'benchmarks'
 ] as const;
 
 export type TableName = (typeof TABLE_NAMES)[number];
@@ -51,9 +54,15 @@ export class PlainsightDb extends Dexie {
   declare quarantine: EntityTable<QuarantineRecord, 'id'>;
   declare meta: Table<MetaRecord, string>;
   declare syncState: Table<SyncStateRecord, string>;
+  declare benchmarks: Table<BenchmarkRecord, string>;
 
   constructor(name = 'plainsight') {
     super(name);
+    // A fresh database is created at the newest version, so the upgrade
+    // callbacks never run for it; populate is where its defaults seed.
+    this.on('populate', (tx) => {
+      void tx.table('benchmarks').bulkAdd(seededBenchmarks());
+    });
     this.version(1).stores({
       companies: 'id, updatedAt',
       statements: '[companyId+fy+statement], companyId',
@@ -93,7 +102,28 @@ export class PlainsightDb extends Dexie {
           row.updatedAt = now;
         });
     });
+    // The benchmark reference lines (dashboard design plan §6.5): one global
+    // row per metric, seeded with the two owner-resolved defaults. Local and
+    // exportable, never synced: a wire type would be a backend-spec change,
+    // deliberately not taken with this table.
+    this.version(4)
+      .stores({
+        benchmarks: 'metricId'
+      })
+      .upgrade(async (tx) => {
+        await tx.table('benchmarks').bulkAdd(seededBenchmarks());
+      });
   }
+}
+
+/** The pre-populated rows, stamped at seed time (records.ts pins the values). */
+function seededBenchmarks(): BenchmarkRecord[] {
+  const now = new Date().toISOString();
+  return Object.entries(BENCHMARK_DEFAULTS).map(([metricId, value]) => ({
+    metricId: metricId as BenchmarkRecord['metricId'],
+    value,
+    updatedAt: now
+  }));
 }
 
 /** The app-wide database. Tests construct their own instances under throwaway names. */

@@ -14,6 +14,7 @@ import {
   isFyLabel,
   LINE_ITEMS,
   LINE_ITEM_IDS,
+  METRIC_IDS,
   RULE_IDS,
   STATEMENT_KINDS,
   type EntryValue,
@@ -220,6 +221,36 @@ export const flagDismissalRecordSchema = z.object({
 });
 
 export type FlagDismissalRecord = z.infer<typeof flagDismissalRecordSchema>;
+
+/**
+ * One benchmark reference line per metric (dashboard design plan §6.5),
+ * global rather than per-company: a reference value is the user's stance, not
+ * the company's. The value sits in the metric's native unit (a fraction for
+ * percentages), fires nothing, and the deterministic rules stay the only
+ * authority that raises an item to investigate. updatedAt carries the
+ * export format's newer-wins merge.
+ */
+export const benchmarkRecordSchema = z.object({
+  metricId: enumOf(METRIC_IDS),
+  value: z.number().finite().positive(),
+  updatedAt: isoDateTime
+});
+
+export type BenchmarkRecord = z.infer<typeof benchmarkRecordSchema>;
+
+/**
+ * The pre-populated reference lines (owner-resolved 2026-07-22, finance-look
+ * gap plan §6): ROE at the classic quality threshold, and interest coverage
+ * at the fragility rule's own pinned floor, presented as the rule's line.
+ * Debt-to-equity deliberately ships without one: a caution line at half the
+ * level the rules fire at would speak with authority the rules do not own.
+ * Every other metric starts unset and stays settable.
+ */
+export const BENCHMARK_DEFAULTS: Readonly<Partial<Record<(typeof METRIC_IDS)[number], number>>> =
+  {
+    roe: 0.15,
+    interestCoverage: 3
+  };
 
 /** Never exported and never synced: the export format's allowlist cannot reach this table (data-model spec §5). */
 export const providerCredentialRecordSchema = z.object({
