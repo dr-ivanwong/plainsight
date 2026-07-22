@@ -9,10 +9,14 @@ docstring and land both sides with the fixture in one commit.
 
 from pathlib import Path
 
-from pairs_engine.golden import golden_json
+from pairs_engine.golden import golden_backtest_json, golden_json
 
-FIXTURE = Path(__file__).parents[3] / "packages" / "api-contract" / "fixtures" / "pair-scan.golden.json"
+FIXTURES = Path(__file__).parents[3] / "packages" / "api-contract" / "fixtures"
 
 
 def test_committed_golden_fixture_matches_the_engine_byte_for_byte():
-    assert FIXTURE.read_text() == golden_json()
+    assert (FIXTURES / "pair-scan.golden.json").read_text() == golden_json()
+
+
+def test_committed_backtest_fixture_matches_the_engine_byte_for_byte():
+    assert (FIXTURES / "backtest.golden.json").read_text() == golden_backtest_json()

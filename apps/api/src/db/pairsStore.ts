@@ -1,26 +1,43 @@
 /**
- * The pairs artefact store (integration plan §4 transport): scan reports
- * land as durable objects under pairs/ in the uploads bucket (outside the
+ * The pairs artefact store (integration plan §4 transport): one durable
+ * object per run under pairs/{kind}/ in the uploads bucket (outside the
  * uploads/ seven-day lifecycle), with one run row per run date under the
- * PAIRS# partition. Run dates are ISO, so the sort key orders
+ * PAIRS#{kind} partition. Run dates are ISO, so the sort key orders
  * chronologically and the latest run is the first row of a descending
  * query. Writes arrive only from the engine's authenticated publish; the
- * app renders and never writes sleeve data.
+ * app renders and never writes sleeve data. Kinds are a closed set: a
+ * new artefact kind lands with its schema on both sides of the contract,
+ * never as an open string.
  */
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { pairsArtefactRunSchema, type PairScanReport, type PairsArtefactRun } from '@plainsight/api-contract';
+import { pairsArtefactRunSchema, type PairsArtefactRun } from '@plainsight/api-contract';
 
-export const PAIRS_PARTITION = 'PAIRS#pair-scan';
+export const PAIRS_KINDS = ['pair-scan', 'backtest'] as const;
+export type PairsArtefactKind = (typeof PAIRS_KINDS)[number];
+
+export function isPairsKind(value: string): value is PairsArtefactKind {
+  return (PAIRS_KINDS as readonly string[]).includes(value);
+}
+
+export const pairsPartition = (kind: PairsArtefactKind): string => `PAIRS#${kind}`;
+export const pairsObjectPrefix = (kind: PairsArtefactKind): string => `pairs/${kind}/`;
 export const PAIRS_RUN_SORT_PREFIX = 'RUN#';
-export const PAIRS_OBJECT_PREFIX = 'pairs/pair-scan/';
 export const PAIRS_HISTORY_LIMIT = 25;
 
+/** What every artefact kind's report carries at its top level. */
+export interface PairsReportMeta {
+  runDate: string;
+  engineVersion: string;
+  schemaVersion: number;
+  generatedAt: string;
+}
+
 export interface PairsArtefactStore {
-  putRun(report: PairScanReport, receivedAt: string): Promise<PairsArtefactRun>;
-  listRuns(): Promise<PairsArtefactRun[]>;
-  getReport(runDate: string): Promise<unknown>;
+  putRun(kind: PairsArtefactKind, report: PairsReportMeta, receivedAt: string): Promise<PairsArtefactRun>;
+  listRuns(kind: PairsArtefactKind): Promise<PairsArtefactRun[]>;
+  getReport(kind: PairsArtefactKind, runDate: string): Promise<unknown>;
 }
 
 export class TablePairsStore implements PairsArtefactStore {
@@ -46,9 +63,13 @@ export class TablePairsStore implements PairsArtefactStore {
     return new TablePairsStore(documents, new S3Client({}), tableName, bucketName);
   }
 
-  async putRun(report: PairScanReport, receivedAt: string): Promise<PairsArtefactRun> {
+  async putRun(
+    kind: PairsArtefactKind,
+    report: PairsReportMeta,
+    receivedAt: string
+  ): Promise<PairsArtefactRun> {
     const body = JSON.stringify(report);
-    const objectKey = `${PAIRS_OBJECT_PREFIX}${report.runDate}.json`;
+    const objectKey = `${pairsObjectPrefix(kind)}${report.runDate}.json`;
     await this.s3.send(
       new PutObjectCommand({
         Bucket: this.bucketName,
@@ -69,7 +90,7 @@ export class TablePairsStore implements PairsArtefactStore {
       new PutCommand({
         TableName: this.tableName,
         Item: {
-          PK: PAIRS_PARTITION,
+          PK: pairsPartition(kind),
           SK: `${PAIRS_RUN_SORT_PREFIX}${report.runDate}`,
           objectKey,
           ...row
@@ -79,13 +100,13 @@ export class TablePairsStore implements PairsArtefactStore {
     return row;
   }
 
-  async listRuns(): Promise<PairsArtefactRun[]> {
+  async listRuns(kind: PairsArtefactKind): Promise<PairsArtefactRun[]> {
     const result = await this.documents.send(
       new QueryCommand({
         TableName: this.tableName,
         KeyConditionExpression: 'PK = :partition AND begins_with(SK, :run)',
         ExpressionAttributeValues: {
-          ':partition': PAIRS_PARTITION,
+          ':partition': pairsPartition(kind),
           ':run': PAIRS_RUN_SORT_PREFIX
         },
         ScanIndexForward: false,
@@ -95,16 +116,16 @@ export class TablePairsStore implements PairsArtefactStore {
     return (result.Items ?? []).map((item) => pairsArtefactRunSchema.parse(item));
   }
 
-  async getReport(runDate: string): Promise<unknown> {
+  async getReport(kind: PairsArtefactKind, runDate: string): Promise<unknown> {
     const result = await this.s3.send(
       new GetObjectCommand({
         Bucket: this.bucketName,
-        Key: `${PAIRS_OBJECT_PREFIX}${runDate}.json`
+        Key: `${pairsObjectPrefix(kind)}${runDate}.json`
       })
     );
     const body = await result.Body?.transformToString();
     if (body === undefined) {
-      throw new Error(`stored artefact for ${runDate} has no body`);
+      throw new Error(`stored ${kind} artefact for ${runDate} has no body`);
     }
     return JSON.parse(body) as unknown;
   }

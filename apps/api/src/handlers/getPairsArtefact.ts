@@ -1,22 +1,33 @@
 /**
- * GET /v1/pairs/artefacts/pair-scan (integration plan §4; backend spec §2
- * route table as amended 2026-07-22): the latest report in full plus the
- * run history, for the Pairs surfaces. Read-only over what the engine
- * published; an empty sleeve is a 200 with a null latest, never an error.
+ * GET /v1/pairs/artefacts/{kind} (integration plan §4; backend spec §2
+ * route table as amended 2026-07-22): the latest report of the named
+ * kind in full plus the run history, for the Pairs surfaces. Read-only
+ * over what the engine published; an empty sleeve is a 200 with a null
+ * latest, never an error, and an unknown kind is not found.
  */
 import {
   errorEnvelope,
   pairsArtefactCollectionSchema,
-  pairScanReportSchema,
-  type PairScanReport
+  pairsBacktestCollectionSchema
 } from '@plainsight/api-contract';
 import type {
   APIGatewayProxyEventV2WithJWTAuthorizer,
   APIGatewayProxyStructuredResultV2
 } from 'aws-lambda';
-import { TablePairsStore, type PairsArtefactStore } from '../db/pairsStore.js';
+import type { z } from 'zod';
+import {
+  TablePairsStore,
+  type PairsArtefactKind,
+  type PairsArtefactStore
+} from '../db/pairsStore.js';
 import { jsonResponse, logOutcome, requestIdOf } from '../http/respond.js';
+import { kindOf, REPORT_SCHEMAS } from './putPairsArtefact.js';
 import { userIdOf } from './syncPush.js';
+
+const COLLECTION_SCHEMAS: Record<PairsArtefactKind, z.ZodType> = {
+  'pair-scan': pairsArtefactCollectionSchema,
+  backtest: pairsBacktestCollectionSchema
+};
 
 export function createGetPairsArtefactHandler(store: PairsArtefactStore) {
   return async (
@@ -30,17 +41,29 @@ export function createGetPairsArtefactHandler(store: PairsArtefactStore) {
           errorEnvelope('unauthenticated', 'A signed-in session is required to read the sleeve.', requestId)
         );
       }
-      const history = await store.listRuns();
+      const kind = kindOf(event);
+      if (kind === undefined) {
+        return jsonResponse(
+          404,
+          errorEnvelope('not_found', 'Unknown artefact kind.', requestId)
+        );
+      }
+      const history = await store.listRuns(kind);
       const latestRun = history[0];
-      let latest: PairScanReport | null = null;
+      let latest: unknown = null;
       if (latestRun !== undefined) {
-        const raw = await store.getReport(latestRun.runDate);
-        const parsed = pairScanReportSchema.safeParse(raw);
+        const raw = await store.getReport(kind, latestRun.runDate);
+        const parsed = REPORT_SCHEMAS[kind].safeParse(raw);
         if (!parsed.success) {
           // A stored object that no longer parses is server state gone
           // wrong, not a client mistake: surface it as internal so the
           // operator re-publishes rather than the app rendering a hole.
-          logOutcome({ requestId, route: 'getPairsArtefact', outcome: 'corrupt', detail: latestRun.runDate });
+          logOutcome({
+            requestId,
+            route: 'getPairsArtefact',
+            outcome: 'corrupt',
+            detail: `${kind} ${latestRun.runDate}`
+          });
           return jsonResponse(
             500,
             errorEnvelope('internal', 'The stored artefact failed validation; re-publish the run.', requestId)
@@ -48,8 +71,13 @@ export function createGetPairsArtefactHandler(store: PairsArtefactStore) {
         }
         latest = parsed.data;
       }
-      logOutcome({ requestId, route: 'getPairsArtefact', outcome: 'served', detail: latest?.runDate ?? 'empty' });
-      return jsonResponse(200, pairsArtefactCollectionSchema.parse({ latest, history }));
+      logOutcome({
+        requestId,
+        route: 'getPairsArtefact',
+        outcome: 'served',
+        detail: `${kind} ${latestRun?.runDate ?? 'empty'}`
+      });
+      return jsonResponse(200, COLLECTION_SCHEMAS[kind].parse({ latest, history }));
     } catch (error) {
       logOutcome({
         requestId,

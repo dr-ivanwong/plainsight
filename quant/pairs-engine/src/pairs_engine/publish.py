@@ -15,7 +15,17 @@ from pathlib import Path
 import httpx
 
 DEFAULT_REGION = "ap-southeast-2"
-ARTEFACT_ROUTE = "/v1/pairs/artefacts/pair-scan"
+
+# One authenticated PUT per artefact kind (integration plan §4); the API
+# routes by the kind segment, and file names carry the same slug.
+ARTEFACT_KINDS = ("pair-scan", "backtest")
+DEFAULT_KIND = "pair-scan"
+
+
+def artefact_route(kind: str) -> str:
+    if kind not in ARTEFACT_KINDS:
+        raise PublishError(f"unknown artefact kind {kind!r}; one of {', '.join(ARTEFACT_KINDS)}")
+    return f"/v1/pairs/artefacts/{kind}"
 
 
 class PublishError(RuntimeError):
@@ -62,11 +72,13 @@ def mint_token(config: PublishConfig, transport: httpx.BaseTransport | None = No
 def publish_artefact(
     artefact_path: Path,
     config: PublishConfig,
+    kind: str = DEFAULT_KIND,
     transport: httpx.BaseTransport | None = None,
 ) -> dict:
     """PUT the artefact file to the API; returns the stored run metadata."""
+    route = artefact_route(kind)  # an unknown kind fails before any network
     token = mint_token(config, transport=transport)
-    url = config.api_url.rstrip("/") + ARTEFACT_ROUTE
+    url = config.api_url.rstrip("/") + route
     with httpx.Client(transport=transport, timeout=60.0) as client:
         response = client.put(
             url,
@@ -87,8 +99,8 @@ def publish_artefact(
     return response.json()
 
 
-def newest_artefact(out_dir: Path) -> Path | None:
+def newest_artefact(out_dir: Path, kind: str = DEFAULT_KIND) -> Path | None:
     """Run dates are ISO in the file name, so lexicographic order is
     chronological order and the newest sorts last."""
-    candidates = sorted(out_dir.glob("pair-scan-*.json"))
+    candidates = sorted(out_dir.glob(f"{kind}-*.json"))
     return candidates[-1] if candidates else None

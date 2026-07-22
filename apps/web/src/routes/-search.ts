@@ -91,3 +91,13 @@ export const pairsSearchSchema = z.object({
 });
 
 export type PairsSearch = z.infer<typeof pairsSearchSchema>;
+
+/**
+ * The backtest surface (integration plan §4, slice 4): `?pair=AAA-BBB`
+ * focuses one backtested pair; absent, the first pair renders.
+ */
+export const backtestSearchSchema = z.object({
+  pair: z.string().optional().catch(undefined)
+});
+
+export type BacktestSearch = z.infer<typeof backtestSearchSchema>;

@@ -33,12 +33,16 @@ export {
   type QuarantineEntry
 } from './db/table.js';
 export {
+  isPairsKind,
   PAIRS_HISTORY_LIMIT,
-  PAIRS_OBJECT_PREFIX,
-  PAIRS_PARTITION,
+  PAIRS_KINDS,
   PAIRS_RUN_SORT_PREFIX,
+  pairsObjectPrefix,
+  pairsPartition,
   TablePairsStore,
-  type PairsArtefactStore
+  type PairsArtefactKind,
+  type PairsArtefactStore,
+  type PairsReportMeta
 } from './db/pairsStore.js';
 export {
   EdgarClient,

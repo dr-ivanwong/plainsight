@@ -9,21 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PairsRouteImport } from './routes/pairs'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as PairsIndexRouteImport } from './routes/pairs.index'
 import { Route as SettingsProvidersRouteImport } from './routes/settings.providers'
 import { Route as SettingsDataRouteImport } from './routes/settings.data'
+import { Route as PairsBacktestRouteImport } from './routes/pairs.backtest'
 import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as CompanyIdThesisRouteImport } from './routes/company.$id.thesis'
 import { Route as CompanyIdEntryRouteImport } from './routes/company.$id.entry'
 
-const PairsRoute = PairsRouteImport.update({
-  id: '/pairs',
-  path: '/pairs',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
@@ -39,6 +35,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PairsIndexRoute = PairsIndexRouteImport.update({
+  id: '/pairs/',
+  path: '/pairs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsProvidersRoute = SettingsProvidersRouteImport.update({
   id: '/settings/providers',
   path: '/settings/providers',
@@ -47,6 +48,11 @@ const SettingsProvidersRoute = SettingsProvidersRouteImport.update({
 const SettingsDataRoute = SettingsDataRouteImport.update({
   id: '/settings/data',
   path: '/settings/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PairsBacktestRoute = PairsBacktestRouteImport.update({
+  id: '/pairs/backtest',
+  path: '/pairs/backtest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompanyIdIndexRoute = CompanyIdIndexRouteImport.update({
@@ -68,9 +74,10 @@ const CompanyIdEntryRoute = CompanyIdEntryRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
-  '/pairs': typeof PairsRoute
+  '/pairs/backtest': typeof PairsBacktestRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
+  '/pairs/': typeof PairsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
   '/company/$id/thesis': typeof CompanyIdThesisRoute
@@ -79,9 +86,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
-  '/pairs': typeof PairsRoute
+  '/pairs/backtest': typeof PairsBacktestRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
+  '/pairs': typeof PairsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
   '/company/$id/thesis': typeof CompanyIdThesisRoute
@@ -91,9 +99,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
-  '/pairs': typeof PairsRoute
+  '/pairs/backtest': typeof PairsBacktestRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
+  '/pairs/': typeof PairsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/company/$id/entry': typeof CompanyIdEntryRoute
   '/company/$id/thesis': typeof CompanyIdThesisRoute
@@ -104,9 +113,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/compare'
-    | '/pairs'
+    | '/pairs/backtest'
     | '/settings/data'
     | '/settings/providers'
+    | '/pairs/'
     | '/settings/'
     | '/company/$id/entry'
     | '/company/$id/thesis'
@@ -115,9 +125,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/compare'
-    | '/pairs'
+    | '/pairs/backtest'
     | '/settings/data'
     | '/settings/providers'
+    | '/pairs'
     | '/settings'
     | '/company/$id/entry'
     | '/company/$id/thesis'
@@ -126,9 +137,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/compare'
-    | '/pairs'
+    | '/pairs/backtest'
     | '/settings/data'
     | '/settings/providers'
+    | '/pairs/'
     | '/settings/'
     | '/company/$id/entry'
     | '/company/$id/thesis'
@@ -138,9 +150,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompareRoute: typeof CompareRoute
-  PairsRoute: typeof PairsRoute
+  PairsBacktestRoute: typeof PairsBacktestRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsProvidersRoute: typeof SettingsProvidersRoute
+  PairsIndexRoute: typeof PairsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   CompanyIdEntryRoute: typeof CompanyIdEntryRoute
   CompanyIdThesisRoute: typeof CompanyIdThesisRoute
@@ -149,13 +162,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/pairs': {
-      id: '/pairs'
-      path: '/pairs'
-      fullPath: '/pairs'
-      preLoaderRoute: typeof PairsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/compare': {
       id: '/compare'
       path: '/compare'
@@ -177,6 +183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pairs/': {
+      id: '/pairs/'
+      path: '/pairs'
+      fullPath: '/pairs/'
+      preLoaderRoute: typeof PairsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/providers': {
       id: '/settings/providers'
       path: '/settings/providers'
@@ -189,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/data'
       fullPath: '/settings/data'
       preLoaderRoute: typeof SettingsDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pairs/backtest': {
+      id: '/pairs/backtest'
+      path: '/pairs/backtest'
+      fullPath: '/pairs/backtest'
+      preLoaderRoute: typeof PairsBacktestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/company/$id/': {
@@ -218,9 +238,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
-  PairsRoute: PairsRoute,
+  PairsBacktestRoute: PairsBacktestRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsProvidersRoute: SettingsProvidersRoute,
+  PairsIndexRoute: PairsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   CompanyIdEntryRoute: CompanyIdEntryRoute,
   CompanyIdThesisRoute: CompanyIdThesisRoute,

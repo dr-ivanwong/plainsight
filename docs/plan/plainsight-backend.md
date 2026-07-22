@@ -32,8 +32,8 @@ This table drives the cdk §6 invariant: every route flagged auth here must have
 | `POST /v1/extractions` | ✓ | 3 | Start an extraction job; Idempotency-Key required |
 | `GET /v1/extractions/{jobId}` | ✓ | 3 | Job status / result payload |
 | `POST /v1/proxy/{providerId}` | ✓ | 3 | BYOK pass-through for non-CORS providers (§7) |
-| `PUT /v1/pairs/artefacts/pair-scan` | ✓ | pairs slice 2 | The engine publishes the scan artefact, idempotent by run date (pairs research integration plan §4; added 2026-07-22) |
-| `GET /v1/pairs/artefacts/pair-scan` | ✓ | pairs slice 2 | The latest report in full plus the run history, for the Pairs surfaces |
+| `PUT /v1/pairs/artefacts/{kind}` | ✓ | pairs slice 2 | The engine publishes a validated artefact of the named kind, idempotent by run date (integration plan §4; added 2026-07-22, the kind segment added with slice 4: `pair-scan`, `backtest`, a closed set that grows with its schemas, never new functions) |
+| `GET /v1/pairs/artefacts/{kind}` | ✓ | pairs slice 2 | The latest report of the named kind in full plus the run history, for the Pairs surfaces; unknown kinds are not found |
 
 Route throttles: ~10 rps / 20 burst per route (cdk §8 not-list: throttles are the WAF and the scraper cost-cap). All routes sit behind CloudFront; `GET financials` carries the 6-hour edge cache with pipeline invalidation.
 
@@ -141,7 +141,7 @@ All `NodejsFunction`, Node 22, ARM64, explicit timeout, `logRetention: 30 days` 
 | `syncPush`, `syncPull` | Api | API GW | 15 s | §4; transact-writes |
 | `createUpload`, `createExtraction`, `getExtraction` | Api | API GW | 10 s | §6 |
 | `byokProxy` | Api | API GW | 25 s | §7; streaming pass-through |
-| `putPairsArtefact`, `getPairsArtefact` | Api | API GW | 10 s | pairs transport (integration plan §4, added 2026-07-22): artefact objects under `pairs/`, run rows under `PAIRS#` |
+| `putPairsArtefact`, `getPairsArtefact` | Api | API GW | 10 s | pairs transport (integration plan §4, added 2026-07-22; kind-routed from slice 4): artefact objects under `pairs/{kind}/`, run rows under `PAIRS#{kind}` |
 | `ingestTicker` | Ingestion | async invoke + SFN task | 120 s / 512 MB | fetch + normalise + gates |
 | `extractFiling` | Ingestion | SFN task | 300 s / 1536 MB | rasterising + ladder (cdk §5 sizing) |
 | `sweepDispatcher` | Ingestion | EventBridge weekly | 60 s | starts the SFN map |

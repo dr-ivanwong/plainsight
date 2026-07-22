@@ -81,6 +81,53 @@ def _scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def _backtest(args: argparse.Namespace) -> int:
+    import pandas as pd
+
+    from .artefacts import PairScanReport, build_backtest_report, write_backtest_report
+    from .backtest import backtest_pair
+    from .publish import newest_artefact
+
+    if args.scan:
+        scan_path = Path(args.scan)
+    else:
+        found = newest_artefact(Path(args.out_dir), "pair-scan")
+        if found is None:
+            print(f"no pair-scan artefacts under {args.out_dir}; run scan first", file=sys.stderr)
+            return 1
+        scan_path = found
+    scan_report = PairScanReport.model_validate_json(scan_path.read_text())
+    store = CloseStore(Path(args.data_dir))
+    split = pd.Timestamp(scan_report.window.split_date)
+    stats_by_pair = {(row.ticker1, row.ticker2): row for row in scan_report.pairs}
+    results = []
+    for candidate in scan_report.candidates:
+        stats = stats_by_pair[(candidate.ticker1, candidate.ticker2)]
+        results.append(
+            backtest_pair(
+                store.load(candidate.ticker1),
+                store.load(candidate.ticker2),
+                beta=candidate.beta,
+                split=split,
+                scan_p_value=stats.p_value,
+                scan_half_life_days=stats.half_life_days,
+            )
+        )
+    report = build_backtest_report(results, scan_report, datetime.now(timezone.utc))
+    path = write_backtest_report(report, Path(args.out_dir))
+    selected = sum(1 for pair in report.pairs if pair.selected)
+    print(
+        f"backtested {len(report.pairs)} candidate pair(s) from scan {scan_report.run_date.isoformat()}: "
+        f"{selected} selected by the stated gates"
+    )
+    print(
+        "the holdout is spent once: iterate inside the training window only "
+        "(pairs trading plan, Week 4)"
+    )
+    print(f"artefact: {path}")
+    return 0
+
+
 def _publish(args: argparse.Namespace) -> int:
     import os
 
@@ -101,9 +148,12 @@ def _publish(args: argparse.Namespace) -> int:
     if args.artefact:
         artefact_path = Path(args.artefact)
     else:
-        found = newest_artefact(Path(args.out_dir))
+        found = newest_artefact(Path(args.out_dir), args.kind)
         if found is None:
-            print(f"no pair-scan artefacts under {args.out_dir}; run scan first", file=sys.stderr)
+            print(
+                f"no {args.kind} artefacts under {args.out_dir}; run the engine first",
+                file=sys.stderr,
+            )
             return 1
         artefact_path = found
     config = PublishConfig(
@@ -113,7 +163,7 @@ def _publish(args: argparse.Namespace) -> int:
         region=os.environ.get("PLAINSIGHT_AWS_REGION", DEFAULT_REGION),
     )
     try:
-        stored = publish_artefact(artefact_path, config)
+        stored = publish_artefact(artefact_path, config, kind=args.kind)
     except PublishError as error:
         print(str(error), file=sys.stderr)
         return 1
@@ -136,9 +186,18 @@ def main(argv: list[str] | None = None) -> int:
     scan_cmd.add_argument("--out-dir", default="artefacts", help="artefact output directory")
     scan_cmd.set_defaults(run=_scan)
 
-    publish_cmd = commands.add_parser("publish", help="PUT the newest scan artefact to the app's API")
-    publish_cmd.add_argument("--artefact", help="artefact file (default: newest in the output directory)")
+    backtest_cmd = commands.add_parser(
+        "backtest", help="backtest the scan's candidates: train window, then the one-shot holdout"
+    )
+    backtest_cmd.add_argument("--data-dir", default="data", help="close cache directory")
+    backtest_cmd.add_argument("--out-dir", default="artefacts", help="artefact output directory")
+    backtest_cmd.add_argument("--scan", help="scan artefact file (default: newest in the output directory)")
+    backtest_cmd.set_defaults(run=_backtest)
+
+    publish_cmd = commands.add_parser("publish", help="PUT the newest artefact of a kind to the app's API")
+    publish_cmd.add_argument("--artefact", help="artefact file (default: newest of the kind in the output directory)")
     publish_cmd.add_argument("--out-dir", default="artefacts", help="artefact output directory")
+    publish_cmd.add_argument("--kind", default="pair-scan", choices=["pair-scan", "backtest"], help="artefact kind")
     publish_cmd.set_defaults(run=_publish)
 
     args = parser.parse_args(argv)

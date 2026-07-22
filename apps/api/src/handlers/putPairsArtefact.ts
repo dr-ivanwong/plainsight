@@ -1,18 +1,43 @@
 /**
- * PUT /v1/pairs/artefacts/pair-scan (integration plan §4; backend spec §2
+ * PUT /v1/pairs/artefacts/{kind} (integration plan §4; backend spec §2
  * route table as amended 2026-07-22): the engine publishes a validated
- * scan artefact, idempotent by run date (a re-publish of the same run
- * overwrites the same object and row). The Cognito authoriser has already
- * verified the token; the app itself never calls this route.
+ * artefact of the named kind, idempotent by run date (a re-publish of the
+ * same run overwrites the same object and row). The Cognito authoriser
+ * has already verified the token; the app itself never calls this route,
+ * and an unknown kind is not found, never stored.
  */
-import { errorEnvelope, pairsArtefactRunSchema, pairScanReportSchema } from '@plainsight/api-contract';
+import {
+  backtestReportSchema,
+  errorEnvelope,
+  pairsArtefactRunSchema,
+  pairScanReportSchema
+} from '@plainsight/api-contract';
 import type {
   APIGatewayProxyEventV2WithJWTAuthorizer,
   APIGatewayProxyStructuredResultV2
 } from 'aws-lambda';
-import { TablePairsStore, type PairsArtefactStore } from '../db/pairsStore.js';
+import type { z } from 'zod';
+import {
+  isPairsKind,
+  TablePairsStore,
+  type PairsArtefactKind,
+  type PairsArtefactStore,
+  type PairsReportMeta
+} from '../db/pairsStore.js';
 import { jsonResponse, logOutcome, requestIdOf } from '../http/respond.js';
 import { userIdOf } from './syncPush.js';
+
+export const REPORT_SCHEMAS: Record<PairsArtefactKind, z.ZodType<PairsReportMeta>> = {
+  'pair-scan': pairScanReportSchema,
+  backtest: backtestReportSchema
+};
+
+export function kindOf(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer
+): PairsArtefactKind | undefined {
+  const kind = event.pathParameters?.['kind'];
+  return kind !== undefined && isPairsKind(kind) ? kind : undefined;
+}
 
 export function createPutPairsArtefactHandler(
   store: PairsArtefactStore,
@@ -29,6 +54,13 @@ export function createPutPairsArtefactHandler(
           errorEnvelope('unauthenticated', 'A signed-in session is required to publish.', requestId)
         );
       }
+      const kind = kindOf(event);
+      if (kind === undefined) {
+        return jsonResponse(
+          404,
+          errorEnvelope('not_found', 'Unknown artefact kind.', requestId)
+        );
+      }
       let parsedBody: unknown;
       try {
         parsedBody = JSON.parse(event.body ?? '');
@@ -38,7 +70,7 @@ export function createPutPairsArtefactHandler(
           errorEnvelope('invalid_request', 'The artefact body must be JSON.', requestId)
         );
       }
-      const report = pairScanReportSchema.safeParse(parsedBody);
+      const report = REPORT_SCHEMAS[kind].safeParse(parsedBody);
       if (!report.success) {
         return jsonResponse(
           400,
@@ -47,8 +79,13 @@ export function createPutPairsArtefactHandler(
           ])
         );
       }
-      const row = await store.putRun(report.data, now().toISOString());
-      logOutcome({ requestId, route: 'putPairsArtefact', outcome: 'stored', detail: row.runDate });
+      const row = await store.putRun(kind, report.data, now().toISOString());
+      logOutcome({
+        requestId,
+        route: 'putPairsArtefact',
+        outcome: 'stored',
+        detail: `${kind} ${row.runDate}`
+      });
       return jsonResponse(200, pairsArtefactRunSchema.parse(row));
     } catch (error) {
       logOutcome({

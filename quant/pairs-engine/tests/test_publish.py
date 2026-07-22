@@ -5,9 +5,9 @@ import pytest
 
 from pairs_engine.cli import main
 from pairs_engine.publish import (
-    ARTEFACT_ROUTE,
     PublishConfig,
     PublishError,
+    artefact_route,
     mint_token,
     newest_artefact,
     publish_artefact,
@@ -51,7 +51,7 @@ def test_publish_puts_the_artefact_with_the_minted_token(tmp_path):
         if request.url.host.startswith("cognito-idp"):
             return token_handler(request)
         assert request.method == "PUT"
-        assert request.url.path == ARTEFACT_ROUTE
+        assert request.url.path == artefact_route("pair-scan")
         assert request.headers["Authorization"] == "Bearer id-token-xyz"
         assert json.loads(request.content)["artefact"] == "pairScanReport"
         return httpx.Response(200, json={"runDate": "2026-07-21", "receivedAt": "now"})
@@ -76,11 +76,35 @@ def test_publish_surfaces_the_error_envelope(tmp_path):
         publish_artefact(artefact, CONFIG, transport=httpx.MockTransport(handler))
 
 
-def test_newest_artefact_sorts_run_dates_lexicographically(tmp_path):
+def test_newest_artefact_sorts_run_dates_and_filters_by_kind(tmp_path):
     (tmp_path / "pair-scan-2026-07-01.json").write_text("{}")
     (tmp_path / "pair-scan-2026-07-21.json").write_text("{}")
+    (tmp_path / "backtest-2026-07-11.json").write_text("{}")
     assert newest_artefact(tmp_path).name == "pair-scan-2026-07-21.json"
+    assert newest_artefact(tmp_path, "backtest").name == "backtest-2026-07-11.json"
     assert newest_artefact(tmp_path / "empty-dir-that-does-not-exist") is None
+
+
+def test_publish_routes_by_kind_and_refuses_unknown_kinds(tmp_path):
+    artefact = tmp_path / "backtest-2026-07-21.json"
+    artefact.write_text('{"artefact": "backtestReport"}')
+
+    def handler(request):
+        if request.url.host.startswith("cognito-idp"):
+            return token_handler(request)
+        assert request.url.path == "/v1/pairs/artefacts/backtest"
+        return httpx.Response(200, json={"runDate": "2026-07-21"})
+
+    stored = publish_artefact(
+        artefact, CONFIG, kind="backtest", transport=httpx.MockTransport(handler)
+    )
+    assert stored["runDate"] == "2026-07-21"
+
+    def refuse(request):
+        raise AssertionError("an unknown kind must fail before any network call")
+
+    with pytest.raises(PublishError, match="unknown artefact kind"):
+        publish_artefact(artefact, CONFIG, kind="daily", transport=httpx.MockTransport(refuse))
 
 
 def test_cli_publish_without_credentials_points_at_the_runbook(monkeypatch, capsys):
@@ -103,4 +127,4 @@ def test_cli_publish_with_no_artefacts_fails_loudly(tmp_path, monkeypatch, capsy
     monkeypatch.setenv("PLAINSIGHT_COGNITO_REFRESH_TOKEN", "refresh-abc")
     exit_code = main(["publish", "--out-dir", str(tmp_path)])
     assert exit_code == 1
-    assert "run scan first" in capsys.readouterr().err
+    assert "run the engine first" in capsys.readouterr().err

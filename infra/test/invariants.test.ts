@@ -851,14 +851,14 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
       'GET /v1/companies/{ticker}',
       'GET /v1/companies/{ticker}/financials',
       'GET /v1/extractions/{jobId}',
-      'GET /v1/pairs/artefacts/pair-scan',
+      'GET /v1/pairs/artefacts/{kind}',
       'GET /v1/search',
       'GET /v1/sync/pull',
       'POST /v1/extractions',
       'POST /v1/proxy/{providerId}',
       'POST /v1/sync/push',
       'POST /v1/uploads',
-      'PUT /v1/pairs/artefacts/pair-scan',
+      'PUT /v1/pairs/artefacts/{kind}',
     ]);
     for (const route of routes) {
       const key: string = route.Properties.RouteKey;

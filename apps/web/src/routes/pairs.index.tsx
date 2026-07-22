@@ -15,7 +15,7 @@ import { pairsSearchSchema } from './-search';
 // amended 2026-07-22): the matrix and candidate table over the latest
 // published scan, with the fundamentals join into the library. The pair
 // sheet encodes in `?pair=`, the matrix measure in `?view=`.
-export const Route = createFileRoute('/pairs')({
+export const Route = createFileRoute('/pairs/')({
   validateSearch: pairsSearchSchema,
   component: PairsRoute
 });

@@ -33,8 +33,8 @@ export const queryClient = new QueryClient({
   }
 });
 
-/** Screens that render in the wider column (frontend spec §7): the dashboard, compare, and the pairs matrix. */
-const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/', '/compare', '/pairs'];
+/** Screens that render in the wider column (frontend spec §7): the dashboard, compare, and the pairs surfaces. */
+const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/', '/compare', '/pairs/', '/pairs/backtest'];
 
 /**
  * Ask the browser to keep this origin's data, once per launch. Browsers
@@ -115,8 +115,12 @@ function RootShell(): ReactElement {
   const companies = useCompanies();
   // The sleeve's progressive rule (integration plan §4): Pairs joins the
   // rail once this device has seen artefacts on the API; the pairs route
-  // keeps the flag current on every read.
+  // keeps the flag current on every read. On the sleeve's own routes the
+  // rail lists its sections, the company-group pattern.
   const pairsSeenRow = useLiveQuery(() => db.meta.get('pairsSeen'), []);
+  const pairsSection = useRouterState({
+    select: (state) => state.matches.some((match) => match.routeId.startsWith('/pairs')),
+  });
   const columnClass = wide || libraryScreener ? styles.columnWideRail : styles.columnRail;
   return (
     <QueryClientProvider client={queryClient}>
@@ -125,6 +129,7 @@ function RootShell(): ReactElement {
           <AppRail
             showCompare={(companies?.length ?? 0) >= 2}
             showPairs={pairsSeenRow?.value === true}
+            pairsSection={pairsSection}
             companyId={companyId}
             companyName={companyId === undefined ? undefined : company?.name}
           />

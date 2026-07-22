@@ -13,6 +13,18 @@ export {
   type IngestingBody
 } from './envelope.js';
 export {
+  BACKTEST_ARTEFACT_KIND,
+  BACKTEST_EXIT_REASONS,
+  BACKTEST_SCHEMA_VERSION,
+  backtestAssumptionsSchema,
+  backtestCriteriaSchema,
+  backtestGatesSchema,
+  backtestPairSchema,
+  backtestReportSchema,
+  backtestSeriesSchema,
+  backtestTradeSchema,
+  backtestWindowResultSchema,
+  backtestWindowSpecSchema,
   PAIR_SCAN_ARTEFACT_KIND,
   PAIR_SCAN_SCHEMA_VERSION,
   PAIR_SKIP_REASONS,
@@ -23,10 +35,16 @@ export {
   pairScanWindowSchema,
   pairsArtefactCollectionSchema,
   pairsArtefactRunSchema,
+  pairsBacktestCollectionSchema,
   skippedPairSchema,
+  type BacktestPair,
+  type BacktestReport,
+  type BacktestTrade,
+  type BacktestWindowResult,
   type PairRow,
   type PairsArtefactCollection,
   type PairsArtefactRun,
+  type PairsBacktestCollection,
   type PairScanReport
 } from './pairs.js';
 export {

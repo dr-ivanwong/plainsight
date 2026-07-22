@@ -376,15 +376,18 @@ export class ApiStack extends Stack {
 
       // The pairs sleeve transport (integration plan §4; backend spec §2
       // route table as amended 2026-07-22): the engine's authenticated
-      // PUT, idempotent by run date, and the app's read of latest plus
-      // history. Scan artefacts are durable objects under pairs/ (outside
-      // the uploads/ seven-day lifecycle); the run rows live under the
-      // PAIRS# partition. The app never trades and never writes sleeve
-      // data: the only writer is the engine's publish through this route.
+      // PUT per artefact kind, idempotent by run date, and the app's read
+      // of latest plus history. The kind segment routes inside two
+      // Lambdas over a closed set (pair-scan, backtest; later kinds land
+      // with their schemas, not new functions). Artefacts are durable
+      // objects under pairs/{kind}/ (outside the uploads/ seven-day
+      // lifecycle); the run rows live under the PAIRS#{kind} partition.
+      // The app never trades and never writes sleeve data: the only
+      // writer is the engine's publish through this route.
       const putPairsArtefact = new AppFunction(this, 'PutPairsArtefact', {
         entry: handlerEntry('putPairsArtefact'),
         description:
-          'PUT /v1/pairs/artefacts/pair-scan: the engine publishes a validated scan artefact (integration plan §4).',
+          'PUT /v1/pairs/artefacts/{kind}: the engine publishes a validated artefact of the named kind (integration plan §4).',
         timeout: Duration.seconds(10),
         environment: { ...environment, UPLOADS_BUCKET: uploadsBucket.bucketName },
       });
@@ -415,7 +418,7 @@ export class ApiStack extends Stack {
       const getPairsArtefact = new AppFunction(this, 'GetPairsArtefact', {
         entry: handlerEntry('getPairsArtefact'),
         description:
-          'GET /v1/pairs/artefacts/pair-scan: the latest report plus run history for the Pairs surfaces (integration plan §4).',
+          'GET /v1/pairs/artefacts/{kind}: the latest report of the named kind plus run history for the Pairs surfaces (integration plan §4).',
         timeout: Duration.seconds(10),
         environment: { ...environment, UPLOADS_BUCKET: uploadsBucket.bucketName },
       });
@@ -443,13 +446,13 @@ export class ApiStack extends Stack {
       );
 
       this.httpApi.addRoutes({
-        path: '/v1/pairs/artefacts/pair-scan',
+        path: '/v1/pairs/artefacts/{kind}',
         methods: [apigwv2.HttpMethod.PUT],
         integration: new HttpLambdaIntegration('PutPairsArtefactIntegration', putPairsArtefact.fn),
         authorizer,
       });
       this.httpApi.addRoutes({
-        path: '/v1/pairs/artefacts/pair-scan',
+        path: '/v1/pairs/artefacts/{kind}',
         methods: [apigwv2.HttpMethod.GET],
         integration: new HttpLambdaIntegration('GetPairsArtefactIntegration', getPairsArtefact.fn),
         authorizer,

@@ -136,8 +136,15 @@ The engine is built and tested keyless (integration plan §7, slice 1); the firs
    uv run --directory quant/pairs-engine pairs-engine scan
    ```
 
-   The summary prints tested, skipped, significant and candidate counts, and the artefact lands in `quant/pairs-engine/artefacts/pair-scan-<runDate>.json`. Sanity marks: about twelve hundred pairs tested; dozens significant at the nominal threshold by chance alone (the plan's multiple-comparisons caution); the candidate list much shorter. The holdout begins after the printed split date and stays untouched until the validation slice.
-4. **Publish the artefact to the API** (integration plan §7, slice 2). Once, mint a refresh token with the IAM-gated admin flow (values in angle brackets from the Auth stack outputs; the leading space keeps the password out of zsh history):
+   The summary prints tested, skipped, significant and candidate counts, and the artefact lands in `quant/pairs-engine/artefacts/pair-scan-<runDate>.json`. Sanity marks: about twelve hundred pairs tested; dozens significant at the nominal threshold by chance alone (the plan's multiple-comparisons caution); the candidate list much shorter. The holdout begins after the printed split date and stays untouched until the backtest's validation step.
+4. **Backtest the candidates** (integration plan §7, slice 4):
+
+   ```sh
+   uv run --directory quant/pairs-engine pairs-engine backtest
+   ```
+
+   Train window first, then the one-shot holdout, per candidate, net of the plan's costs; the artefact lands as `backtest-<runDate>.json` and the summary prints how many pairs the stated gates selected. The holdout is spent by this run: if its numbers send you back to change thresholds or swap pairs, iterate inside the training window only (pairs trading plan, Week 4).
+5. **Publish the artefacts to the API** (integration plan §7, slices 2 and 4). Once, mint a refresh token with the IAM-gated admin flow (values in angle brackets from the Auth stack outputs; the leading space keeps the password out of zsh history):
 
    ```sh
     aws cognito-idp admin-initiate-auth --user-pool-id <UserPoolId> \
@@ -154,7 +161,7 @@ The engine is built and tested keyless (integration plan §7, slice 1); the firs
       uv run --directory quant/pairs-engine pairs-engine publish
    ```
 
-   The publish is idempotent by run date: a re-publish after a same-day re-scan overwrites the same run. The GET half of the route pair serves latest plus history to the Pairs surfaces from slice 3; until then, a `curl` with a minted token is the read-back check.
+   The publish is idempotent by run date, and one kind rides per call: the command above publishes the scan; add `--kind backtest` (same environment) for the backtest artefact. The GET half of the route pair serves latest plus history to the Pairs surfaces: Research reads the scan, Backtest reads the backtest.
 
 ## Rebuild from zero (the drill)
 
