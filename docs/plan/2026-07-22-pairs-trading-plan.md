@@ -171,7 +171,16 @@ for fname in os.listdir('data'):
 
 print(f"Loaded {len(data)} tickers\n")
 
-# Test cointegration for ALL pairs
+# Freeze the holdout FIRST. Everything below runs on the training window
+# only: the final 20% of the calendar stays untouched until Week 4, and it
+# is used exactly once. Selecting pairs on the full period and then
+# "validating" on its tail validates nothing, because the test data
+# already voted.
+all_dates = sorted(set().union(*[set(series.index) for series in data.values()]))
+split_date = all_dates[int(len(all_dates) * 0.8)]
+print(f"Training window ends {split_date.date()}; the holdout begins after it.\n")
+
+# Test cointegration for ALL pairs, on the training window
 # Expected: ~C(50,2) = 1,225 pairs
 print("Testing pairs for cointegration...")
 results = []
@@ -179,25 +188,33 @@ pair_count = 0
 
 for ticker1, ticker2 in itertools.combinations(sorted(data.keys()), 2):
     pair_count += 1
-    
-    price1 = data[ticker1].values
-    price2 = data[ticker2].values
-    
+
+    # Align on dates before anything statistical: positional arrays from
+    # different listing calendars silently shift one series against the
+    # other, and cointegration on shifted series is noise.
+    joined = pd.concat([data[ticker1], data[ticker2]], axis=1, join='inner').dropna()
+    train = joined[joined.index <= split_date]
+    if len(train) < 500:
+        continue  # not enough shared training history
+
+    price1 = train.iloc[:, 0].values
+    price2 = train.iloc[:, 1].values
+
     # Engle-Granger cointegration test
     # H0: NOT cointegrated
     # If p < 0.05, reject H0 → they ARE cointegrated
     try:
         score, pvalue, _ = coint(price1, price2)
-    except:
+    except Exception:
         continue
-    
-    if pvalue < 0.05:  # Only keep significant pairs
-        # Calculate hedge ratio (OLS regression)
-        # price1 = alpha + beta * price2 + error
+
+    if pvalue < 0.05:  # Only keep nominally significant pairs
+        # Hedge ratio by OLS, on the training window only; the same beta
+        # rides unchanged into Week 4's holdout and the live system.
         X = np.column_stack([price2, np.ones(len(price2))])
         coeffs = np.linalg.lstsq(X, price1, rcond=None)[0]
         beta = coeffs[0]
-        
+
         results.append({
             'ticker1': ticker1,
             'ticker2': ticker2,
@@ -205,7 +222,7 @@ for ticker1, ticker2 in itertools.combinations(sorted(data.keys()), 2):
             'beta': beta,
             'correlation': np.corrcoef(price1, price2)[0, 1],
         })
-    
+
     # Print progress
     if pair_count % 200 == 0:
         print(f"  Tested {pair_count} pairs, found {len(results)} cointegrated")
@@ -238,6 +255,8 @@ NAB     ANZ      0.00023  0.8765  0.932
 CBA     NAB      0.00051  0.9123  0.928
 ...
 ```
+
+**Caution on the pair count.** Testing 1,225 pairs at p < 0.05 will produce roughly 60 nominal positives by chance alone even if nothing is cointegrated, so a long Week 1 list is expected and by itself means little. Cut the search space before the statistics (prefer pairs with an economic reason to co-move: same sector, same business model), rank on the p < 0.01 tier, and let the untouched holdout, not the p-value, carry the final vote.
 
 ---
 
@@ -275,8 +294,9 @@ def calculate_half_life(ticker1, ticker2, beta, data, lookback=60):
         half_life (float): Days to mean revert 50%
         half_life_valid (bool): Is half-life realistic?
     """
-    price1 = data[ticker1].values
-    price2 = data[ticker2].values
+    joined = pd.concat([data[ticker1], data[ticker2]], axis=1, join='inner').dropna()
+    price1 = joined.iloc[:, 0].values
+    price2 = joined.iloc[:, 1].values
     
     # Calculate spread
     spread = price1 - beta * price2
@@ -311,6 +331,10 @@ def calculate_half_life(ticker1, ticker2, beta, data, lookback=60):
 # Load cointegrated pairs
 pairs_df = pd.read_csv('week1_cointegrated_pairs.csv')
 
+# Weeks 2 and 3 select and tune on the training window only; the holdout
+# frozen in Week 1 stays untouched until Week 4.
+train_data = {ticker: series[series.index <= split_date] for ticker, series in data.items()}
+
 print("Calculating half-life for all cointegrated pairs...\n")
 metrics = []
 
@@ -320,7 +344,7 @@ for idx, row in pairs_df.iterrows():
     beta = row['beta']
     
     try:
-        half_life, is_valid = calculate_half_life(ticker1, ticker2, beta, data)
+        half_life, is_valid = calculate_half_life(ticker1, ticker2, beta, train_data)
         metrics.append({
             'ticker1': ticker1,
             'ticker2': ticker2,
@@ -437,7 +461,7 @@ for idx, row in metrics_df.iterrows():
     beta = row['beta']
     
     try:
-        sharpe = calculate_sharpe(ticker1, ticker2, beta, data)
+        sharpe = calculate_sharpe(ticker1, ticker2, beta, train_data)
         sharpe_results.append({
             'ticker1': ticker1,
             'ticker2': ticker2,
@@ -626,7 +650,7 @@ for idx, row in pairs_to_test.iterrows():
     print(f"Testing {ticker1}-{ticker2}...", end=' ')
     
     try:
-        result = backtest_pair(ticker1, ticker2, beta, data)
+        result = backtest_pair(ticker1, ticker2, beta, train_data)
         backtest_results.append(result)
         
         print(f"Sharpe: {result['annual_sharpe']:>6.2f}  DD: {result['max_drawdown']:>7.1f}%  Trades: {result['num_trades']:>4.0f}")
@@ -712,74 +736,68 @@ live_candidates.to_csv('week3_live_candidates.csv', index=False)
 
 #### Detailed Steps
 
-##### Step 4.1: Train/Test Split Backtest
+##### Step 4.1: Holdout Validation
 
 ```python
-def backtest_train_test_split(ticker1, ticker2, beta, data,
-                               train_pct=0.8,
-                               entry_zscore=2.0, exit_zscore=0.5,
-                               lookback=60):
+def validate_out_of_sample(ticker1, ticker2, beta, data, split_date,
+                           entry_zscore=2.0, exit_zscore=0.5,
+                           lookback=60, cost_bps=COST_BPS):
     """
-    Backtest with temporal train/test split.
-    
-    Train: First 80% of data (2019-2022)
-    Test: Last 20% of data (2023-2024, unseen by model)
-    
-    This prevents overfitting to a specific historical period.
+    One-shot holdout validation, with the exact rule that trades live.
+
+    Everything tunable (the pair, beta, the thresholds) was fixed on the
+    training window in Weeks 1 and 2; this function's only job is to run
+    the identical rolling-statistics engine from Step 2.2 across data that
+    influenced none of those choices. It warm-starts with the last lookback
+    days of training so the first holdout day has statistics. The static
+    train-mean variant this replaces validated a strategy nobody deploys:
+    rolling in the backtest means rolling here.
     """
-    price1 = data[ticker1].values
-    price2 = data[ticker2].values
-    dates = data[ticker1].index
-    
-    # Split point
-    split_idx = int(len(price1) * train_pct)
-    split_date = dates[split_idx]
-    
-    print(f"  Train: {dates[0].date()} - {dates[split_idx-1].date()}")
-    print(f"  Test:  {dates[split_idx].date()} - {dates[-1].date()}")
-    
-    # TRAIN period: calculate rolling statistics
-    train_spread = price1[:split_idx] - beta * price2[:split_idx]
-    
-    # For each point in test set, use TRAIN period stats
-    test_price1 = price1[split_idx:]
-    test_price2 = price2[split_idx:]
-    test_spread = test_price1 - beta * test_price2
-    
-    # Use TRAIN mean/std (don't look-ahead)
-    train_mean = np.mean(train_spread)
-    train_std = np.std(train_spread)
-    
-    # Z-score on test set using train statistics
-    test_z = (test_spread - train_mean) / train_std
-    
-    # Signals on test set only
-    signals = np.zeros(len(test_z))
-    signals[test_z > entry_zscore] = -1
-    signals[test_z < -entry_zscore] = 1
-    signals[np.abs(test_z) < exit_zscore] = 0
-    
-    # P&L on test set
-    test_returns = np.diff(test_spread) / np.abs(test_spread[:-1])
-    pnl = signals[:-1] * test_returns
-    
-    # Metrics
-    cumulative = np.cumprod(1 + pnl)
-    total_return = (cumulative[-1] - 1) * 100
-    
-    sharpe = (np.mean(pnl) / np.std(pnl) * np.sqrt(252)) if np.std(pnl) > 0 else 0
-    
-    max_dd = ((cumulative / np.maximum.accumulate(cumulative)) - 1).min() * 100
-    win_rate = (pnl > 0).mean() * 100
-    
+    joined = pd.concat([data[ticker1], data[ticker2]], axis=1, join='inner').dropna()
+    holdout_from = joined.index.searchsorted(split_date, side='right')
+    window = joined.iloc[max(holdout_from - lookback, 0):]
+
+    pnl, position, gross_notional = pair_daily_pnl(
+        window.iloc[:, 0].values, window.iloc[:, 1].values, beta,
+        lookback=lookback, entry_zscore=entry_zscore,
+        exit_zscore=exit_zscore, cost_bps=cost_bps
+    )
+    pnl = pnl[lookback:]          # score only true holdout days
+    position = position[lookback:]
+
+    capital = float(np.nanmean(gross_notional))
+    daily = pnl / capital
+    equity = capital + np.cumsum(pnl)
+
+    oos_sharpe = 0.0
+    if daily.std() > 0:
+        oos_sharpe = float(daily.mean() / daily.std() * np.sqrt(252))
+    running_max = np.maximum.accumulate(equity)
+    oos_max_dd = ((equity - running_max) / running_max).min() * 100
+
+    trade_pnls = []
+    open_idx = None
+    for t in range(len(position)):
+        if open_idx is None and position[t] != 0:
+            open_idx = t
+        elif open_idx is not None and position[t] == 0:
+            trade_pnls.append(pnl[open_idx:t + 1].sum())
+            open_idx = None
+    if open_idx is not None:
+        trade_pnls.append(pnl[open_idx:].sum())
+    oos_win_rate = (
+        sum(1 for tp in trade_pnls if tp > 0) / len(trade_pnls) * 100
+        if trade_pnls else 0.0
+    )
+
     return {
         'pair': f'{ticker1}-{ticker2}',
-        'train_period': f'{dates[0].date()}-{dates[split_idx-1].date()}',
-        'test_period': f'{dates[split_idx].date()}-{dates[-1].date()}',
-        'oos_return': total_return,
-        'oos_sharpe': sharpe,
-        'oos_max_dd': max_dd,
-        'oos_win_rate': win_rate,
+        'holdout_start': str(window.index[lookback].date()),
+        'holdout_end': str(window.index[-1].date()),
+        'oos_return': (equity[-1] / capital - 1) * 100,
+        'oos_sharpe': oos_sharpe,
+        'oos_max_dd': oos_max_dd,
+        'oos_win_rate': oos_win_rate,
     }
 
 # Load candidates
@@ -799,7 +817,7 @@ for idx, row in candidates.iterrows():
     print(f"\n{ticker1}-{ticker2}:")
     
     try:
-        result = backtest_train_test_split(ticker1, ticker2, beta, data)
+        result = validate_out_of_sample(ticker1, ticker2, beta, data, split_date)
         oos_results.append(result)
         
         print(f"  OOS Sharpe: {result['oos_sharpe']:>6.2f}")
@@ -822,6 +840,8 @@ oos_df.to_csv('week4_oos_validation.csv', index=False)
 - [ ] OOS Sharpe within 80% of in-sample Sharpe (not overfit)
 - [ ] Minimum 3 pairs pass OOS validation
 - [ ] Results saved to `week4_oos_validation.csv`
+
+**The holdout is spent once.** If these numbers send you back to change thresholds or swap pairs, the changed strategy has now seen the holdout, and re-splitting the same history cannot re-arm it. Iterate inside the training window only, and treat paper trading (Weeks 5 to 8) as the next genuinely unseen data.
 
 **Example:**
 ```
@@ -864,14 +884,14 @@ print(f"\n✨ READY FOR WEEK 5 DEPLOYMENT\n")
 final_live_pairs.to_csv('week4_final_live_pairs.csv', index=False)
 ```
 
-**Deliverable:**
+**Deliverable (illustrative shape; figures are placeholders):**
 ```
 week4_final_live_pairs.csv
 
-pair      train_period           test_period             oos_return  oos_sharpe  oos_max_dd  oos_win_rate
-BHP-RIO   2019-01-02-2022-05-16  2022-05-17-2024-01-01       142.3        1.87       -11.2        46.1
-NAB-ANZ   2019-01-02-2022-05-16  2022-05-17-2024-01-01       118.4        1.73       -12.8        45.3
-CBA-NAB   2019-01-02-2022-05-16  2022-05-17-2024-01-01       104.2        1.54       -13.5        44.2
+pair      holdout_start  holdout_end  oos_return  oos_sharpe  oos_max_dd  oos_win_rate
+BHP-RIO   2023-01-03     2023-12-29        11.2        1.61        -6.8          52.0
+NAB-ANZ   2023-01-03     2023-12-29         8.9        1.38        -7.9          50.0
+CBA-NAB   2023-01-03     2023-12-29         7.4        1.29        -9.1          47.0
 ```
 
 ---
