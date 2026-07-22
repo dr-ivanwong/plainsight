@@ -2,7 +2,7 @@
 ## Bootstrap Quant Fund | $100K POC Capital | 1 Engineer
 
 **Date:** 2026-07-22
-**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: no per-pair stop against divergence or takeover events, short-leg borrow and dividend mechanics unaddressed (the backtest still runs on raw rather than adjusted closes), data licensing unconfirmed, no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
+**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: short-leg borrow and dividend mechanics unaddressed (the backtest still runs on raw rather than adjusted closes), data licensing unconfirmed, no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
 
 ---
 
@@ -396,6 +396,7 @@ COST_BPS = 15.0  # commission plus expected slippage, per side, on traded notion
 
 def pair_daily_pnl(price1, price2, beta,
                    lookback=60, entry_zscore=2.0, exit_zscore=0.5,
+                   stop_zscore=3.5, max_hold_days=60,
                    cost_bps=COST_BPS):
     """
     Daily dollar P&L for one spread unit, net of costs.
@@ -405,6 +406,15 @@ def pair_daily_pnl(price1, price2, beta,
     yesterday's position earns today's change in the spread. Never use
     pct_change() on a spread; a spread crosses zero, so percentage returns
     on it are undefined and compound into nonsense.
+
+    Two per-pair stops guard the classic pairs failure, the spread that
+    never comes back. The z-stop abandons a position when the spread blows
+    this far past entry: that is more likely a changed relationship than a
+    better price. The time stop closes anything held max_hold_days without
+    reverting: capital parked in a non-reverting spread is what half-life
+    screening was meant to prevent. After either stop the pair stands down
+    until the z-score first returns inside the exit band, so a
+    still-stretched spread cannot re-enter on the next bar.
     """
     s1 = pd.Series(price1, dtype=float)
     s2 = pd.Series(price2, dtype=float)
@@ -415,21 +425,32 @@ def pair_daily_pnl(price1, price2, beta,
     z = ((spread - mean) / std).values
 
     # Explicit position state: enter beyond the entry threshold, hold until
-    # the z-score comes back inside the exit band. (Assigning zeros to the
-    # in-between zone and forward-filling does not implement this rule; it
-    # closes every position a day after it opens.)
+    # the z-score comes back inside the exit band, stop on the z-stop or
+    # the time stop.
     position = np.zeros(len(spread))
+    stood_down = False
+    days_held = 0
     for t in range(lookback, len(spread)):
         held = position[t - 1]
+        if stood_down:
+            if abs(z[t]) < exit_zscore:
+                stood_down = False
+            continue  # flat until the spread has actually normalised
         if held == 0:
+            days_held = 0
             if z[t] > entry_zscore:
                 position[t] = -1.0
             elif z[t] < -entry_zscore:
                 position[t] = 1.0
-        elif abs(z[t]) < exit_zscore:
-            position[t] = 0.0
         else:
-            position[t] = held
+            days_held += 1
+            if abs(z[t]) >= stop_zscore or days_held >= max_hold_days:
+                position[t] = 0.0
+                stood_down = True
+            elif abs(z[t]) < exit_zscore:
+                position[t] = 0.0
+            else:
+                position[t] = held
 
     pnl = np.zeros(len(spread))
     pnl[1:] = position[:-1] * np.diff(spread.values)
@@ -1096,11 +1117,19 @@ CLOSES = Path('data/closes.csv')   # daily closes, appended after each close
 ENTRY_Z = 2.0
 EXIT_Z = 0.5
 LOOKBACK = 60
+STOP_Z = 3.5        # abandon: this far past entry is a broken pair, not a bargain
+MAX_HOLD_DAYS = 60  # time stop: reversion that never comes is not reversion
 LIMIT_CAP_BPS = 10  # how far through the touch a limit order may pay
 
 
 def compute_targets(pairs_config):
-    """Nightly job: today's close decides tomorrow's target position."""
+    """Nightly job: today's close decides tomorrow's target position.
+
+    The book keeps a little state per pair (units, days held, stood_down)
+    so the same stops the backtest measured apply live: the z-stop, the
+    time stop, and the stand-down that blocks re-entry until the spread
+    first trades back inside the exit band.
+    """
     closes = pd.read_csv(CLOSES, index_col='date', parse_dates=True)
     book = json.loads(STATE.read_text()) if STATE.exists() else {}
     targets = {}
@@ -1111,9 +1140,21 @@ def compute_targets(pairs_config):
         z = float((spread.iloc[-1] - window.mean()) / window.std())
 
         name = f'{t1}-{t2}'
-        held = book.get(name, 0)
-        if held == 0:
+        entry = book.get(name, {})
+        held = entry.get('units', 0)
+        days_held = entry.get('days_held', 0)
+        stood_down = entry.get('stood_down', False)
+
+        if stood_down:
+            direction = 0
+            if abs(z) < EXIT_Z:
+                stood_down = False  # normalised; eligible again from tomorrow
+        elif held == 0:
             direction = -1 if z > ENTRY_Z else (1 if z < -ENTRY_Z else 0)
+        elif abs(z) >= STOP_Z or days_held + 1 >= MAX_HOLD_DAYS:
+            direction = 0
+            stood_down = True
+            logging.warning('stop on %s: z=%.2f after %d days held', name, z, days_held + 1)
         else:
             # hold until the z-score is back inside the exit band
             direction = 0 if abs(z) < EXIT_Z else int(np.sign(held))
@@ -1124,6 +1165,7 @@ def compute_targets(pairs_config):
             'ticker1': t1, 'ticker2': t2, 'beta': beta,
             'z': round(z, 2),
             'target_units': direction * units,
+            'stood_down': stood_down,
         }
         logging.info('compute %s: z=%.2f target=%d units', name, z, direction * units)
     TARGETS.write_text(json.dumps(targets, indent=2))
@@ -1148,7 +1190,7 @@ class PairsTrader:
         broker = {p.contract.symbol: p.position for p in await self.ib.reqPositionsAsync()}
         expected = {}
         for pair in self.pairs:
-            units = book.get(f"{pair['ticker1']}-{pair['ticker2']}", 0)
+            units = book.get(f"{pair['ticker1']}-{pair['ticker2']}", {}).get('units', 0)
             expected[pair['ticker1']] = expected.get(pair['ticker1'], 0) + units
             expected[pair['ticker2']] = expected.get(pair['ticker2'], 0) - round(units * pair['beta'])
         for symbol, want in expected.items():
@@ -1191,14 +1233,25 @@ class PairsTrader:
         book = await self.reconcile()
         targets = json.loads(TARGETS.read_text())
         for name, target in targets.items():
-            delta_units = target['target_units'] - book.get(name, 0)
-            if delta_units == 0:
-                continue
-            # risk gate first (see the risk controls section): loss limits,
-            # position and leverage caps, the drawdown circuit breaker
-            await self._work_leg(target['ticker1'], delta_units)
-            await self._work_leg(target['ticker2'], -round(delta_units * target['beta']))
-            book[name] = target['target_units']
+            entry = book.get(name, {'units': 0, 'days_held': 0, 'stood_down': False})
+            delta_units = target['target_units'] - entry['units']
+            if delta_units != 0:
+                # risk gate first (see the risk controls section): loss limits,
+                # position and leverage caps, the drawdown circuit breaker
+                await self._work_leg(target['ticker1'], delta_units)
+                await self._work_leg(target['ticker2'], -round(delta_units * target['beta']))
+            held_now = target['target_units']
+            if held_now == 0:
+                days_held = 0
+            elif entry['units'] == 0:
+                days_held = 1  # opened today
+            else:
+                days_held = entry['days_held'] + 1
+            book[name] = {
+                'units': held_now,
+                'days_held': days_held,
+                'stood_down': target['stood_down'],
+            }
             # write after every pair, not at the end: a crash mid-run must
             # not leave filled orders outside the book
             self.state_path.write_text(json.dumps(book, indent=2))
@@ -1362,6 +1415,8 @@ def apply_risk_controls(order, account_info, pair_config):
     
     return True  # Order approved
 ```
+
+**Per-pair stops (in the engine and the book).** Three stops sit inside the strategy itself, not around it. The z-stop abandons at |z| >= 3.5: a spread that far past entry is more likely a changed relationship (a takeover, a guidance shock, an index event) than a better price. The time stop closes anything held 60 trading days without reverting, roughly three times the longest half-life the screen accepts. After either stop the pair stands down until its z-score first returns inside the exit band, so a still-stretched spread cannot re-enter the next morning. Both run identically in the backtest engine and the nightly compute job. **The event stop is operational, not statistical:** on any market-sensitive announcement touching either leg (a takeover or scheme, a capital raising, a trading halt, guidance withdrawn), close the pair the same day and retire it pending re-validation. A price-only backtest cannot exercise this rule, which is one honest reason live results will not perfectly match it.
 
 ---
 
@@ -1826,6 +1881,8 @@ But leaves no margin for error
 ### If Pair Cointegration Breaks
 
 **Scenario:** Engle-Granger test p-value > 0.05
+
+(The per-pair stops are the fast path out of a breaking pair; this weekly test is the slow confirmation that it should not come back.)
 
 **Action:**
 1. Remove pair from live trading immediately
