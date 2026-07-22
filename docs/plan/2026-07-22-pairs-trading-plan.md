@@ -2,7 +2,7 @@
 ## Bootstrap Quant Fund | $100K POC Capital | 1 Engineer
 
 **Date:** 2026-07-22
-**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
+**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
 
 ---
 
@@ -1562,6 +1562,7 @@ def weekly_monitoring():
 - Prepare POC report for backer (see "Week 20 Backer Report" section below)
 - Write up: What worked, what didn't, why edge is real or why it failed
 - If successful: Detailed plan for scaling to $500K-$1M
+- Commission the outside-capital legal advice if not already running (the gate in the structure section)
 
 **Week 20: Go/No-Go Decision**
 
@@ -1572,7 +1573,7 @@ Timeline: 4-8 weeks to full deployment
 Expected returns: $75-100K+ annually (18-20% on $500K)
 
 Action items:
-├─ Secure $500K from backer
+├─ Secure $500K from backer (gated on the settled legal structure; see the outside-capital section)
 ├─ Deploy 5 pairs across $500K capital
 ├─ Maintain same daily rebalancing infrastructure
 └─ Report monthly to backer
@@ -1761,7 +1762,7 @@ Year 2: $610K → $745K (+22%)
 
 ### Backer Next Steps
 
-1. **Approve $500K deployment** (can start with $200K, add more if successful)
+1. **Approve $500K deployment**, conditional on the settled legal structure (the outside-capital section; nothing moves before it); can start with $200K
 2. **Monthly reporting**: Sharpe, DD, Sharpe consistency vs. backtest
 3. **Annual review**: ROI, strategy evolution, competitive landscape
 4. **Optional**: Add 2nd strategy (daily momentum) in parallel for diversification
@@ -1835,6 +1836,38 @@ We've successfully proven that pairs trading works on the ASX with:
 ```
 
 ---
+
+## Outside Capital: Structure Before Scale
+
+The POC trades the operator's own account, and nothing more is needed for
+that. The moment the Week 20 decision would bring a backer's money under
+management, this stops being an engineering question:
+
+- **Licensing.** Managing another person's capital for a fee or a profit
+  share is a financial service under the Corporations Act 2001. Doing it
+  without an Australian financial services licence, an authorised
+  representative arrangement under someone else's licence, or a genuine
+  exemption is an offence, and "it's only one backer" is not an exemption.
+- **The plausible structures**, in rough order of weight: the backer trades
+  their own account and employs or contracts the operator; the operator
+  becomes a corporate authorised representative under an incumbent AFSL
+  holder; a wholesale-only mandate through a licensed trustee or platform,
+  if the backer meets the wholesale client tests; or a fresh AFSL, which is
+  a business decision in its own right, not a form to fill in.
+- **Adjacent questions for the same advice session:** the trading entity
+  (individual, company, trust) and its tax treatment; whether the backer
+  relationship is a loan, an investment or a mandate, because the three are
+  regulated differently; insurance; and what happens to open positions if
+  either party wants out mid-quarter.
+
+**The gate:** no outside dollar is accepted before written advice from an
+Australian financial services lawyer settles the structure. The Week 20
+"secure $500K" step is conditional on this gate, and the advice should be
+commissioned around Week 12, because licensing arrangements take longer
+than eight weeks.
+
+---
+
 
 ## Slippage & Commission Analysis ($100K POC)
 
