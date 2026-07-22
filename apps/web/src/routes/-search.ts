@@ -75,3 +75,19 @@ export const compareSearchSchema = z.object({
 });
 
 export type CompareSearch = z.infer<typeof compareSearchSchema>;
+
+/**
+ * The pairs research screen (integration plan §4): `?pair=AAA-BBB` opens
+ * that pair's detail sheet (closed by the system back gesture, the house
+ * rule), and `?view=` picks the matrix's measure. Unknown values degrade
+ * to the plain screen, like every other search contract here.
+ */
+export const pairsSearchSchema = z.object({
+  pair: z.string().optional().catch(undefined),
+  view: z
+    .enum(['correlation', 'cointegration'])
+    .optional()
+    .catch(undefined)
+});
+
+export type PairsSearch = z.infer<typeof pairsSearchSchema>;

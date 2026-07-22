@@ -16,7 +16,7 @@ import {
 } from '@plainsight/api-contract';
 
 /** Dev override for pointing at a deployed API; production is same-origin. */
-const apiOrigin = (): string =>
+export const apiOrigin = (): string =>
   (import.meta.env as Record<string, string | undefined>)['VITE_API_ORIGIN'] ?? '';
 
 export type FinancialsFetch =

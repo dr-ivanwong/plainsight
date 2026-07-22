@@ -21,10 +21,13 @@ const COMPANY_SECTIONS = [
  */
 export function AppRail({
   showCompare,
+  showPairs,
   companyId,
   companyName
 }: {
   showCompare: boolean;
+  /** The sleeve's progressive rule (integration plan §4): Pairs joins once this device has seen artefacts on the API. */
+  showPairs: boolean;
   companyId?: string;
   companyName?: string;
 }): ReactElement {
@@ -49,6 +52,17 @@ export function AppRail({
               activeProps={{ className: styles.sectionActive }}
             >
               Compare
+            </Link>
+          </li>
+        ) : null}
+        {showPairs ? (
+          <li>
+            <Link
+              to="/pairs"
+              className={styles.section}
+              activeProps={{ className: styles.sectionActive }}
+            >
+              Pairs
             </Link>
           </li>
         ) : null}

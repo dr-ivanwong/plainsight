@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PairsRouteImport } from './routes/pairs'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as CompanyIdIndexRouteImport } from './routes/company.$id.index'
 import { Route as CompanyIdThesisRouteImport } from './routes/company.$id.thesis'
 import { Route as CompanyIdEntryRouteImport } from './routes/company.$id.entry'
 
+const PairsRoute = PairsRouteImport.update({
+  id: '/pairs',
+  path: '/pairs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
+  '/pairs': typeof PairsRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
   '/settings/': typeof SettingsIndexRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
+  '/pairs': typeof PairsRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
   '/settings': typeof SettingsIndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
   '/onboarding': typeof OnboardingRoute
+  '/pairs': typeof PairsRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
   '/settings/': typeof SettingsIndexRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compare'
     | '/onboarding'
+    | '/pairs'
     | '/settings/data'
     | '/settings/providers'
     | '/settings/'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compare'
     | '/onboarding'
+    | '/pairs'
     | '/settings/data'
     | '/settings/providers'
     | '/settings'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compare'
     | '/onboarding'
+    | '/pairs'
     | '/settings/data'
     | '/settings/providers'
     | '/settings/'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompareRoute: typeof CompareRoute
   OnboardingRoute: typeof OnboardingRoute
+  PairsRoute: typeof PairsRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsProvidersRoute: typeof SettingsProvidersRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
@@ -149,6 +162,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pairs': {
+      id: '/pairs'
+      path: '/pairs'
+      fullPath: '/pairs'
+      preLoaderRoute: typeof PairsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
   OnboardingRoute: OnboardingRoute,
+  PairsRoute: PairsRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsProvidersRoute: SettingsProvidersRoute,
   SettingsIndexRoute: SettingsIndexRoute,

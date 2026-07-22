@@ -95,5 +95,6 @@ export const pairsArtefactCollectionSchema = z.object({
 });
 
 export type PairScanReport = z.infer<typeof pairScanReportSchema>;
+export type PairRow = z.infer<typeof pairRowSchema>;
 export type PairsArtefactRun = z.infer<typeof pairsArtefactRunSchema>;
 export type PairsArtefactCollection = z.infer<typeof pairsArtefactCollectionSchema>;

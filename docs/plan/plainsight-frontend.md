@@ -20,6 +20,7 @@
 | `/settings` | S9 Settings root | settings | |
 | `/settings/providers` | S10 Providers (BYOK) | settings | |
 | `/settings/data` | S11 Data & storage | settings | |
+| `/pairs` | S13 Pairs research | pairs | `?pair=AAA-BBB` opens the pair sheet; `?view=` picks the matrix measure (added 2026-07-22, pairs research integration plan §4) |
 
 **Router: TanStack Router.** Chosen for fully typed routes and, decisively, **typed search params**: since sheets and modals encode their state in query params (below), `?metric=roe` and `?job=:jobId` become typed contracts the compiler checks rather than strings the runtime parses.
 
@@ -27,7 +28,7 @@
 
 ### 1.2 Navigation model
 
-Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl. *(Amended 2026-07-18, twice, with the desktop rail slices, main plan §12.10 and §12.11: at ≥1200px a persistent 200px navigation rail sits left of the content column on every screen except the welcome flow. It carries the top-level destinations (Library; Compare once two companies exist, §3's progressive rule; Settings) and, inside a company, the company's name and its three sections: Dashboard, Data entry, Thesis, with the active item marked throughout. At that breakpoint the rail owns wayfinding and per-screen top-bar navigation duplicates recede; titles, actions, and the autosave status line stay put. Below the breakpoint the stack is untouched, and the mobile tab-bar refusal stands.)*
+Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl. *(Amended 2026-07-18, twice, with the desktop rail slices, main plan §12.10 and §12.11: at ≥1200px a persistent 200px navigation rail sits left of the content column on every screen except the welcome flow. It carries the top-level destinations (Library; Compare once two companies exist, §3's progressive rule; Settings) and, inside a company, the company's name and its three sections: Dashboard, Data entry, Thesis, with the active item marked throughout. At that breakpoint the rail owns wayfinding and per-screen top-bar navigation duplicates recede; titles, actions, and the autosave status line stay put. Below the breakpoint the stack is untouched, and the mobile tab-bar refusal stands.)* *(Amended 2026-07-22, pairs research integration plan §4: Pairs joins the top-level destinations between Compare and Settings once this device has seen sleeve artefacts on the API, the same progressive spirit as Compare's rule; the memory is the `pairsSeen` flag in `meta`, kept current both ways by S13's reads, and the route stays reachable by URL regardless.)*
 
 ## 2. Global chrome and cross-cutting states
 
@@ -139,6 +140,18 @@ Export (with last-export date; feeds the 30-day nudge; placement recorded 2026-0
 
 **Ticker search** (Phase 2): debounced search sheet, results with exchange badges, hidden offline with the standard hint. **File upload** (Phase 3): drop/browse; type/size validation messages inline; provider select showing data-policy labels; a **"This document is confidential" toggle that filters the provider list to paid, no-training endpoints** (main plan §6 sensitivity routing, made tactile); kickoff → S6.
 
+### S13: Pairs research (added 2026-07-22, pairs research integration plan §4)
+
+Purpose: the sleeve's research surface, desktop-first by the operator's workflow. The latest published pair scan rendered whole: a provenance line (run date, engine version, fetch time), the candidate table (statistics beside the fundamentals join: each leg's sector, active-flag state and dashboard link, and a Compare link when both legs live in the library), and the correlation-and-cointegration matrix over the scanned universe, its measure a segmented control. The matrix is a visual summary and deliberately `aria-hidden`; a visually-hidden note points at the candidate table and the pair sheet, which carry the same statistics accessibly. The pair sheet (`?pair=`) is the derivation surface: each statistic beside its meaning and inputs, the window and criteria it was computed under, the gate-by-gate candidate verdict, and both legs' library state. Education framing throughout; the surface describes what the engine measured and never advises.
+
+| State | Rendering |
+|---|---|
+| Signed out | "Sign in to read the sleeve" with a Settings link; the API is never called |
+| Loading | A quiet one-line "Loading the latest scan…" |
+| Fetch failed | The error placeholder carrying the envelope's message, with a Retry |
+| Empty sleeve | "No scan published yet" with the publish hint; the rail memory clears |
+| Ready | The three blocks above; offline appends "offline, showing the last fetch" to the provenance line. The query cache is in-session: a reload while offline lands on the fetch-failed state, honestly, rather than a stale render posing as fresh |
+
 ## 4. First-run and sample data: decision pinned
 
 **One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads the **ASX golden five**: CSL (the ten-year showcase, an ASX listing reporting in USD), Wesfarmers, Woolworths, JB Hi-Fi, and Cochlear, as `sample: true` records (schema flag per companion §9), each badged, all removable with one action in S11. *(Amended twice on 2026-07-18 with the ASX-first steer: first the original US trio, Apple, Coca-Cola, and Costco, retired per companion §12 D1's amendment, leaving CSL alone; then the owner amended the companion's depth rule the same day so the four six-year ASX fixtures join, their sparklines showing the six years each fixture carries while CSL keeps ten. Compare is reachable from a fresh sample library again.)* *(2026-07-19: samples load pre-classified per companion §12 D3's mapping: CSL and Cochlear under Healthcare; Wesfarmers, Woolworths and JB Hi-Fi under Retail.)*
@@ -165,7 +178,10 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `SourcePeek` | Page image / sheet-cell snippet | `provenance` |
 | `CompanyRow` | Library row | `company, flagsCount, roeSpark, roeLatest?, roeDelta?` (watchlist figure added 2026-07-22) |
 | `LibraryTable` | S2 screener view (added 2026-07-22) | `companies` (reports assemble in `useLibraryReports`, one live pass for the sortable columns) |
-| `AppRail` | ≥1200px persistent navigation rail (§1.2 amendment) | `showCompare, companyId?, companyName?` |
+| `AppRail` | ≥1200px persistent navigation rail (§1.2 amendment) | `showCompare, showPairs, companyId?, companyName?` (`showPairs` added 2026-07-22, §1.2's sleeve rule) |
+| `PairCandidates` | S13 candidate table with the fundamentals join (added 2026-07-22) | `report, legs, onOpenPair` |
+| `PairsMatrix` | S13 shaded universe grid, correlation or cointegration (added 2026-07-22) | `report, view, onOpenPair` |
+| `PairSheet` | S13 pair derivation sheet (added 2026-07-22) | `report, pairKey, legs, onClose` |
 | `ComparisonTable` | S7 grid | `companies, metrics, hideAbsolutes` |
 | `ProviderRow` | S10 row | `provider, keyState, probeResult, onTest, onDelete` |
 | `EmptyState` | All empties, one component | `title, body, primary, secondary?` |
@@ -188,12 +204,13 @@ Any component crossing ~8 props triggers the design review per main plan §5.
 | `useStorageStatus()` | S11, quota banner | `navigator.storage` persist/estimate |
 | `useOnlineStatus()` | offline pill, feature-hiding | `navigator.onLine` + listener |
 | `useSyncRunner()` / `useSyncStatus()` | app shell / S2 first catch-up | the sync scheduler (main plan §12.9): revalidates on launch, reconnect, focus and sign-in, drains pending writes with backoff; the status snapshot gates the first read. Amendment 2026-07-18 with the reads-behind-the-API slice |
+| `usePairsCollection()` | S13, and the rail's gate through `meta` | TanStack Query over the sleeve's authenticated GET (integration plan §4, added 2026-07-22): cached-last within the session, staleness stamped from the query's fetch time; the sleeve deliberately skips Dexie because this client authors nothing |
 
 Keystrokes never cross feature boundaries: `MoneyField` holds local state, commits on blur; the S3 dashboard cannot re-render from S5 typing (state colocation, main plan §5).
 
 ## 7. Responsive rules
 
-Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7, and for S2 while its screener view is on, whose eight columns need the dashboard's width; amendment 2026-07-22 with the finance-look gap plan §5), ≥1200 (the navigation rail joins at left on every screen but the welcome flow: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11). Metric grid at ≥900: `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1. Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
+Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7, for S2 while its screener view is on, whose eight columns need the dashboard's width (amendment 2026-07-22 with the finance-look gap plan §5), and for S13, whose matrix earns the same width (2026-07-22)), ≥1200 (the navigation rail joins at left on every screen but the welcome flow: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11). Metric grid at ≥900: `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1. Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 
@@ -205,7 +222,7 @@ S2: rows are single buttons with composite labels ("Apple, 2 flags, updated yest
 apps/web/src/
   routes/            # one file per route above, lazy boundaries here
   features/
-    library/  dashboard/  entry/  review/  compare/  thesis/  settings/
+    library/  dashboard/  entry/  review/  compare/  thesis/  settings/  pairs/
   components/        # §5 inventory: presentational only
   hooks/             # §6 inventory: containers
   db/                # Dexie schema, migrations, export/import (allowlist!)

@@ -25,14 +25,16 @@ export const Route = createRootRoute({
 // root route so every render of the tree carries it, tests included. It
 // caches the market-data reads; the library itself rides the sync engine,
 // with IndexedDB as the working copy (main plan §12.9).
-const queryClient = new QueryClient({
+// Exported for tests only: suites that exercise query-fed screens reset
+// the cache between cases the way they reset Dexie.
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 }
   }
 });
 
-/** Screens that render in the wider column (frontend spec §7): the dashboard and compare. */
-const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/', '/compare'];
+/** Screens that render in the wider column (frontend spec §7): the dashboard, compare, and the pairs matrix. */
+const WIDE_ROUTE_IDS: readonly string[] = ['/company/$id/', '/compare', '/pairs'];
 
 /**
  * Ask the browser to keep this origin's data, once per launch. Browsers
@@ -115,6 +117,10 @@ function RootShell(): ReactElement {
   });
   const company = useCompany(companyId ?? '');
   const companies = useCompanies();
+  // The sleeve's progressive rule (integration plan §4): Pairs joins the
+  // rail once this device has seen artefacts on the API; the pairs route
+  // keeps the flag current on every read.
+  const pairsSeenRow = useLiveQuery(() => db.meta.get('pairsSeen'), []);
   const columnClass = onboarding
     ? styles.column
     : wide || libraryScreener
@@ -129,6 +135,7 @@ function RootShell(): ReactElement {
           <div className={railStyles.frame}>
             <AppRail
               showCompare={(companies?.length ?? 0) >= 2}
+              showPairs={pairsSeenRow?.value === true}
               companyId={companyId}
               companyName={companyId === undefined ? undefined : company?.name}
             />

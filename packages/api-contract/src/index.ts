@@ -24,6 +24,7 @@ export {
   pairsArtefactCollectionSchema,
   pairsArtefactRunSchema,
   skippedPairSchema,
+  type PairRow,
   type PairsArtefactCollection,
   type PairsArtefactRun,
   type PairScanReport

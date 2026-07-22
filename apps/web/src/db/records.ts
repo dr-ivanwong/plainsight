@@ -308,6 +308,12 @@ export const metaRecordSchema = z.discriminatedUnion('key', [
   // The library's rows-or-screener choice (finance-look gap plan §5); the
   // table exists at desktop width only, so narrow devices ignore the value.
   z.object({ key: z.literal('libraryTableView'), value: z.boolean() }),
+  // Whether this device has seen sleeve artefacts on the API (pairs
+  // research integration plan §4): the rail's Pairs item gates on it, the
+  // way Compare gates on the library size. Device memory about the server,
+  // not sleeve data (the app never writes sleeve data), and not in the
+  // export allowlist.
+  z.object({ key: z.literal('pairsSeen'), value: z.boolean() }),
   // The sync engine's device-local facts (backend spec §4): the device id,
   // the Lamport clock, the pull checkpoint, and the quiet status line. None
   // sit in the export allowlist; they describe this device, not the library.
