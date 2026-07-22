@@ -81,6 +81,46 @@ def _scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def _publish(args: argparse.Namespace) -> int:
+    import os
+
+    from .publish import DEFAULT_REGION, PublishConfig, PublishError, newest_artefact, publish_artefact
+
+    missing = [
+        name
+        for name in ("PLAINSIGHT_API_URL", "PLAINSIGHT_COGNITO_CLIENT_ID", "PLAINSIGHT_COGNITO_REFRESH_TOKEN")
+        if not os.environ.get(name)
+    ]
+    if missing:
+        print(
+            "missing " + ", ".join(missing) + "; publish credentials live in the "
+            "environment only (see docs/runbook.md, the pairs publish step)",
+            file=sys.stderr,
+        )
+        return 2
+    if args.artefact:
+        artefact_path = Path(args.artefact)
+    else:
+        found = newest_artefact(Path(args.out_dir))
+        if found is None:
+            print(f"no pair-scan artefacts under {args.out_dir}; run scan first", file=sys.stderr)
+            return 1
+        artefact_path = found
+    config = PublishConfig(
+        api_url=os.environ["PLAINSIGHT_API_URL"],
+        client_id=os.environ["PLAINSIGHT_COGNITO_CLIENT_ID"],
+        refresh_token=os.environ["PLAINSIGHT_COGNITO_REFRESH_TOKEN"],
+        region=os.environ.get("PLAINSIGHT_AWS_REGION", DEFAULT_REGION),
+    )
+    try:
+        stored = publish_artefact(artefact_path, config)
+    except PublishError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    print(f"published {artefact_path.name}: run {stored.get('runDate', '?')} stored")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pairs-engine")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -95,6 +135,11 @@ def main(argv: list[str] | None = None) -> int:
     scan_cmd.add_argument("--data-dir", default="data", help="close cache directory")
     scan_cmd.add_argument("--out-dir", default="artefacts", help="artefact output directory")
     scan_cmd.set_defaults(run=_scan)
+
+    publish_cmd = commands.add_parser("publish", help="PUT the newest scan artefact to the app's API")
+    publish_cmd.add_argument("--artefact", help="artefact file (default: newest in the output directory)")
+    publish_cmd.add_argument("--out-dir", default="artefacts", help="artefact output directory")
+    publish_cmd.set_defaults(run=_publish)
 
     args = parser.parse_args(argv)
     return args.run(args)

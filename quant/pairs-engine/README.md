@@ -28,6 +28,8 @@ uv run pairs-engine scan
 
 `fetch` refreshes the whole five-year window for all fifty tickers and aborts loudly, all failures listed, if any ticker is missing: a downloader that skips failures quietly shrinks the universe. `scan` reads the cache, freezes the split, runs the statistics, and writes `artefacts/pair-scan-<runDate>.json`. Both `data/` and `artefacts/` are operator-local working state, ignored by git.
 
+Publishing to the app's API (slice 2) rides the same environment-only rule: `PLAINSIGHT_API_URL`, `PLAINSIGHT_COGNITO_CLIENT_ID` and `PLAINSIGHT_COGNITO_REFRESH_TOKEN`, then `uv run pairs-engine publish`. The refresh token is minted once via the runbook's pairs publish step; the PUT is idempotent by run date, and artefacts travel in this direction only (the app renders and never writes sleeve data).
+
 ## Determinism and tests
 
 Same cached closes, same statistics, byte for byte; `generatedAt` is the only field that moves between reruns over the same inputs. The suite plants what it asserts: a synthetic cointegrated pair with a known hedge ratio and mean-reversion speed that the scan must recover, independent walks that must never become candidates, a hand-computed least-squares fit, and an end-to-end scan whose tested-plus-skipped counts reconcile exactly. Seeded throughout; no network anywhere in the tests.

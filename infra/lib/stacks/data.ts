@@ -40,6 +40,15 @@ export const uploadsObjectsArn = (config: EnvConfig): string =>
 export const uploadsObjectsFindingArn = (config: EnvConfig): string =>
   `arn:<AWS::Partition>:s3:::${uploadsBucketName(config)}/uploads/*`;
 
+/** The pairs artefact keyspace (integration plan §4): durable, outside the
+ * uploads/ seven-day lifecycle; the engine publishes, the app reads. */
+export const pairsObjectsArn = (config: EnvConfig): string =>
+  `arn:${Aws.PARTITION}:s3:::${uploadsBucketName(config)}/pairs/*`;
+
+/** The same ARN as cdk-nag flattens it, for acknowledgement ids. */
+export const pairsObjectsFindingArn = (config: EnvConfig): string =>
+  `arn:<AWS::Partition>:s3:::${uploadsBucketName(config)}/pairs/*`;
+
 export interface DataStackProps extends StackProps {
   config: EnvConfig;
 }
@@ -145,7 +154,14 @@ export class DataStack extends Stack {
         versioned: true,
         lifecycleRules: [
           {
+            // The seven-day expiry governs the transient filing uploads
+            // only; the pairs/ artefact keyspace (integration plan §4) is
+            // durable, so the rule is prefix-scoped rather than
+            // bucket-wide (scoped 2026-07-22 with the pairs transport).
+            prefix: 'uploads/',
             expiration: Duration.days(7),
+          },
+          {
             noncurrentVersionExpiration: Duration.days(1),
             abortIncompleteMultipartUploadAfter: Duration.days(1),
           },

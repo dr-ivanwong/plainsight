@@ -32,6 +32,8 @@ This table drives the cdk §6 invariant: every route flagged auth here must have
 | `POST /v1/extractions` | ✓ | 3 | Start an extraction job; Idempotency-Key required |
 | `GET /v1/extractions/{jobId}` | ✓ | 3 | Job status / result payload |
 | `POST /v1/proxy/{providerId}` | ✓ | 3 | BYOK pass-through for non-CORS providers (§7) |
+| `PUT /v1/pairs/artefacts/pair-scan` | ✓ | pairs slice 2 | The engine publishes the scan artefact, idempotent by run date (pairs research integration plan §4; added 2026-07-22) |
+| `GET /v1/pairs/artefacts/pair-scan` | ✓ | pairs slice 2 | The latest report in full plus the run history, for the Pairs surfaces |
 
 Route throttles: ~10 rps / 20 burst per route (cdk §8 not-list: throttles are the WAF and the scraper cost-cap). All routes sit behind CloudFront; `GET financials` carries the 6-hour edge cache with pipeline invalidation.
 
@@ -73,11 +75,12 @@ One table (`Data` stack), provisioned 25/25 inside the always-free tier (cdk §8
 | `USER#{u}` | `QUOTA#{yyyy-mm}` | extraction count for server-key jobs | atomic increment, limit 10/month |
 | `JOB#{jobId}` | `STATE` | extraction job state machine (§6) | TTL 30 days |
 | `IDEMP#{key}` | `RESP` | stored response for idempotent replay | TTL 24 hours |
+| `PAIRS#{kind}` | `RUN#{yyyy-mm-dd}` | pairs artefact run: engine and schema versions, generatedAt, receivedAt, sizeBytes, object key | integration plan §4 (added 2026-07-22); ISO dates make the sort key chronological, so the latest run is the first row of a descending query; report bodies are durable objects under the uploads bucket's `pairs/` prefix, outside the seven-day `uploads/` lifecycle |
 
 **GSI1 (sync feed):** on `REC#` items, `GSI1PK = USER#{u}`, `GSI1SK = SEQ#{seq, zero-padded}`. Pull is a single Query for `seq > checkpoint`.
 **GSI2 (watched tickers, sparse):** on `PROFILE` items with `watchedSince`, `GSI2PK = 'WATCH'`, `GSI2SK = TICKER#{t}`. The weekly sweep is one Query.
 
-Access patterns are exactly: profile by ticker (GetItem), all years for a ticker (Query `begins_with FY#`), changes since checkpoint (GSI1 Query), watched tickers (GSI2 Query), job by id (GetItem). Nothing relational exists in the serving path (main plan §6, Aurora rejection reaffirmed).
+Access patterns are exactly: profile by ticker (GetItem), all years for a ticker (Query `begins_with FY#`), changes since checkpoint (GSI1 Query), watched tickers (GSI2 Query), job by id (GetItem), and latest-plus-history for a pairs artefact kind (Query descending under `PAIRS#`, added 2026-07-22). Nothing relational exists in the serving path (main plan §6, Aurora rejection reaffirmed).
 
 ## 4. Sync protocol (pinned; cited by main plan §5 and §6)
 
@@ -138,6 +141,7 @@ All `NodejsFunction`, Node 22, ARM64, explicit timeout, `logRetention: 30 days` 
 | `syncPush`, `syncPull` | Api | API GW | 15 s | §4; transact-writes |
 | `createUpload`, `createExtraction`, `getExtraction` | Api | API GW | 10 s | §6 |
 | `byokProxy` | Api | API GW | 25 s | §7; streaming pass-through |
+| `putPairsArtefact`, `getPairsArtefact` | Api | API GW | 10 s | pairs transport (integration plan §4, added 2026-07-22): artefact objects under `pairs/`, run rows under `PAIRS#` |
 | `ingestTicker` | Ingestion | async invoke + SFN task | 120 s / 512 MB | fetch + normalise + gates |
 | `extractFiling` | Ingestion | SFN task | 300 s / 1536 MB | rasterising + ladder (cdk §5 sizing) |
 | `sweepDispatcher` | Ingestion | EventBridge weekly | 60 s | starts the SFN map |

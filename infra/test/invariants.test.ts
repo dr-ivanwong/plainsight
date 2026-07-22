@@ -136,7 +136,7 @@ describe('Lambda functions (spec §6 universals: timeout, ARM64, retained logs)'
     }
     // The whole fleet, closed: a function appearing in any other stack, or a
     // stack growing one, is a deliberate decision, exactly like the buckets.
-    expect(functionsPerStack).toEqual({ Foundation: 1, Ingestion: 3, Api: 9 });
+    expect(functionsPerStack).toEqual({ Foundation: 1, Ingestion: 3, Api: 11 });
   });
 });
 
@@ -728,9 +728,17 @@ describe('Auth stack (spec §3: single admin-created user, no signup, hosted UI)
     expect(domain.Properties.Domain).toBe('plainsight-prod-679345828813');
   });
 
-  it('the web client is public, code-flow only, redirecting to the pinned origins', () => {
+  it('the web client is public, hosted-UI code flow plus the IAM-gated admin flow', () => {
     expect(client.Properties.GenerateSecret).toBeUndefined();
     expect(client.Properties.AllowedOAuthFlows).toEqual(['code']);
+    // The admin flow serves the pairs engine's publish step (integration
+    // plan §4): the owner mints a refresh token once via
+    // admin-initiate-auth, which is IAM-gated server-side, so no public
+    // sign-in surface is added. Refresh-token auth is its companion flag.
+    expect(client.Properties.ExplicitAuthFlows).toEqual([
+      'ALLOW_ADMIN_USER_PASSWORD_AUTH',
+      'ALLOW_REFRESH_TOKEN_AUTH',
+    ]);
     expect(client.Properties.AllowedOAuthFlowsUserPoolClient).toBe(true);
     expect(client.Properties.AllowedOAuthScopes).toEqual(
       expect.arrayContaining(['openid', 'email']),
@@ -786,24 +794,25 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
 
   it('every Lambda: ARM64, Node 22, explicit timeout and memory', () => {
     const entries = Object.values(functions);
-    expect(entries).toHaveLength(9);
+    expect(entries).toHaveLength(11);
     for (const fn of entries as any[]) {
       expect(fn.Properties.Architectures).toEqual(['arm64']);
       expect(fn.Properties.Runtime).toBe('nodejs22.x');
       expect(fn.Properties.MemorySize).toBe(256);
     }
-    // Reads and job routes answer in 10 seconds, the sync functions carry
-    // the pinned 15, and the proxy its 25 (backend spec §10 inventory).
+    // Reads, job routes, and the pairs transport answer in 10 seconds, the
+    // sync functions carry the pinned 15, and the proxy its 25 (backend
+    // spec §10 inventory).
     const timeouts = entries.map((fn: any) => fn.Properties.Timeout).sort((a: number, b: number) => a - b);
-    expect(timeouts).toEqual([10, 10, 10, 10, 10, 10, 15, 15, 25]);
-    // The company routes, both sync functions, and both job routes read the
-    // table; search, the presigner, and the proxy deliberately do not (the
-    // proxy carries no environment at all: destination from the registry,
-    // key from the caller).
+    expect(timeouts).toEqual([10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 25]);
+    // The company routes, both sync functions, both job routes, and both
+    // pairs functions read the table; search, the presigner, and the proxy
+    // deliberately do not (the proxy carries no environment at all:
+    // destination from the registry, key from the caller).
     const withTable = entries.filter(
       (fn: any) => fn.Properties.Environment?.Variables?.TABLE_NAME !== undefined,
     );
-    expect(withTable).toHaveLength(6);
+    expect(withTable).toHaveLength(8);
     const withoutEnvironment = entries.filter((fn: any) => fn.Properties.Environment === undefined);
     expect(withoutEnvironment).toHaveLength(1);
     expect((withoutEnvironment[0] as any).Properties.Timeout).toBe(25);
@@ -820,7 +829,7 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
   it('log retention is explicit log groups, not the custom-resource shortcut', () => {
     // One group per function plus the access-log group; every group 30 days.
     const groups = Object.values(api.findResources('AWS::Logs::LogGroup')) as any[];
-    expect(groups).toHaveLength(10);
+    expect(groups).toHaveLength(12);
     for (const group of groups) {
       expect(group.Properties.RetentionInDays).toBe(30);
     }
@@ -842,12 +851,14 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
       'GET /v1/companies/{ticker}',
       'GET /v1/companies/{ticker}/financials',
       'GET /v1/extractions/{jobId}',
+      'GET /v1/pairs/artefacts/pair-scan',
       'GET /v1/search',
       'GET /v1/sync/pull',
       'POST /v1/extractions',
       'POST /v1/proxy/{providerId}',
       'POST /v1/sync/push',
       'POST /v1/uploads',
+      'PUT /v1/pairs/artefacts/pair-scan',
     ]);
     for (const route of routes) {
       const key: string = route.Properties.RouteKey;
@@ -855,7 +866,8 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
         key.includes('/v1/sync/') ||
         key.includes('/v1/proxy/') ||
         key.includes('/v1/uploads') ||
-        key.includes('/v1/extractions');
+        key.includes('/v1/extractions') ||
+        key.includes('/v1/pairs/');
       if (flagged) {
         expect(route.Properties.AuthorizationType).toBe('JWT');
         expect(route.Properties.AuthorizerId).toBeDefined();
@@ -921,11 +933,13 @@ describe('Api stack (spec §5 Lambda rules; backend spec §2 route table)', () =
     const expectedKeysBySid: Record<string, string[]> = {
       ReadWriteUserPartitions: ['USER#*', 'IDEMP#*'],
       WriteJobsQuotaAndReplays: ['JOB#*', 'USER#*', 'IDEMP#*'],
+      WritePairsRuns: ['PAIRS#*'],
     };
     expect(writeBearing.map((statement) => statement.Sid).sort()).toEqual([
       'ReadWriteUserPartitions',
       'ReadWriteUserPartitions',
       'WriteJobsQuotaAndReplays',
+      'WritePairsRuns',
     ]);
     for (const statement of writeBearing) {
       expect(statement.Condition).toEqual({

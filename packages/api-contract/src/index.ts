@@ -13,6 +13,22 @@ export {
   type IngestingBody
 } from './envelope.js';
 export {
+  PAIR_SCAN_ARTEFACT_KIND,
+  PAIR_SCAN_SCHEMA_VERSION,
+  PAIR_SKIP_REASONS,
+  pairCandidateSchema,
+  pairRowSchema,
+  pairScanCriteriaSchema,
+  pairScanReportSchema,
+  pairScanWindowSchema,
+  pairsArtefactCollectionSchema,
+  pairsArtefactRunSchema,
+  skippedPairSchema,
+  type PairsArtefactCollection,
+  type PairsArtefactRun,
+  type PairScanReport
+} from './pairs.js';
+export {
   EXTRACTION_JOB_STATES,
   UPLOAD_CONTENT_TYPES,
   UPLOAD_MAX_BYTES,

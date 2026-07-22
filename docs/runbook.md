@@ -137,6 +137,24 @@ The engine is built and tested keyless (integration plan §7, slice 1); the firs
    ```
 
    The summary prints tested, skipped, significant and candidate counts, and the artefact lands in `quant/pairs-engine/artefacts/pair-scan-<runDate>.json`. Sanity marks: about twelve hundred pairs tested; dozens significant at the nominal threshold by chance alone (the plan's multiple-comparisons caution); the candidate list much shorter. The holdout begins after the printed split date and stays untouched until the validation slice.
+4. **Publish the artefact to the API** (integration plan §7, slice 2). Once, mint a refresh token with the IAM-gated admin flow (values in angle brackets from the Auth stack outputs; the leading space keeps the password out of zsh history):
+
+   ```sh
+    aws cognito-idp admin-initiate-auth --user-pool-id <UserPoolId> \
+      --client-id <WebClientId> --auth-flow ADMIN_USER_PASSWORD_AUTH \
+      --auth-parameters USERNAME=you@example.com,PASSWORD='...'
+   ```
+
+   `AuthenticationResult.RefreshToken` is the credential the engine keeps; it lives 30 days (the pool default, pinned by the auth invariants), and re-minting is this same command. Then, with the API base being the site origin (CloudFront fronts `/v1/*`) or the Api stack's ApiEndpoint output:
+
+   ```sh
+    PLAINSIGHT_API_URL=<ApiEndpoint> \
+      PLAINSIGHT_COGNITO_CLIENT_ID=<WebClientId> \
+      PLAINSIGHT_COGNITO_REFRESH_TOKEN=... \
+      uv run --directory quant/pairs-engine pairs-engine publish
+   ```
+
+   The publish is idempotent by run date: a re-publish after a same-day re-scan overwrites the same run. The GET half of the route pair serves latest plus history to the Pairs surfaces from slice 3; until then, a `curl` with a minted token is the read-back check.
 
 ## Rebuild from zero (the drill)
 

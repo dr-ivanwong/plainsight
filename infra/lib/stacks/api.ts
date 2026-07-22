@@ -14,7 +14,13 @@ import type { EnvConfig } from '../../config/types';
 import { ASX_DIRECTORY_OBJECT_KEY, edgarContactParameterName, LOG_RETENTION, TICKER_INDEX_OBJECT_KEY } from '../constants';
 import { acknowledgeNagFinding } from '../nag';
 import { AppFunction, handlerEntry } from '../constructs/app-function';
-import { SYNC_FEED_INDEX, uploadsObjectsArn, uploadsObjectsFindingArn } from './data';
+import {
+  pairsObjectsArn,
+  pairsObjectsFindingArn,
+  SYNC_FEED_INDEX,
+  uploadsObjectsArn,
+  uploadsObjectsFindingArn,
+} from './data';
 
 /** ~10 rps steady, 20 burst (backend spec §2): the throttles are the WAF and the scraper cost-cap (spec §8 not-list). */
 export const ROUTE_RATE_LIMIT = 10;
@@ -365,6 +371,87 @@ export class ApiStack extends Stack {
         path: '/v1/extractions/{jobId}',
         methods: [apigwv2.HttpMethod.GET],
         integration: new HttpLambdaIntegration('GetExtractionIntegration', getExtraction.fn),
+        authorizer,
+      });
+
+      // The pairs sleeve transport (integration plan §4; backend spec §2
+      // route table as amended 2026-07-22): the engine's authenticated
+      // PUT, idempotent by run date, and the app's read of latest plus
+      // history. Scan artefacts are durable objects under pairs/ (outside
+      // the uploads/ seven-day lifecycle); the run rows live under the
+      // PAIRS# partition. The app never trades and never writes sleeve
+      // data: the only writer is the engine's publish through this route.
+      const putPairsArtefact = new AppFunction(this, 'PutPairsArtefact', {
+        entry: handlerEntry('putPairsArtefact'),
+        description:
+          'PUT /v1/pairs/artefacts/pair-scan: the engine publishes a validated scan artefact (integration plan §4).',
+        timeout: Duration.seconds(10),
+        environment: { ...environment, UPLOADS_BUCKET: uploadsBucket.bucketName },
+      });
+      putPairsArtefact.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'WritePairsArtefactObjects',
+          actions: ['s3:PutObject'],
+          resources: [pairsObjectsArn(config)],
+        }),
+      );
+      putPairsArtefact.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'WritePairsRuns',
+          actions: ['dynamodb:PutItem'],
+          resources: [table.tableArn],
+          conditions: {
+            'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['PAIRS#*'] },
+          },
+        }),
+      );
+      acknowledgeNagFinding(
+        putPairsArtefact,
+        `AwsSolutions-IAM5[Resource::${pairsObjectsFindingArn(config)}]`,
+        'Artefact keys are minted server-side under pairs/ from the validated run date; the ' +
+          'wildcard is the sleeve keyspace, one object per run.',
+      );
+
+      const getPairsArtefact = new AppFunction(this, 'GetPairsArtefact', {
+        entry: handlerEntry('getPairsArtefact'),
+        description:
+          'GET /v1/pairs/artefacts/pair-scan: the latest report plus run history for the Pairs surfaces (integration plan §4).',
+        timeout: Duration.seconds(10),
+        environment: { ...environment, UPLOADS_BUCKET: uploadsBucket.bucketName },
+      });
+      getPairsArtefact.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadPairsArtefactObjects',
+          actions: ['s3:GetObject'],
+          resources: [pairsObjectsArn(config)],
+        }),
+      );
+      getPairsArtefact.fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          sid: 'ReadPairsRuns',
+          actions: ['dynamodb:Query'],
+          resources: [table.tableArn],
+          conditions: {
+            'ForAllValues:StringLike': { 'dynamodb:LeadingKeys': ['PAIRS#*'] },
+          },
+        }),
+      );
+      acknowledgeNagFinding(
+        getPairsArtefact,
+        `AwsSolutions-IAM5[Resource::${pairsObjectsFindingArn(config)}]`,
+        'Reads over the sleeve keyspace only, one durable object per published run.',
+      );
+
+      this.httpApi.addRoutes({
+        path: '/v1/pairs/artefacts/pair-scan',
+        methods: [apigwv2.HttpMethod.PUT],
+        integration: new HttpLambdaIntegration('PutPairsArtefactIntegration', putPairsArtefact.fn),
+        authorizer,
+      });
+      this.httpApi.addRoutes({
+        path: '/v1/pairs/artefacts/pair-scan',
+        methods: [apigwv2.HttpMethod.GET],
+        integration: new HttpLambdaIntegration('GetPairsArtefactIntegration', getPairsArtefact.fn),
         authorizer,
       });
 

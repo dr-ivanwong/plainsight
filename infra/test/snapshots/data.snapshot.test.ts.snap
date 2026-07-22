@@ -203,10 +203,14 @@ exports[`Data template matches the reviewed snapshot 1`] = `
         "LifecycleConfiguration": {
           "Rules": [
             {
+              "ExpirationInDays": 7,
+              "Prefix": "uploads/",
+              "Status": "Enabled",
+            },
+            {
               "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
-              "ExpirationInDays": 7,
               "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1,
               },

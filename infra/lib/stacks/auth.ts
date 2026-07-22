@@ -105,6 +105,13 @@ export class AuthStack extends Stack {
     this.webClient = this.userPool.addClient('WebClient', {
       userPoolClientName: 'plainsight-web',
       preventUserExistenceErrors: true,
+      // The pairs engine's publish step (integration plan §4) mints its
+      // short-lived tokens from a refresh token the owner obtains once via
+      // admin-initiate-auth (runbook, the pairs publish step). The admin
+      // flow is IAM-gated server-side, so enabling it adds no public
+      // surface; refresh-token auth rides along as the companion flag, and
+      // the hosted-UI code flow is untouched. Pinned by the invariant.
+      authFlows: { adminUserPassword: true },
       oAuth: {
         flows: { authorizationCodeGrant: true },
         scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL],

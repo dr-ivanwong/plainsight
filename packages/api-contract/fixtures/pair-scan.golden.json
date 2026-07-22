@@ -1,0 +1,139 @@
+{
+  "artefact": "pairScanReport",
+  "schemaVersion": 1,
+  "engineVersion": "0.1.0",
+  "runDate": "2024-01-26",
+  "generatedAt": "2026-07-22T09:30:00Z",
+  "universe": [
+    "AAA",
+    "BBB",
+    "CCC",
+    "DDD",
+    "EEE"
+  ],
+  "window": {
+    "start": "2021-01-04",
+    "end": "2024-01-26",
+    "splitDate": "2023-06-19",
+    "trainFraction": 0.8,
+    "minSharedTrainDays": 500
+  },
+  "criteria": {
+    "maxPValue": 0.05,
+    "maxCandidateHalfLifeDays": 30.0,
+    "halfLifeCeilingDays": 120.0,
+    "minAbsRegressionR": 0.1,
+    "requirePositiveBeta": true
+  },
+  "pairsTested": 6,
+  "pairs": [
+    {
+      "ticker1": "AAA",
+      "ticker2": "BBB",
+      "sharedTrainDays": 641,
+      "pValue": 0.0,
+      "beta": 2.538416,
+      "intercept": 6.739586,
+      "correlation": 0.997311,
+      "halfLifeDays": 3.430338,
+      "halfLifeValid": true,
+      "candidate": true
+    },
+    {
+      "ticker1": "AAA",
+      "ticker2": "CCC",
+      "sharedTrainDays": 641,
+      "pValue": 0.499558,
+      "beta": 1.471293,
+      "intercept": 101.415263,
+      "correlation": 0.641736,
+      "halfLifeDays": 52.718458,
+      "halfLifeValid": false,
+      "candidate": false
+    },
+    {
+      "ticker1": "AAA",
+      "ticker2": "DDD",
+      "sharedTrainDays": 641,
+      "pValue": 0.435942,
+      "beta": -0.694253,
+      "intercept": 306.494853,
+      "correlation": -0.230678,
+      "halfLifeDays": 68.618477,
+      "halfLifeValid": false,
+      "candidate": false
+    },
+    {
+      "ticker1": "BBB",
+      "ticker2": "CCC",
+      "sharedTrainDays": 641,
+      "pValue": 0.489888,
+      "beta": 0.586999,
+      "intercept": 36.621679,
+      "correlation": 0.651669,
+      "halfLifeDays": 53.302306,
+      "halfLifeValid": false,
+      "candidate": false
+    },
+    {
+      "ticker1": "BBB",
+      "ticker2": "DDD",
+      "sharedTrainDays": 641,
+      "pValue": 0.390583,
+      "beta": -0.276626,
+      "intercept": 118.405453,
+      "correlation": -0.233945,
+      "halfLifeDays": 70.843644,
+      "halfLifeValid": false,
+      "candidate": false
+    },
+    {
+      "ticker1": "CCC",
+      "ticker2": "DDD",
+      "sharedTrainDays": 641,
+      "pValue": 0.671469,
+      "beta": -0.150313,
+      "intercept": 106.697148,
+      "correlation": -0.114506,
+      "halfLifeDays": 103.131172,
+      "halfLifeValid": false,
+      "candidate": false
+    }
+  ],
+  "skipped": [
+    {
+      "ticker1": "AAA",
+      "ticker2": "EEE",
+      "sharedTrainDays": 300,
+      "reason": "insufficientSharedHistory"
+    },
+    {
+      "ticker1": "BBB",
+      "ticker2": "EEE",
+      "sharedTrainDays": 300,
+      "reason": "insufficientSharedHistory"
+    },
+    {
+      "ticker1": "CCC",
+      "ticker2": "EEE",
+      "sharedTrainDays": 300,
+      "reason": "insufficientSharedHistory"
+    },
+    {
+      "ticker1": "DDD",
+      "ticker2": "EEE",
+      "sharedTrainDays": 300,
+      "reason": "insufficientSharedHistory"
+    }
+  ],
+  "candidates": [
+    {
+      "ticker1": "AAA",
+      "ticker2": "BBB",
+      "beta": 2.538416,
+      "pValue": 0.0,
+      "halfLifeDays": 3.430338,
+      "correlation": 0.997311
+    }
+  ]
+}
