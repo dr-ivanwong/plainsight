@@ -81,9 +81,10 @@ const DATE_FIELD = /\*\*Date:\*\*\s+(?!(?:\d{4}-\d{2}-\d{2}|YYYY-MM-DD)\b)/g;
 // The lookbehind skips codes embedded in hyphenated external identifiers
 // (cdk-nag's "AwsSolutions-S1"): another system's id, not a document reference.
 const PLAN_CODE = /\b(?<!-)(?:[MRNDS]\d{1,2}|[A-Z][A-Z0-9]{0,7}-\d{1,3})\b/g;
-// Amazon S3 is a proper noun, not a screen code (the one real collision);
-// exempting it mirrors rule 2's capitalisation heuristic.
-const PLAN_CODE_ALLOW = new Set(['S3']);
+// Amazon S3 is a proper noun, not a screen code, and S32 is South32's ASX
+// ticker (it entered source with the pairs universe, 2026-07-22), not a
+// metric code; exempting them mirrors rule 2's capitalisation heuristic.
+const PLAN_CODE_ALLOW = new Set(['S3', 'S32']);
 // Well-known hyphenated technical terms, exempt by the leading letters of
 // their first segment: UTF-8, SHA-256, ISO- and RFC-numbered standards,
 // COVID-19, FY2024-25 ranges, PDF-1.x format versions. Never name a review

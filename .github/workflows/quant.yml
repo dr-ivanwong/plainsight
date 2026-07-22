@@ -1,0 +1,27 @@
+# The pairs engine's suite (pairs research integration plan, slice 1):
+# the only Python in the repository, contained per ADR 0005. No key and
+# no network anywhere in the tests, so this job is green with no vendor
+# account at all; the first live fetch is an owner step in the runbook.
+name: quant
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pairs-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: quant/pairs-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Sync the locked environment
+        run: uv sync --locked
+      - name: Test (seeded, offline, deterministic)
+        run: uv run pytest

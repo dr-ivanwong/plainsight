@@ -1,0 +1,27 @@
+[project]
+name = "pairs-engine"
+version = "0.1.0"
+description = "Plainsight pairs sleeve: the quant engine. It computes and writes artefacts; the app renders them and never trades."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pydantic>=2.8",
+    "scipy>=1.14",
+    "statsmodels>=0.14",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[project.scripts]
+pairs-engine = "pairs_engine.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

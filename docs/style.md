@@ -73,7 +73,7 @@ Why: a code is a pointer into a document revision, not a meaning. The numbering 
 **Scope and exemptions, by design:**
 
 - The checker scans every tracked source file (everything that is not Markdown), case-sensitively, raw lines included: unlike rules 2 and 3 there is no prose/code distinction to make, because the rule is about code. It matches two shapes: the plans' single-letter item codes, and any uppercase hyphenated family (the policy codes, plus whatever dimensions a review or audit mints).
-- **`S3` is exempt everywhere:** it is Amazon S3, a proper noun, throughout the infrastructure code (the same heuristic spirit as rule 2's capitalisation exemption). Write "the dashboard screen" when the screen is meant and the exemption never bites.
+- **`S3` and `S32` are exempt everywhere:** Amazon S3 throughout the infrastructure code, and South32's ASX ticker since the pairs universe entered source (2026-07-22); proper nouns both, the same heuristic spirit as rule 2's capitalisation exemption. Write "the dashboard screen" when the screen is meant and the exemption never bites.
 - **Well-known hyphenated technical terms are exempt by prefix:** UTF-8, SHA-256, ISO- and RFC-numbered standards, COVID-19, and FY ranges are the world's vocabulary, not a review's. The flip side: never name a review dimension after one of these prefixes.
 - **Hyphenated external identifiers are exempt:** a code reached through a hyphen, as in cdk-nag's `AwsSolutions-S1`, belongs to another system's vocabulary, not the plans'.
 - **SVG path data is stripped before matching:** `d="M12 4v16"` is drawing, not a metric.

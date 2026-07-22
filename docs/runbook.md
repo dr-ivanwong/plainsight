@@ -118,6 +118,26 @@ The user pool deployed with `features.auth` (flipped 2026-07-18) through the sta
 
 3. **Sign-in lives at** `<HostedUiBaseUrl>`, and in the app at Settings → Sign in. The client wiring and the sync routes landed 2026-07-18, and the Cognito authoriser guards exactly the routes the backend spec §2 table flags.
 
+## Pairs sleeve: the first scan
+
+The engine is built and tested keyless (integration plan §7, slice 1); the first live run is an owner step because the data licence is bought, not built.
+
+1. **Buy the EOD data plan** (EODHD or equivalent; ASX coverage needs a paid tier). Read the personal-use terms against the pairs trading plan's licensing section (Week 1) before paying, and line the first invoice up against that plan's monthly estimate; where they disagree, the estimate is what is wrong.
+2. **Fetch the universe** (the key lives in the environment for this one command, never in a file; the leading space keeps it out of zsh history):
+
+   ```sh
+    EODHD_API_KEY=... uv run --directory quant/pairs-engine pairs-engine fetch
+   ```
+
+   The fetch aborts loudly listing every missing ticker. A failure here means the universe audit needs re-running (pairs trading plan, Week 1), not a retry loop: tickers rename and delist, and a downloader that skips failures quietly shrinks the universe.
+3. **Run the scan and eyeball the artefact:**
+
+   ```sh
+   uv run --directory quant/pairs-engine pairs-engine scan
+   ```
+
+   The summary prints tested, skipped, significant and candidate counts, and the artefact lands in `quant/pairs-engine/artefacts/pair-scan-<runDate>.json`. Sanity marks: about twelve hundred pairs tested; dozens significant at the nominal threshold by chance alone (the plan's multiple-comparisons caution); the candidate list much shorter. The holdout begins after the printed split date and stays untouched until the validation slice.
+
 ## Rebuild from zero (the drill)
 
 Everything is IaC plus exactly two out-of-band artefacts: the CDK bootstrap and the contact parameter. From an empty account, run go-live steps 2 to 7. Canonical data needs no restore: any ticker re-ingests on demand and the weekly sweep refreshes the watched set. The owner's research lives on the owner's devices (and from Phase 3, the table's user partitions restore via point-in-time recovery). Exercise the drill on a rehearsal overlay when an infra change deserves it (`--context env=rehearsal`; see the infra README).
