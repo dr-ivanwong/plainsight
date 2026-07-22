@@ -582,6 +582,94 @@ describe('the company dashboard', () => {
     expect(within(stats).getAllByText('n/m: negative equity').length).toBeGreaterThan(0);
   });
 
+  it('edits, removes and resets a benchmark from the trends section', async () => {
+    const company = await seedCompany();
+    for (let offset = 0; offset < 3; offset += 1) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${2022 + offset}` as FyLabel
+        )
+      );
+    }
+
+    renderAt(`/company/${company.id}`);
+
+    // Live queries land between steps, so every step reads the section fresh.
+    const trends = () => screen.getByRole('region', { name: 'Trends' });
+    await screen.findByRole('region', { name: 'Trends' });
+    fireEvent.click(within(trends()).getByRole('radio', { name: 'Returns' }));
+
+    // The seeded default speaks on its button; an invalid entry refuses inline.
+    const summary = await screen.findByRole('button', { name: 'Benchmark 15.0%' });
+    fireEvent.click(summary);
+    fireEvent.change(within(trends()).getByLabelText('Benchmark (%)'), {
+      target: { value: 'abc' }
+    });
+    fireEvent.click(within(trends()).getByRole('button', { name: 'Save' }));
+    expect(within(trends()).getByRole('alert')).toHaveTextContent(
+      'Enter the benchmark as a positive number.'
+    );
+    expect((await db.benchmarks.get('roe'))?.value).toBe(0.15);
+
+    // A valid entry saves immediately and the summary restates it.
+    fireEvent.change(within(trends()).getByLabelText('Benchmark (%)'), {
+      target: { value: '12' }
+    });
+    fireEvent.click(within(trends()).getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('button', { name: 'Benchmark 12.0%' })).toBeVisible();
+    await waitFor(async () => {
+      expect((await db.benchmarks.get('roe'))?.value).toBe(0.12);
+    });
+
+    // Remove clears the line; reset restores the pre-populated default.
+    fireEvent.click(screen.getByRole('button', { name: 'Benchmark 12.0%' }));
+    fireEvent.click(within(trends()).getByRole('button', { name: 'Remove' }));
+    await waitFor(async () => {
+      expect(await db.benchmarks.get('roe')).toBeUndefined();
+    });
+    const unset = await screen.findAllByRole('button', { name: 'Set benchmark' });
+    expect(unset.length).toBeGreaterThan(0);
+
+    fireEvent.click(unset[0] as HTMLElement);
+    fireEvent.click(await screen.findByRole('button', { name: 'Reset to default' }));
+    expect(await screen.findByRole('button', { name: 'Benchmark 15.0%' })).toBeVisible();
+    await waitFor(async () => {
+      expect((await db.benchmarks.get('roe'))?.value).toBe(0.15);
+    });
+  });
+
+  it('hides the benchmark lens with the education layer, keeping the line', async () => {
+    const company = await seedCompany();
+    for (let offset = 0; offset < 3; offset += 1) {
+      await upsertStatement(
+        db,
+        yearWrite(
+          company.id,
+          'income',
+          { revenue: e(100_000), costOfRevenue: e(60_000 - offset * 1_000) },
+          `FY${2022 + offset}` as FyLabel
+        )
+      );
+    }
+    await setMeta(db, 'educationLayerOff', true);
+
+    renderAt(`/company/${company.id}`);
+
+    const section = await screen.findByRole('region', { name: 'Trends' });
+    fireEvent.click(within(section).getAllByRole('button', { name: 'Set benchmark' })[0] as HTMLElement);
+    expect(await screen.findByLabelText('Benchmark (%)')).toBeVisible();
+    // The education row lands through its own live query; the paragraph goes
+    // with it and the field stays.
+    await waitFor(() => {
+      expect(screen.queryByText(/never a verdict/)).not.toBeInTheDocument();
+    });
+    expect(screen.getByLabelText('Benchmark (%)')).toBeVisible();
+  });
+
   it('fires, dismisses and restores an item to investigate', async () => {
     const company = await seedCompany();
     await upsertStatement(

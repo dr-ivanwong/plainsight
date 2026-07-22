@@ -418,6 +418,8 @@ Storage and the pinned schema (the first draft waved at this): one new Dexie tab
 
 The Owner's lens explains the feature where it lives: the benchmark popover carries one education paragraph on what a reference line is and is not (a lens for the user's own judgement, never a verdict; the app does not say buy or sell). With the education layer off, the paragraph hides and the line stays.
 
+**Build note (2026-07-22, landed):** the owner resolved the defaults to the two this section flagged and no more: ROE 15%, and interest coverage 3.0× labelled as the fragility rule's threshold while its value sits at the rule's pinned floor (edited away, it speaks as a plain reference). Debt-to-equity ships with no default, and the table's ROIC and FCF-conversion candidates were dropped rather than defaulted (finance-look gap plan §6, question 5). Three further readings: the popover landed as an inline panel beneath each mini chart rather than a tap on the SVG label, which no keyboard or screen reader could reach, with the same numeric field, inline refusal, immediate save, reset and remove; money metrics carry no editor in v1, an absolute reference needing the entry-scale conversation a small field cannot hold; and the tint reads the pinned health direction, so direction-less metrics draw lines that never tint. The axis extends to keep an out-of-range line visible, and the export joins per the data-model §5 amendment, replace mode touching benchmarks only when the file carries them.
+
 ## 7. Dark mode notes
 
 Every change in this plan has a dark-mode specification:
@@ -535,6 +537,7 @@ The changes are ordered by visual impact and implementation independence. Each s
 - Render dashed reference lines on the mini charts, tinting the unfavourable side per metric direction (§6.5).
 - Add the inline-edit popover and its Owner's-lens paragraph.
 - Depends on step 11 (the charts must exist).
+- Landed 2026-07-22, the defaults owner-resolved; readings per the §6.5 build note, the migration and round-trip tests per §9's rows. The twelve steps are complete.
 
 ## 9. Testing requirements
 

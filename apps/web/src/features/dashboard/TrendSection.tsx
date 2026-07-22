@@ -1,12 +1,37 @@
-import { METRICS, type FyLabel } from '@plainsight/calc-engine';
+import {
+  formatMetricValue,
+  METRICS,
+  type CurrencyCode,
+  type FyLabel,
+  type MetricId
+} from '@plainsight/calc-engine';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { lazy, Suspense, useState, type ReactElement } from 'react';
 
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { StatusValue } from '../../components/StatusValue';
+import { BENCHMARK_DEFAULTS, db } from '../../db';
+import { useBenchmarks } from '../../hooks/useBenchmarks';
 import type { CompanyMetrics } from '../../hooks/useMetrics';
+import { BenchmarkEditor } from './BenchmarkEditor';
 import { DASHBOARD_SECTIONS } from './sections';
 import type { TrendPoint } from './TrendMiniChart';
 import * as styles from './trendSection.css';
+
+/**
+ * The line's right-edge words (dashboard design plan §6.5): a reference by
+ * default, but while the coverage line sits at the fragility rule's own
+ * pinned floor it speaks as the rule's line rather than a coincidence.
+ */
+export function benchmarkLabelFor(
+  id: MetricId,
+  value: number,
+  currency: CurrencyCode
+): string {
+  const figure = formatMetricValue({ status: 'ok', value }, METRICS[id].format, currency);
+  const ruleLine = id === 'interestCoverage' && value === BENCHMARK_DEFAULTS.interestCoverage;
+  return `${figure} ${ruleLine ? 'rule threshold' : 'reference'}`;
+}
 
 // The chart library loads only when the section first renders a chart; the
 // picker and the table fallback never pay for it.
@@ -34,6 +59,9 @@ export function TrendSection({
   const { company, report } = metrics;
   const [groupLabel, setGroupLabel] = useState<string>(DASHBOARD_SECTIONS[0]?.label ?? '');
   const [view, setView] = useState<'chart' | 'table'>('chart');
+  const benchmarks = useBenchmarks();
+  const educationRow = useLiveQuery(() => db.meta.get('educationLayerOff'), []);
+  const educationOff = educationRow?.value === true;
 
   const group = DASHBOARD_SECTIONS.find((section) => section.label === groupLabel);
   if (report.fyLabels.length < 3 || group === undefined) return null;
@@ -67,12 +95,24 @@ export function TrendSection({
               };
             });
             const plottable = points.filter((point) => point.value !== null).length >= 2;
+            const benchmark = benchmarks?.[id];
             return (
               <figure key={id} className={styles.chartCell}>
                 <figcaption className={styles.chartLabel}>{def.label}</figcaption>
                 {plottable ? (
                   <Suspense fallback={<div className={styles.chartGhost} />}>
-                    <TrendMiniChart points={points} kind={def.format} currency={company.currency} />
+                    <TrendMiniChart
+                      points={points}
+                      kind={def.format}
+                      currency={company.currency}
+                      benchmark={benchmark}
+                      benchmarkLabel={
+                        benchmark === undefined
+                          ? undefined
+                          : benchmarkLabelFor(id, benchmark, company.currency)
+                      }
+                      healthDirection={def.healthDirection}
+                    />
                   </Suspense>
                 ) : (
                   <p className={styles.chartEmpty}>
@@ -87,6 +127,18 @@ export function TrendSection({
                       />
                     )}
                   </p>
+                )}
+                {def.format === 'money' ? null : (
+                  // An absolute-money reference needs the entry-scale
+                  // conversation this small field cannot hold; the money
+                  // chart keeps its editor away until someone misses it.
+                  <BenchmarkEditor
+                    metricId={id}
+                    kind={def.format}
+                    currency={company.currency}
+                    value={benchmark}
+                    educationOff={educationOff}
+                  />
                 )}
               </figure>
             );
