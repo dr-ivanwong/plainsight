@@ -10,7 +10,7 @@ import * as railStyles from '../components/appRail.css';
 import { Placeholder } from '../components/Placeholder';
 import * as placeholderStyles from '../components/placeholder.css';
 import { db } from '../db';
-import { LIBRARY_WIDE_MEDIA } from '../features/library/Library';
+import { LIBRARY_WIDE_MEDIA } from '../features/library/libraryMedia';
 import { useCompanies } from '../hooks/useCompanies';
 import { useCompany } from '../hooks/useCompany';
 import { useMediaQuery } from '../hooks/useMediaQuery';

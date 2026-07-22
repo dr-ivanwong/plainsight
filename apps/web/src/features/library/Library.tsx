@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type ReactElement } from 'react';
+import { lazy, Suspense, useState, type ReactElement } from 'react';
 
 import { InstallExplainer } from '../../components/InstallExplainer';
 import { SegmentedControl } from '../../components/SegmentedControl';
@@ -21,10 +21,14 @@ import { CompanyRow } from './CompanyRow';
 import { ImportTickerSheet } from './ImportTickerSheet';
 import * as styles from './library.css';
 import { LibraryEmpty } from './LibraryEmpty';
-import { LibraryTable } from './LibraryTable';
+import { LIBRARY_WIDE_MEDIA } from './libraryMedia';
 
-/** The screener needs width for its columns; below this the rows always render (finance-look gap plan §5). */
-export const LIBRARY_WIDE_MEDIA = 'screen and (min-width: 900px)';
+// The screener loads only when the toggle first asks for it: the rows are
+// the default at every width, and the shell's initial JS budget never pays
+// for a desktop-only view (main plan §5, the bundle gate).
+const LibraryTable = lazy(() =>
+  import('./LibraryTable').then((module) => ({ default: module.LibraryTable }))
+);
 
 const LIBRARY_VIEW_OPTIONS: readonly { value: 'rows' | 'table'; label: string }[] = [
   { value: 'rows', label: 'Rows' },
@@ -235,7 +239,9 @@ export function Library({
             <p className={styles.noMatches}>No companies match.</p>
           ) : tableMode ? (
             // The screener: flat and sortable, so the sector bands step aside.
-            <LibraryTable companies={visible} />
+            <Suspense fallback={null}>
+              <LibraryTable companies={visible} />
+            </Suspense>
           ) : (
             // The filter matches rows wherever they sit; a section left with
             // no matches drops out entirely (frontend spec §3).
