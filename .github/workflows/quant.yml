@@ -18,7 +18,8 @@ jobs:
         working-directory: quant/pairs-engine
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9
+      # Exact tag: setup-uv stopped publishing moving major aliases after v7.
+      - uses: astral-sh/setup-uv@v9.0.0
         with:
           enable-cache: true
       - name: Sync the locked environment
