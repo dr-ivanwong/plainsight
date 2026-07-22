@@ -47,7 +47,7 @@ Three panes, hard-capped, skippable, never shown twice (flag in `meta`), re-open
 
 ### S2: Library
 
-Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag dot count, last-updated, 10-yr ROE microsparkline). 64px rows, separation by spacing.
+Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag dot count, the watchlist figure (latest ROE with its coloured delta, added 2026-07-22), last-updated, 10-yr ROE microsparkline). 64px rows, separation by spacing.
 
 | State | Rendering |
 |---|---|
@@ -161,7 +161,7 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `MoneyField` | Numeric input: separators, sign rules, known-zero menu | `value: MonetaryInt\|null\|'zero', signed, onChange` |
 | `ConfidenceBadge` | Review-mode field state | `confidence, confirmed, onConfirm` |
 | `SourcePeek` | Page image / sheet-cell snippet | `provenance` |
-| `CompanyRow` | Library row | `company, flagsCount, roeSpark` |
+| `CompanyRow` | Library row | `company, flagsCount, roeSpark, roeLatest?, roeDelta?` (watchlist figure added 2026-07-22) |
 | `AppRail` | ≥1200px persistent navigation rail (§1.2 amendment) | `showCompare, companyId?, companyName?` |
 | `ComparisonTable` | S7 grid | `companies, metrics, hideAbsolutes` |
 | `ProviderRow` | S10 row | `provider, keyState, probeResult, onTest, onDelete` |

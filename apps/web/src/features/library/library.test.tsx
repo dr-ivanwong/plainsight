@@ -3,6 +3,7 @@
 // The library screen (frontend spec §3): empty and populated states, the
 // add-company flow behind `?add=1`, sample chips, and the progressive filter.
 import 'fake-indexeddb/auto';
+import type { EntryValue } from '@plainsight/calc-engine';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,6 +27,31 @@ beforeEach(async () => {
 afterEach(() => {
   vi.useRealTimers();
 });
+
+const e = (amountMinor: number): EntryValue => ({ kind: 'entered', amountMinor });
+
+/** One computable year: ROE = netIncome over totalEquity, ending basis. */
+async function seedRoe(companyId: string, netIncome: number, equity: number): Promise<void> {
+  const provenance = { source: 'manual', recordedAt: T1 } as const;
+  await upsertStatement(db, {
+    companyId,
+    fy: 'FY2024',
+    statement: 'income',
+    endDate: '2024-06-30',
+    entryScale: 'ones',
+    values: { revenue: e(100_000), netIncome: e(netIncome) },
+    provenance
+  });
+  await upsertStatement(db, {
+    companyId,
+    fy: 'FY2024',
+    statement: 'balance',
+    endDate: '2024-06-30',
+    entryScale: 'ones',
+    values: { totalEquity: e(equity) },
+    provenance
+  });
+}
 
 function renderLibrary(path = '/') {
   const router = createRouter({
@@ -111,6 +137,17 @@ describe('the library', () => {
     fireEvent.change(filter, { target: { value: 'Filler 3' } });
     expect(screen.getAllByRole('link', { name: /updated today/ })).toHaveLength(1);
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
+  it('carries the watchlist figure on a row once ROE computes', async () => {
+    const wes = await createCompany(db, { name: 'Wesfarmers', ticker: 'WES', currency: 'AUD' });
+    await seedRoe(wes.id, 15_000, 40_000);
+
+    renderLibrary();
+
+    const row = await screen.findByRole('link', { name: /ROE 37\.5%/ });
+    expect(within(row).getByText('37.5%')).toBeVisible();
+    expect(within(row).getByText('ROE')).toBeVisible();
   });
 
   it('offers compare once two companies exist, toolbar and rail alike', async () => {

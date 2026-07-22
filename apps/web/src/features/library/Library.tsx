@@ -27,6 +27,8 @@ function LibraryRow({ company }: { company: CompanyRecord }): ReactElement {
       company={company}
       flagsCount={flags?.active.length}
       roeSpark={report === undefined ? undefined : okPoints(report.metrics.roe, report.fyLabels)}
+      roeLatest={report?.metrics.roe.latest}
+      roeDelta={report?.metrics.roe.delta}
     />
   );
 }

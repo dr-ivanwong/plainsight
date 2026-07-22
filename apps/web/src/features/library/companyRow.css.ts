@@ -85,6 +85,26 @@ export const trailing = style({
   flexShrink: 0
 });
 
+/** The watchlist figure (finance-look gap plan §5): latest ROE and its delta, one number per row. */
+export const roeBlock = style({
+  display: 'inline-flex',
+  alignItems: 'baseline',
+  gap: space[8]
+});
+
+export const roeLabel = style({
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  color: colour.textSecondary
+});
+
+export const roeValue = style({
+  fontSize: fontSize.caption1,
+  letterSpacing: tracking.caption,
+  fontWeight: fontWeight.semibold,
+  fontVariantNumeric: 'tabular-nums'
+});
+
 /** The ten-year ROE microsparkline; narrow screens keep the row to its words. */
 export const spark = style({
   width: '64px',
