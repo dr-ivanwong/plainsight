@@ -70,7 +70,7 @@ Grouped by gate, not by size; every stage is shippable alone and arrives in slic
 
 **Stage 4: benchmarks (one confirmation).** Reference lines (step 12), after the owner settles the default thresholds (§6 below). Depends on stage 1's charts.
 
-**Stage 5: the library as watchlist (new scope).** §5 below; amends the frontend spec's library screen in the same change. Benefits from stage 2 (coloured deltas in its columns) but does not require it.
+**Stage 5: the library as watchlist (new scope).** §5 below; amends the frontend spec's library screen in the same change. Benefits from stage 2 (coloured deltas in its columns) but does not require it. *(Landed 2026-07-22: the row figure and the desktop screener per §5's sketch, with two build readings: the screener is flat, sorting and sector bands being rival orderings, and its reports assemble in one live pass because sortable columns need their values above the row components, where per-company hooks cannot reach.)*
 
 Stages 2 and 3 are small builds behind large confirmations; if the confirmations arrive together, colour and density can leapfrog the larger stage 1 build. The order above optimises for starting without waiting.
 
@@ -94,7 +94,7 @@ Data cost: none. The rows already hold each company's metrics report (the ROE sp
 3. **Rule-to-metric map (gates stage 2).** The draft in the dashboard design plan §4.2. Recommendation: adopt as drafted. *(Resolved 2026-07-19 as drafted.)*
 4. **Progressive-disclosure loosening (gates stage 3).** Recommendation: yes; without it the dashboard cannot show a year of history without a tap, and that tap is the distance between reading app and instrument. *(Resolved 2026-07-19 as recommended; main plan §12 entry 14.)*
 5. **Benchmark defaults (gates stage 4).** The two flagged conflicts: recommendation: ship interest coverage's line at 3.0× presented as the fragility rule's own threshold; ship ROE at 15%; leave debt-to-equity with **no default** (1.0 beside the rule's pinned 2.0 draws a caution line the rules do not own; the owner can set one).
-6. **Library columns (stage 5).** Recommendation: ROE, net margin, debt to equity, flags; add more only after living with four.
+6. **Library columns (stage 5).** Recommendation: ROE, net margin, debt to equity, flags; add more only after living with four. *(Resolved 2026-07-22 as recommended.)*
 7. Unchanged and still open from the dashboard design plan's footer: whether the detail sheet offers exact money figures beside the pinned compact display.
 
 ## 7. What does not change

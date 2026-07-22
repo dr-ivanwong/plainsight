@@ -10,8 +10,10 @@ import * as railStyles from '../components/appRail.css';
 import { Placeholder } from '../components/Placeholder';
 import * as placeholderStyles from '../components/placeholder.css';
 import { db } from '../db';
+import { LIBRARY_WIDE_MEDIA } from '../features/library/Library';
 import { useCompanies } from '../hooks/useCompanies';
 import { useCompany } from '../hooks/useCompany';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import * as styles from '../styles/shell.css';
 
 export const Route = createRootRoute({
@@ -89,6 +91,16 @@ function RootShell(): ReactElement {
   const wide = useRouterState({
     select: (state) => state.matches.some((match) => WIDE_ROUTE_IDS.includes(match.routeId)),
   });
+  // The library borrows the wide column while its screener is on (finance-look
+  // gap plan §5): eight columns need the dashboard's width. The same signals
+  // that gate the screener gate the width, so the rows always get the narrow
+  // column back.
+  const libraryRoute = useRouterState({
+    select: (state) => state.matches.some((match) => match.routeId === '/'),
+  });
+  const screenerWidth = useMediaQuery(LIBRARY_WIDE_MEDIA);
+  const libraryTableRow = useLiveQuery(() => db.meta.get('libraryTableView'), []);
+  const libraryScreener = libraryRoute && screenerWidth && libraryTableRow?.value === true;
   // The welcome flow is the one railless screen (frontend spec §1.2).
   const onboarding = useRouterState({
     select: (state) => state.matches.some((match) => match.routeId === '/onboarding'),
@@ -105,7 +117,7 @@ function RootShell(): ReactElement {
   const companies = useCompanies();
   const columnClass = onboarding
     ? styles.column
-    : wide
+    : wide || libraryScreener
       ? styles.columnWideRail
       : styles.columnRail;
   return (

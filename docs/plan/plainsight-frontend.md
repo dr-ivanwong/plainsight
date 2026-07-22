@@ -57,6 +57,7 @@ Purpose: calm home; one row per company (name, ticker/exchange badge, red-flag d
 | >12 companies | A filter field appears (progressive: invisible until useful) |
 | Loading | None in steady state (Dexie live queries are ~ms); skeleton rows only on cold service-worker start |
 | Signed in, first catch-up in flight, empty cache | Placeholder rows (64px, quiet, motionless) with a screen-reader status line, never the true-empty hero: an empty cache on a device that has never synced is not yet an empty library. The hero returns when the first pull lands empty or fails (catch-up serves the cache). Amendment 2026-07-18 with the reads-behind-the-API slice (main plan §12.9) |
+| Screener picked, ≥900px | The table replaces the sectioned rows (added 2026-07-22, finance-look gap plan §5): companies as rows; ticker, latest FY, ROE, net margin, debt-to-equity, flag count and the ROE microsparkline as columns; header buttons sort client-side (figures biggest-first on the first press, absent values last); degenerate cells speak short forms with full phrases as accessible names; the name cell opens the dashboard. The screen borrows the wide column while the screener is on (§7). The rows-or-table choice persists in `meta`; below 900px the rows always render, whatever it says |
 
 **Sector sections (added 2026-07-19, main plan §12 entry 16).** Companies group under the pinned vocabulary's section labels (companion §12 D3) in vocabulary order, styled as the dashboard grid's quiet section labels (dashboard design plan §5.2); within a section, the last-updated sort stands. Unclassified companies gather under a closing "Unclassified" section whose header renders only when a classified section also renders: a library where nothing is classified reads exactly as before, one flat list, the same progressive spirit as the >12 filter. That filter matches rows across sections, a section with no matches dropping out, and the first-catch-up placeholder rows stay flat. Empty sections never render. The add sheet's sector field becomes a picker over the vocabulary with "None" as the default; free text retires, and legacy values normalise per the companion's mapping.
 
@@ -162,6 +163,7 @@ Rationale: a library that starts full lies about whose research it is: ownership
 | `ConfidenceBadge` | Review-mode field state | `confidence, confirmed, onConfirm` |
 | `SourcePeek` | Page image / sheet-cell snippet | `provenance` |
 | `CompanyRow` | Library row | `company, flagsCount, roeSpark, roeLatest?, roeDelta?` (watchlist figure added 2026-07-22) |
+| `LibraryTable` | S2 screener view (added 2026-07-22) | `companies` (reports assemble in `useLibraryReports`, one live pass for the sortable columns) |
 | `AppRail` | ≥1200px persistent navigation rail (§1.2 amendment) | `showCompare, companyId?, companyName?` |
 | `ComparisonTable` | S7 grid | `companies, metrics, hideAbsolutes` |
 | `ProviderRow` | S10 row | `provider, keyState, probeResult, onTest, onDelete` |
@@ -190,7 +192,7 @@ Keystrokes never cross feature boundaries: `MoneyField` holds local state, commi
 
 ## 7. Responsive rules
 
-Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7; metric grid `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1), ≥1200 (the navigation rail joins at left on every screen but the welcome flow: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11). Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
+Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7, and for S2 while its screener view is on, whose eight columns need the dashboard's width; amendment 2026-07-22 with the finance-look gap plan §5), ≥1200 (the navigation rail joins at left on every screen but the welcome flow: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11). Metric grid at ≥900: `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1. Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 

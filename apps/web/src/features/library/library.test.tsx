@@ -26,7 +26,26 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
+
+/** jsdom has no matchMedia; the screener tests pick the width themselves. */
+function stubMatchMedia(matches: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    (query: string) =>
+      ({
+        matches,
+        media: query,
+        onchange: null,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        dispatchEvent: () => false
+      }) as unknown as MediaQueryList
+  );
+}
 
 const e = (amountMinor: number): EntryValue => ({ kind: 'entered', amountMinor });
 
@@ -148,6 +167,48 @@ describe('the library', () => {
     const row = await screen.findByRole('link', { name: /ROE 37\.5%/ });
     expect(within(row).getByText('37.5%')).toBeVisible();
     expect(within(row).getByText('ROE')).toBeVisible();
+  });
+
+  it('offers the screener at desktop width, sortable and persistent', async () => {
+    stubMatchMedia(true);
+    const wes = await createCompany(db, { name: 'Wesfarmers', ticker: 'WES', currency: 'AUD' });
+    await seedRoe(wes.id, 15_000, 40_000);
+    vi.setSystemTime(new Date(T2));
+    const wow = await createCompany(db, { name: 'Woolworths', ticker: 'WOW', currency: 'AUD' });
+    await seedRoe(wow.id, 8_000, 40_000);
+
+    renderLibrary();
+    fireEvent.click(await screen.findByRole('radio', { name: 'Table' }));
+
+    const table = await screen.findByRole('table');
+    expect(within(table).getByRole('columnheader', { name: /Debt-to-equity/ })).toBeVisible();
+    const wesRow = await within(table).findByRole('row', { name: /Wesfarmers/ });
+    expect(wesRow).toHaveTextContent('37.5%');
+    expect(wesRow).toHaveTextContent('WES');
+    await waitFor(async () => {
+      expect((await db.meta.get('libraryTableView'))?.value).toBe(true);
+    });
+
+    // First press sorts the figure biggest-first; the second flips it.
+    fireEvent.click(within(table).getByRole('button', { name: 'ROE' }));
+    const sorted = within(table).getAllByRole('row').slice(1);
+    expect(sorted[0]).toHaveTextContent('Wesfarmers');
+    expect(sorted[1]).toHaveTextContent('Woolworths');
+    fireEvent.click(within(table).getByRole('button', { name: /ROE/ }));
+    const flipped = within(table).getAllByRole('row').slice(1);
+    expect(flipped[0]).toHaveTextContent('Woolworths');
+  });
+
+  it('keeps the rows below the breakpoint whatever the stored choice', async () => {
+    stubMatchMedia(false);
+    await setMeta(db, 'libraryTableView', true);
+    await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+
+    renderLibrary();
+
+    await screen.findByRole('link', { name: /Wesfarmers/ });
+    expect(screen.queryByRole('radiogroup', { name: 'Library view' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
   it('offers compare once two companies exist, toolbar and rail alike', async () => {

@@ -36,6 +36,13 @@ export const toolbarActions = style({
   gap: space[8]
 });
 
+/** Seats the rows-or-screener toggle above the list (finance-look gap plan §5); desktop width only. */
+export const viewRow = style({
+  display: 'flex',
+  justifyContent: 'flex-end',
+  marginBottom: space[16]
+});
+
 const toolbarControl = style({
   display: 'inline-flex',
   alignItems: 'center',

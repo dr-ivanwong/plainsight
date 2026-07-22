@@ -1,9 +1,19 @@
 import { Link } from '@tanstack/react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type ReactElement } from 'react';
 
 import { InstallExplainer } from '../../components/InstallExplainer';
+import { SegmentedControl } from '../../components/SegmentedControl';
 import { okPoints } from '../../components/Sparkline';
-import { SECTOR_IDS, SECTOR_LABELS, type CompanyRecord, type SectorId } from '../../db';
+import {
+  db,
+  SECTOR_IDS,
+  SECTOR_LABELS,
+  setMeta,
+  type CompanyRecord,
+  type SectorId
+} from '../../db';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useMetrics } from '../../hooks/useMetrics';
 import { useRedFlags } from '../../hooks/useRedFlags';
 import { AddCompanySheet } from './AddCompanySheet';
@@ -11,6 +21,15 @@ import { CompanyRow } from './CompanyRow';
 import { ImportTickerSheet } from './ImportTickerSheet';
 import * as styles from './library.css';
 import { LibraryEmpty } from './LibraryEmpty';
+import { LibraryTable } from './LibraryTable';
+
+/** The screener needs width for its columns; below this the rows always render (finance-look gap plan §5). */
+export const LIBRARY_WIDE_MEDIA = 'screen and (min-width: 900px)';
+
+const LIBRARY_VIEW_OPTIONS: readonly { value: 'rows' | 'table'; label: string }[] = [
+  { value: 'rows', label: 'Rows' },
+  { value: 'table', label: 'Table' }
+];
 
 /**
  * One row's live depth: the report feeds the ROE microsparkline and the
@@ -126,6 +145,14 @@ export function Library({
             (company.ticker?.toLowerCase().includes(query) ?? false)
         );
 
+  // The screener (finance-look gap plan §5): a desktop-width reading of the
+  // same library. The choice persists beside the dashboard's, but narrow
+  // screens keep the rows whatever it says: a seven-column table has no
+  // honest phone rendering.
+  const wide = useMediaQuery(LIBRARY_WIDE_MEDIA);
+  const tableViewRow = useLiveQuery(() => db.meta.get('libraryTableView'), []);
+  const tableMode = wide && tableViewRow?.value === true;
+
   return (
     <>
       {showInstallExplainer && onInstallExplainerDismiss !== undefined ? (
@@ -184,6 +211,16 @@ export function Library({
               </button>
             </p>
           ) : null}
+          {wide ? (
+            <div className={styles.viewRow}>
+              <SegmentedControl
+                label="Library view"
+                options={LIBRARY_VIEW_OPTIONS}
+                value={tableMode ? 'table' : 'rows'}
+                onChange={(next) => void setMeta(db, 'libraryTableView', next === 'table')}
+              />
+            </div>
+          ) : null}
           {companies.length > 12 ? (
             <input
               className={styles.filter}
@@ -196,6 +233,9 @@ export function Library({
           ) : null}
           {visible.length === 0 ? (
             <p className={styles.noMatches}>No companies match.</p>
+          ) : tableMode ? (
+            // The screener: flat and sortable, so the sector bands step aside.
+            <LibraryTable companies={visible} />
           ) : (
             // The filter matches rows wherever they sit; a section left with
             // no matches drops out entirely (frontend spec §3).
