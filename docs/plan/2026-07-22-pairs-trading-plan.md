@@ -1,6 +1,9 @@
 # Pairs Trading Strategy: Proof-of-Concept Plan
 ## Bootstrap Quant Fund | $100K POC Capital | 1 Engineer
 
+**Date:** 2026-07-22
+**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: no per-pair stop against divergence or takeover events, short-leg borrow and dividend mechanics unaddressed (the backtest still runs on raw rather than adjusted closes), data licensing unconfirmed, no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
+
 ---
 
 ## Executive Summary
