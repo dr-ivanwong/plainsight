@@ -2,7 +2,7 @@
 ## Bootstrap Quant Fund | $100K POC Capital | 1 Engineer
 
 **Date:** 2026-07-22
-**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: data licensing unconfirmed, no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
+**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
 
 ---
 
@@ -12,7 +12,7 @@
 
 **Two-Stage Approach:**
 
-**Stage 1: Validation (Weeks 1-8, FREE)**
+**Stage 1: Validation (Weeks 1-8, data subscription only)**
 - Weeks 1-2: Identify 5-10 cointegrated pairs
 - Weeks 3-4: Validate pairs via backtesting
 - Weeks 5-8: Paper trading (live system, simulated capital)
@@ -23,10 +23,10 @@
 - Week 20: Go/no-go decision on scaling to $500K
 
 **Capital Allocation:**
-- Research/backtest: FREE (using EOD data + EODHD free tier)
+- Research/backtest: one paid EOD data plan (ASX is not in the free tier)
 - Paper trading: FREE (IB sim account)
 - Live POC: $100K across 2-3 pairs
-- Monthly costs: AUD $50 (EODHD if paid tier) or FREE (limited free tier)
+- Monthly costs: roughly AUD $50 to $100 (EOD data plan plus IB's ASX market data feed); confirm tiers in Week 1
 
 **Success Criteria for POC:**
 - **Live Sharpe > 1.4** (≥77% of backtest Sharpe)
@@ -72,8 +72,10 @@ Use one of these sources (pick ONE):
 
 **Option A: EODHD (Easiest)**
 ```python
-# Free tier: 20 API calls/day, data > 15 min old
-# Paid tier: $50-100/month for commercial use
+# The free tier is rate limited and covers demo tickers only; ASX
+# coverage needs a paid plan. Confirm the tier and its terms before
+# Week 1, and again before any outside capital arrives: personal-use
+# data terms do not cover managing someone else's money.
 
 from eodhdc import EODHDClient
 import pandas as pd
@@ -163,6 +165,8 @@ for ticker in candidates:
 - Check: every candidate downloaded (the loop aborts on any missing ticker)
 
 **Universe audit (2026-07-22).** The list above was checked ticker by ticker against the ASX listed-companies directory as at 2026-07-22. Nine entries in the original draft failed the check and were replaced with current large caps: APT, AWC, SKI and URW have delisted, JHG's CDIs have been withdrawn, GLD and ASR are not ASX codes, VAS is an ETF rather than a company, and DXN is a data-centre micro-cap where DXS (Dexus) was plainly meant. Re-run the same audit whenever this plan is picked up: tickers rename (WPL became WDS in 2022) and delist, and a downloader that skips failures quietly shrinks the universe. One limit the audit does not cure: choosing today's constituents for a five-year backtest is survivorship bias, and a fully honest run reconstructs membership as at each historical date. This proof of concept accepts that as a known simplification.
+
+**Data licensing (confirm before Week 1).** Three agreements govern this plan's data, and none is optional. First, EOD history: ASX coverage on EODHD or an equivalent requires a paid plan (the free tier covers demo tickers only), the standard plans are personal-use, and managing outside capital is commercial use under most vendor terms, so the licence question returns at the Week 20 scale-up rather than staying settled at signup; redistribution, including serving vendor data to a backer's dashboard, is separately restricted. Second, IB market data: the execute job's snapshot quotes need an ASX market data subscription, priced at the non-professional rate only while the capital is the operator's own; trading someone else's money generally reclassifies the subscriber as professional at materially higher fees. Third, the ASX directory file used for the universe audit is free to read, carries no price data, and grants nothing further. Line the actual invoices up against the monthly estimate in the summary once tiers are confirmed; where they disagree, the summary is what is wrong.
 
 ---
 
@@ -2063,8 +2067,8 @@ This means your effective Sharpe IMPROVES as you scale
 - eodhdc: End-of-day historical data
 
 **Alternative Data Providers:**
-- EODHD (AUD $50-100/month)
-- Interactive Brokers (AUD $40+/month for data subscriptions)
+- EODHD (AUD $50-100/month; ASX needs a paid tier, personal use unless a commercial agreement says otherwise)
+- Interactive Brokers (AUD $40+/month for data subscriptions, at non-professional rates while the money is your own)
 - Polygon.io (limited free tier)
 
 ---
@@ -2073,8 +2077,8 @@ This means your effective Sharpe IMPROVES as you scale
 
 ### Original Plan (Full Deployment, Week 5 Go-Live)
 ```
-Week 1-2: Research (FREE)
-Week 3-4: Backtest (FREE)
+Week 1-2: Research (data plan only)
+Week 3-4: Backtest (no new costs)
 Week 5-12: Live trading ($1M deployed)
 Result: Prove strategy works or lose $1M
 
@@ -2084,14 +2088,14 @@ Timeline: 12 weeks total
 
 ### Revised POC Plan (De-Risked, Week 9 Go-Live)
 ```
-Week 1-2: Research (FREE)
-Week 3-4: Backtest (FREE)
-Week 5-8: Paper trading (FREE)
+Week 1-2: Research (data plan only)
+Week 3-4: Backtest (no new costs)
+Week 5-8: Paper trading (no new costs)
 Week 9-20: Live POC ($100K deployed)
 Result: Prove strategy works on $100K, then scale
 
 Risk: Low (only $100K at risk, $15-40K expected ROI)
-Timeline: 20 weeks total, but weeks 1-8 are free validation
+Timeline: 20 weeks total, and weeks 1-8 risk no capital
 Full deployment: After Week 20 go/no-go decision
 ```
 
@@ -2100,7 +2104,7 @@ Full deployment: After Week 20 go/no-go decision
 | Factor | Original | Revised |
 |--------|----------|---------|
 | Capital at risk | $1M | $100K |
-| Free validation | 4 weeks | 8 weeks |
+| Capital-free validation | 4 weeks | 8 weeks |
 | Time to prove edge | 12 weeks | 12 weeks (but paper-validated) |
 | Backer confidence | "Trust me" | "12 weeks paper + 12 weeks live data" |
 | Total timeline to scale | 12 weeks | 20 weeks (but $15K+ learned, not lost) |
@@ -2123,7 +2127,7 @@ Full deployment: After Week 20 go/no-go decision
 
 This POC plan is executable within the 20-week window by 1 engineer with $100K capital and consistent daily 5-10 minute monitoring. 
 
-**Weeks 1-8 are completely free** (no capital deployed). If at Week 8 you want to abort, you've invested only your time and learned whether the edge is real via paper trading.
+**Weeks 1-8 deploy no capital** (the only spend is the data plan). If at Week 8 you want to abort, you've invested your time and a small subscription, and learned whether the system tracks its engine via paper trading.
 
 **Week 20 go/no-go decision** is binary:
 - **GO:** Scale to $500K-$1M (full deployment happens then, not before)
