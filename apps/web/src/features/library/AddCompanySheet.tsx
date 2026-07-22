@@ -12,17 +12,13 @@ const CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'JPY', 'NZD'] as const;
  * The add-company sheet, open while `?add=1` is in the URL (frontend spec
  * §1.1 URL rules). Name and reporting currency are all a company needs to
  * exist; everything else is optional colour. Saving lands on the company's
- * dashboard, where the first fiscal year gets entered; arriving with the
- * import-a-file intent (onboarding's third start), it lands on data entry
- * with the upload sheet already open, keeping the button's promise.
+ * dashboard, where the first fiscal year gets entered.
  */
 export function AddCompanySheet({
   open,
-  thenUpload = false,
   onClose
 }: {
   open: boolean;
-  thenUpload?: boolean;
   onClose: () => void;
 }): ReactElement {
   const navigate = useNavigate();
@@ -43,16 +39,7 @@ export function AddCompanySheet({
         sector: field('sector'),
         currency: field('currency') ?? ''
       });
-      if (thenUpload) {
-        await navigate({
-          to: '/company/$id/entry',
-          params: { id: created.id },
-          search: { upload: 1 },
-          replace: true
-        });
-      } else {
-        await navigate({ to: '/company/$id', params: { id: created.id }, replace: true });
-      }
+      await navigate({ to: '/company/$id', params: { id: created.id }, replace: true });
     } catch {
       setError('Could not save the company. Check the fields and try again.');
     }

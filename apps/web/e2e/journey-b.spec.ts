@@ -82,7 +82,6 @@ async function stubApi(page: Page): Promise<void> {
 test('ticker to pre-filled model, through the ingesting wait', async ({ page }) => {
   await stubApi(page);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Skip' }).click();
 
   await page.getByRole('button', { name: 'Import', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search by ticker or company name' }).fill('apple');

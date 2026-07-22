@@ -162,7 +162,7 @@ export const layout = {
   railWidth: '200px',
   /** Width cap for a stacked action group in hero empty states. */
   actionColumnMax: '320px',
-  /** Readable measure for centred prose (welcome panes, explainers). */
+  /** Readable measure for centred prose (explainers). */
   proseMax: '480px',
 } as const;
 

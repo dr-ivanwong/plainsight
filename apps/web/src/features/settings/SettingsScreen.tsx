@@ -177,12 +177,6 @@ export function SettingsScreen(): ReactElement {
           <span className={styles.rowLabel}>Version</span>
           <span className={styles.rowNote}>{__APP_VERSION__}</span>
         </div>
-        <Link to="/onboarding" className={styles.rowLink}>
-          <span className={styles.rowLabel}>Replay the welcome</span>
-          <span className={styles.chevron} aria-hidden="true">
-            ›
-          </span>
-        </Link>
       </section>
     </>
   );

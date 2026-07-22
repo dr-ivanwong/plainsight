@@ -139,7 +139,6 @@ function renderAt(path: string): void {
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
   queryClient.clear();
 });
 

@@ -16,7 +16,6 @@ import { appScheduler } from '../sync/useSync';
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
   appScheduler.reset();
 });
 

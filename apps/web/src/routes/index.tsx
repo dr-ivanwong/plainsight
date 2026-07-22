@@ -1,9 +1,9 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactElement } from 'react';
 import { z } from 'zod';
 
-import { db, getMeta, setMeta } from '../db';
+import { db, setMeta } from '../db';
 import { needsInstallExplainer } from '../features/library/iosInstall';
 import { Library } from '../features/library/Library';
 import { LibrarySkeleton } from '../features/library/LibrarySkeleton';
@@ -14,9 +14,7 @@ import { useSyncStatus } from '../sync/useSync';
 
 const librarySearchSchema = z.object({
   add: z.literal(1).optional().catch(undefined),
-  import: z.literal(1).optional().catch(undefined),
-  /** Alongside `add`: the new company continues straight into the file upload (onboarding's third start). */
-  upload: z.literal(1).optional().catch(undefined)
+  import: z.literal(1).optional().catch(undefined)
 });
 
 // The library route (frontend spec §1.1), root of the stack. The add-company
@@ -24,19 +22,12 @@ const librarySearchSchema = z.object({
 // back gesture closes the sheet instead of exiting the screen.
 export const Route = createFileRoute('/')({
   validateSearch: librarySearchSchema,
-  // A true first launch redirects to the welcome, once: the flag gates it
-  // (frontend spec §3), and every later visit comes straight here.
-  beforeLoad: async () => {
-    if ((await getMeta(db, 'onboardingDone')) !== true) {
-      throw redirect({ to: '/onboarding' });
-    }
-  },
   component: LibraryScreen
 });
 
 function LibraryScreen(): ReactElement | null {
   const companies = useCompanies();
-  const { add, import: importParam, upload } = Route.useSearch();
+  const { add, import: importParam } = Route.useSearch();
   const navigate = useNavigate();
   const online = useOnlineStatus();
   // Read raw: the queriers must stay pure, and a malformed row simply means
@@ -70,7 +61,6 @@ function LibraryScreen(): ReactElement | null {
     <Library
       companies={companies}
       addOpen={add === 1}
-      addThenUpload={upload === 1}
       onAddOpen={() => void navigate({ to: '/', search: { add: 1 } })}
       onAddClose={() => void navigate({ to: '/', search: {}, replace: true })}
       importOpen={importParam === 1}

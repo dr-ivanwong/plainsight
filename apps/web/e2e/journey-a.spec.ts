@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * The Phase 1 exit criterion (main plan §8): Journey A, completable in
  * airplane mode. One online visit installs the service worker; everything
- * after happens offline, from the first-launch welcome through company
+ * after happens offline, from the first-launch empty library through company
  * creation, statement entry, the computed dashboard, and the detail sheet
  * with its by-hand formula.
  *
@@ -12,11 +12,10 @@ import { expect, test, type Page } from '@playwright/test';
  * proof runs on Chromium and WebKit walks the identical journey online.
  */
 async function walkJourneyA(page: Page): Promise<void> {
-  // A true first launch.
+  // A true first launch: the library's empty state carries the promise.
   await expect(
     page.getByRole('heading', { name: 'Read financial statements like an owner' })
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Skip' }).click();
 
   // Create the company.
   await page.getByRole('button', { name: 'Add a company' }).click();

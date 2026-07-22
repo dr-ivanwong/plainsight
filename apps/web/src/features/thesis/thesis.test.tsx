@@ -15,7 +15,6 @@ import {
   createCompany,
   db,
   saveThesisVersion,
-  setMeta,
   upsertStatement,
   type CompanyRecord,
   type ThesisSections
@@ -27,7 +26,6 @@ const e = (amountMinor: number): EntryValue => ({ kind: 'entered', amountMinor }
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
 });
 
 const seedCompany = (): Promise<CompanyRecord> =>

@@ -103,10 +103,6 @@ function RootShell(): ReactElement {
   const screenerWidth = useMediaQuery(LIBRARY_WIDE_MEDIA);
   const libraryTableRow = useLiveQuery(() => db.meta.get('libraryTableView'), []);
   const libraryScreener = libraryRoute && screenerWidth && libraryTableRow?.value === true;
-  // The welcome flow is the one railless screen (frontend spec §1.2).
-  const onboarding = useRouterState({
-    select: (state) => state.matches.some((match) => match.routeId === '/onboarding'),
-  });
   // The rail's container facts: the open company (if any) for its section
   // group, and the library size for Compare's progressive appearance.
   const companyId = useRouterState({
@@ -121,29 +117,21 @@ function RootShell(): ReactElement {
   // rail once this device has seen artefacts on the API; the pairs route
   // keeps the flag current on every read.
   const pairsSeenRow = useLiveQuery(() => db.meta.get('pairsSeen'), []);
-  const columnClass = onboarding
-    ? styles.column
-    : wide || libraryScreener
-      ? styles.columnWideRail
-      : styles.columnRail;
+  const columnClass = wide || libraryScreener ? styles.columnWideRail : styles.columnRail;
   return (
     <QueryClientProvider client={queryClient}>
       <main className={columnClass}>
-        {onboarding ? (
-          <Outlet />
-        ) : (
-          <div className={railStyles.frame}>
-            <AppRail
-              showCompare={(companies?.length ?? 0) >= 2}
-              showPairs={pairsSeenRow?.value === true}
-              companyId={companyId}
-              companyName={companyId === undefined ? undefined : company?.name}
-            />
-            <div>
-              <Outlet />
-            </div>
+        <div className={railStyles.frame}>
+          <AppRail
+            showCompare={(companies?.length ?? 0) >= 2}
+            showPairs={pairsSeenRow?.value === true}
+            companyId={companyId}
+            companyName={companyId === undefined ? undefined : company?.name}
+          />
+          <div>
+            <Outlet />
           </div>
-        )}
+        </div>
       </main>
     </QueryClientProvider>
   );

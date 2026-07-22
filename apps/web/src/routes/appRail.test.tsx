@@ -1,22 +1,21 @@
 // @vitest-environment jsdom
 
 // The desktop navigation rail (frontend spec §1.2 amendment, main plan
-// §12.11): persistent on every screen except the welcome flow, with the
-// destinations up top, Compare joining at two companies, and the open
-// company's sections beneath its name. Width behaviour is CSS (≥1200px) and
-// is verified in the browser, not here.
+// §12.11): persistent on every screen, with the destinations up top,
+// Compare joining at two companies, and the open company's sections
+// beneath its name. Width behaviour is CSS (≥1200px) and is verified in
+// the browser, not here.
 import 'fake-indexeddb/auto';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createCompany, db, setMeta } from '../db';
+import { createCompany, db } from '../db';
 import { routeTree } from '../routeTree.gen';
 
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
 });
 
 function renderAt(path: string): void {
@@ -77,10 +76,4 @@ describe('the navigation rail', () => {
     expect(within(rail).queryByRole('link', { name: 'Dashboard' })).toBeNull();
   });
 
-  it('stays out of the welcome flow', async () => {
-    renderAt('/onboarding');
-
-    expect(await screen.findByRole('heading', { name: /owner/i })).toBeDefined();
-    expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull();
-  });
 });

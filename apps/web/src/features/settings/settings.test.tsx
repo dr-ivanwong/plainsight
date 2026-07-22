@@ -13,7 +13,6 @@ import { routeTree } from '../../routeTree.gen';
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
   delete document.documentElement.dataset.theme;
 });
 
@@ -37,9 +36,6 @@ describe('the settings root', () => {
       '/settings/data'
     );
     expect(screen.getByText('0.0.0')).toBeVisible();
-    expect(screen.getByRole('link', { name: /Replay the welcome/ }).getAttribute('href')).toBe(
-      '/onboarding'
-    );
   });
 
   it('carries the export nudge on the Data & storage row when a copy is overdue', async () => {

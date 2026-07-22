@@ -9,13 +9,12 @@ import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/rea
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { db, putCredential, setMeta } from '../../db';
+import { db, putCredential } from '../../db';
 import { routeTree } from '../../routeTree.gen';
 
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
 });
 
 afterEach(() => {

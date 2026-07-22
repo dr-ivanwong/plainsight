@@ -7,15 +7,9 @@
 import 'fake-indexeddb/auto';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { db, setMeta } from '../db';
 import { routeTree } from '../routeTree.gen';
-
-beforeAll(async () => {
-  // The first-launch gate has its own suite; these tests visit routes directly.
-  await setMeta(db, 'onboardingDone', true);
-});
 
 async function renderAt(path: string) {
   const router = createRouter({
@@ -29,13 +23,6 @@ async function renderAt(path: string) {
 describe('the route skeleton', () => {
   it('serves the library at the root', async () => {
     await renderAt('/');
-    expect(
-      await screen.findByRole('heading', { name: 'Read financial statements like an owner' })
-    ).toBeVisible();
-  });
-
-  it('serves the first-run screen', async () => {
-    await renderAt('/onboarding');
     expect(
       await screen.findByRole('heading', { name: 'Read financial statements like an owner' })
     ).toBeVisible();

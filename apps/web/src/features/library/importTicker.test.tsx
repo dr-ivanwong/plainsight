@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FinancialsResponse } from '@plainsight/api-contract';
 
-import { createCompany, db, setMeta } from '../../db';
+import { createCompany, db } from '../../db';
 import { routeTree } from '../../routeTree.gen';
 
 vi.mock('../../api/client', () => ({
@@ -47,7 +47,6 @@ beforeEach(async () => {
   vi.clearAllMocks();
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
   searchMock.mockResolvedValue({
     results: [{ ticker: 'AAPL', name: 'Apple Inc.', cik: 320193, exchange: 'Nasdaq' }]
   });

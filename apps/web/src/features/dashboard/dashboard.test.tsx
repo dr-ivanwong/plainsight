@@ -28,7 +28,6 @@ const MANUAL = { source: 'manual', recordedAt: '2026-07-11T09:30:00Z' } as const
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
 });
 
 const seedCompany = (): Promise<CompanyRecord> =>

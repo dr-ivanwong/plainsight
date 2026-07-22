@@ -15,7 +15,6 @@ import { company, incomeStatement, T0 } from '../../test/builders';
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
 });
 
 afterEach(() => {
@@ -176,6 +175,7 @@ describe('data and storage', () => {
 
   it('arms the wipe only on the app name, then wipes to a true first launch', async () => {
     await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
+    await setMeta(db, 'theme', 'dark');
     renderAt();
 
     const wipe = await screen.findByRole('button', { name: 'Wipe everything' });
@@ -193,7 +193,7 @@ describe('data and storage', () => {
       await screen.findByRole('heading', { name: 'Read financial statements like an owner' })
     ).toBeVisible();
     expect(await db.companies.count()).toBe(0);
-    expect(await getMeta(db, 'onboardingDone')).toBeUndefined();
+    expect(await getMeta(db, 'theme')).toBeUndefined();
   });
 
   it('says so when the browser does not report storage', async () => {

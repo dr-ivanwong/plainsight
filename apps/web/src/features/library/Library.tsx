@@ -108,7 +108,6 @@ function sectionsOf(companies: readonly CompanyRecord[]): LibrarySection[] {
 export function Library({
   companies,
   addOpen,
-  addThenUpload = false,
   onAddOpen,
   onAddClose,
   importOpen = false,
@@ -124,7 +123,6 @@ export function Library({
 }: {
   companies: CompanyRecord[];
   addOpen: boolean;
-  addThenUpload?: boolean;
   onAddOpen: () => void;
   onAddClose: () => void;
   importOpen?: boolean;
@@ -273,7 +271,7 @@ export function Library({
         </>
       )}
 
-      <AddCompanySheet open={addOpen} thenUpload={addThenUpload} onClose={onAddClose} />
+      <AddCompanySheet open={addOpen} onClose={onAddClose} />
       {onImportClose === undefined || onImportToManual === undefined ? null : (
         <ImportTickerSheet
           open={importOpen}

@@ -9,7 +9,7 @@ import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/rea
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createCompany, db, setMeta, upsertStatement, type CompanyRecord } from '../../db';
+import { createCompany, db, upsertStatement, type CompanyRecord } from '../../db';
 import { routeTree } from '../../routeTree.gen';
 
 const e = (amountMinor: number): EntryValue => ({ kind: 'entered', amountMinor });
@@ -19,7 +19,6 @@ const MANUAL = { source: 'manual', recordedAt: '2026-07-11T09:30:00Z' } as const
 beforeEach(async () => {
   await db.delete();
   await db.open();
-  await setMeta(db, 'onboardingDone', true);
 });
 
 /** One company with one fiscal year: enough income for net margin, enough cash flow for FCF. */

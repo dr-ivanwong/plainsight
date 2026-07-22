@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PairsRouteImport } from './routes/pairs'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
@@ -23,11 +22,6 @@ import { Route as CompanyIdEntryRouteImport } from './routes/company.$id.entry'
 const PairsRoute = PairsRouteImport.update({
   id: '/pairs',
   path: '/pairs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -74,7 +68,6 @@ const CompanyIdEntryRoute = CompanyIdEntryRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
-  '/onboarding': typeof OnboardingRoute
   '/pairs': typeof PairsRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
@@ -86,7 +79,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
-  '/onboarding': typeof OnboardingRoute
   '/pairs': typeof PairsRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
@@ -99,7 +91,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
-  '/onboarding': typeof OnboardingRoute
   '/pairs': typeof PairsRoute
   '/settings/data': typeof SettingsDataRoute
   '/settings/providers': typeof SettingsProvidersRoute
@@ -113,7 +104,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/compare'
-    | '/onboarding'
     | '/pairs'
     | '/settings/data'
     | '/settings/providers'
@@ -125,7 +115,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/compare'
-    | '/onboarding'
     | '/pairs'
     | '/settings/data'
     | '/settings/providers'
@@ -137,7 +126,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/compare'
-    | '/onboarding'
     | '/pairs'
     | '/settings/data'
     | '/settings/providers'
@@ -150,7 +138,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompareRoute: typeof CompareRoute
-  OnboardingRoute: typeof OnboardingRoute
   PairsRoute: typeof PairsRoute
   SettingsDataRoute: typeof SettingsDataRoute
   SettingsProvidersRoute: typeof SettingsProvidersRoute
@@ -167,13 +154,6 @@ declare module '@tanstack/react-router' {
       path: '/pairs'
       fullPath: '/pairs'
       preLoaderRoute: typeof PairsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -238,7 +218,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
-  OnboardingRoute: OnboardingRoute,
   PairsRoute: PairsRoute,
   SettingsDataRoute: SettingsDataRoute,
   SettingsProvidersRoute: SettingsProvidersRoute,

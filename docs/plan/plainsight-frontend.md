@@ -1,7 +1,7 @@
 # Frontend Specification: Routes, Screens, States & First-Run
 
 **Companion to:** `plainsight.md` (design language, §4; frontend architecture, §5) and `plainsight-data-model.md` (every value rendered here). **Status:** Draft for owner review · **Date:** 2026-07-10
-**Purpose:** the build contract for Phase 1–3 UI work. The main plan pins the design language (type scale, spacing, colour, motion); this document pins *what exists*: every route, every screen, every screen's empty/loading/error states, the first-run flow, and the component and hook inventories. If a state can occur, its rendering is specified here; "we'll figure out the empty state later" is how craft dies.
+**Purpose:** the build contract for Phase 1–3 UI work. The main plan pins the design language (type scale, spacing, colour, motion); this document pins *what exists*: every route, every screen, every screen's empty/loading/error states, and the component and hook inventories. If a state can occur, its rendering is specified here; "we'll figure out the empty state later" is how craft dies.
 
 ---
 
@@ -11,8 +11,7 @@
 
 | Route | Screen | Lazy chunk | Notes |
 |---|---|---|---|
-| `/` | S2 Library | shell | Root of the navigation stack |
-| `/onboarding` | S1 First-run | onboarding | Auto-redirect target on true first launch only |
+| `/` | S2 Library | shell | Root of the navigation stack; a true first launch lands on its true-empty state (S1 removed 2026-07-22, main plan §12 entry 18) |
 | `/company/:id` | S3 Dashboard | dashboard (incl. Recharts) | `?metric=roe` opens S4 detail sheet; `?details=1` the company details sheet (2026-07-19, main plan §12 entry 16) |
 | `/company/:id/entry` | S5 Data entry | entry | `?job=:jobId` renders S6 review mode |
 | `/company/:id/thesis` | S8 Thesis | thesis | `?history=1` opens version list |
@@ -28,7 +27,7 @@
 
 ### 1.2 Navigation model
 
-Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl. *(Amended 2026-07-18, twice, with the desktop rail slices, main plan §12.10 and §12.11: at ≥1200px a persistent 200px navigation rail sits left of the content column on every screen except the welcome flow. It carries the top-level destinations (Library; Compare once two companies exist, §3's progressive rule; Settings) and, inside a company, the company's name and its three sections: Dashboard, Data entry, Thesis, with the active item marked throughout. At that breakpoint the rail owns wayfinding and per-screen top-bar navigation duplicates recede; titles, actions, and the autosave status line stay put. Below the breakpoint the stack is untouched, and the mobile tab-bar refusal stands.)* *(Amended 2026-07-22, pairs research integration plan §4: Pairs joins the top-level destinations between Compare and Settings once this device has seen sleeve artefacts on the API, the same progressive spirit as Compare's rule; the memory is the `pairsSeen` flag in `meta`, kept current both ways by S13's reads, and the route stays reachable by URL regardless.)*
+Stack-based, Library at root. Top bar per screen: back affordance, title, at most one contextual action. Compare and Settings are reached from the Library toolbar; **no persistent tab bar**, deliberately: two of the three top-level areas are visited occasionally, and a tab bar would spend ~49pt of every mobile screen on low-frequency destinations. Desktop uses the same single centred column (720px content width; 960px for S3 and S7) with no sidebar in v1. This is a focused instrument, not a dashboard sprawl. *(Amended 2026-07-18, twice, with the desktop rail slices, main plan §12.10 and §12.11: at ≥1200px a persistent 200px navigation rail sits left of the content column on every screen except the welcome flow. It carries the top-level destinations (Library; Compare once two companies exist, §3's progressive rule; Settings) and, inside a company, the company's name and its three sections: Dashboard, Data entry, Thesis, with the active item marked throughout. At that breakpoint the rail owns wayfinding and per-screen top-bar navigation duplicates recede; titles, actions, and the autosave status line stay put. Below the breakpoint the stack is untouched, and the mobile tab-bar refusal stands.)* *(Amended 2026-07-22, pairs research integration plan §4: Pairs joins the top-level destinations between Compare and Settings once this device has seen sleeve artefacts on the API, the same progressive spirit as Compare's rule; the memory is the `pairsSeen` flag in `meta`, kept current both ways by S13's reads, and the route stays reachable by URL regardless.)* *(Amended 2026-07-22 with S1's removal, main plan §12 entry 18: the rail sits on every screen; the welcome-flow exception is retired.)*
 
 ## 2. Global chrome and cross-cutting states
 
@@ -42,9 +41,9 @@ Stack-based, Library at root. Top bar per screen: back affordance, title, at mos
 
 Format per screen: purpose → key elements → states. Design language per main plan §4 throughout.
 
-### S1: First-run (onboarding)
+### S1: First-run (removed)
 
-Three panes, hard-capped, skippable, never shown twice (flag in `meta`), re-openable from S9 → About. Pane 1: what this is (read statements like an owner, one paragraph, no feature tour). Pane 2: where your data lives (a working copy on this device so the app works offline; sign-in gives the library its durable home on the server and offline work catches up; exportable anytime; amended 2026-07-20 to the source-of-truth posture, main plan §12.9, superseding the on-device-only wording, and the copy claims are pinned by test). Pane 3: choose your start. **"Add a company"** / **"See it with sample data"** / "Import a file" (Phase 3+, hidden before). Exit lands on S2 in the corresponding state.
+*Removed 2026-07-22 (main plan §12 entry 18).* The three-pane welcome shipped with Phase 1 and carried a promise pane, a data-residency pane, and a choose-your-start pane; all three duties already lived elsewhere by the time it was retired. A true first launch lands on S2's true-empty state, which carries the same promise and the same starting actions; the data-residency claims are stated and pinned by test in S9's sync group; and importing a file is reached through the library's import affordances and S5's upload sheet. The code S1 stays reserved so the later screens keep their numbers.
 
 ### S2: Library
 
@@ -126,7 +125,7 @@ Four structured sections (business / moat / valuation / what kills it), distract
 
 ### S9: Settings root
 
-Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **Sync** (signed out: a sign-in row stating plainly that the app works on the device copy while the durable copy needs sign-in, online-only (amended 2026-07-20, main plan §12.9; previously "nothing needs it", the local-first wording); signed in: the email, a sign-out, and the quiet sync line: the last-synced time, or the live count of changes waiting to sync while local writes await the server (main plan §12.9: pending is surfaced, never silently equal); the hosted UI does the password handling, and the session lives in device-local meta outside the export allowlist. Amendments 2026-07-18 with the Phase 3 sign-in slice and the server-wins reconciliation slice), **About** (version, licences, replay onboarding).
+Groups: **Appearance** (theme auto/light/dark; education layer on/off, the Practitioner switch), **Providers →**, **Data & storage →**, **Sync** (signed out: a sign-in row stating plainly that the app works on the device copy while the durable copy needs sign-in, online-only (amended 2026-07-20, main plan §12.9; previously "nothing needs it", the local-first wording); signed in: the email, a sign-out, and the quiet sync line: the last-synced time, or the live count of changes waiting to sync while local writes await the server (main plan §12.9: pending is surfaced, never silently equal); the hosted UI does the password handling, and the session lives in device-local meta outside the export allowlist. Amendments 2026-07-18 with the Phase 3 sign-in slice and the server-wins reconciliation slice), **About** (version, licences; the replay row retired 2026-07-22 with S1's removal, main plan §12 entry 18).
 
 ### S10: Settings → Providers (BYOK)
 
@@ -152,7 +151,7 @@ Purpose: the sleeve's research surface, desktop-first by the operator's workflow
 | Empty sleeve | "No scan published yet" with the publish hint; the rail memory clears |
 | Ready | The three blocks above; offline appends "offline, showing the last fetch" to the provenance line. The query cache is in-session: a reload while offline lands on the fetch-failed state, honestly, rather than a stale render posing as fresh |
 
-## 4. First-run and sample data: decision pinned
+## 4. Sample data: decision pinned
 
 **One-tap sample load, not silent preload.** The empty Library offers "See it with sample data"; tapping it loads the **ASX golden five**: CSL (the ten-year showcase, an ASX listing reporting in USD), Wesfarmers, Woolworths, JB Hi-Fi, and Cochlear, as `sample: true` records (schema flag per companion §9), each badged, all removable with one action in S11. *(Amended twice on 2026-07-18 with the ASX-first steer: first the original US trio, Apple, Coca-Cola, and Costco, retired per companion §12 D1's amendment, leaving CSL alone; then the owner amended the companion's depth rule the same day so the four six-year ASX fixtures join, their sparklines showing the six years each fixture carries while CSL keeps ten. Compare is reachable from a fresh sample library again.)* *(2026-07-19: samples load pre-classified per companion §12 D3's mapping: CSL and Cochlear under Healthcare; Wesfarmers, Woolworths and JB Hi-Fi under Retail.)*
 
@@ -210,7 +209,7 @@ Keystrokes never cross feature boundaries: `MoneyField` holds local state, commi
 
 ## 7. Responsive rules
 
-Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7, for S2 while its screener view is on, whose eight columns need the dashboard's width (amendment 2026-07-22 with the finance-look gap plan §5), and for S13, whose matrix earns the same width (2026-07-22)), ≥1200 (the navigation rail joins at left on every screen but the welcome flow: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11). Metric grid at ≥900: `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1. Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
+Breakpoints: <600 (single column; sheets full-screen; entry grid shows 2 year-columns with horizontal scroll and a sticky label column), 600–899 (sheets become centred 560px panels; metric grid auto-fits `minmax(160px, 1fr)`), ≥900 (720px column; 960px for S3/S7, for S2 while its screener view is on, whose eight columns need the dashboard's width (amendment 2026-07-22 with the finance-look gap plan §5), and for S13, whose matrix earns the same width (2026-07-22)), ≥1200 (the navigation rail joins at left on every screen: 200px plus a 24px gutter, so the main column widens by exactly 224px and the content cell keeps the route's designed width; amendments 2026-07-18, main plan §12.10 and §12.11; the welcome-flow exception retired 2026-07-22 with S1's removal, main plan §12 entry 18). Metric grid at ≥900: `repeat(4, 1fr)`, four deterministic columns per the dashboard design plan §5.1. Touch targets ≥44pt everywhere including grid cells. No layout reads differently enough to need separate designs: one design, fluid.
 
 ## 8. Accessibility per screen (deltas beyond the global WCAG AA baseline)
 

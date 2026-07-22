@@ -11,7 +11,7 @@ const COMPANY_SECTIONS = [
 
 /**
  * The desktop navigation rail (frontend spec §1.2 amendment, main plan
- * §12.11): persistent at ≥1200px on every screen except the welcome flow.
+ * §12.11): persistent at ≥1200px on every screen.
  * Top-level destinations first, with Compare joining once two companies
  * exist (the library's progressive rule, frontend spec §3), then the open
  * company's sections beneath its name. The router owns activeness through

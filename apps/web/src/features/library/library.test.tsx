@@ -21,7 +21,6 @@ beforeEach(async () => {
   await db.delete();
   await db.open();
   // These tests exercise the library, not the first-launch gate.
-  await setMeta(db, 'onboardingDone', true);
 });
 
 afterEach(() => {
