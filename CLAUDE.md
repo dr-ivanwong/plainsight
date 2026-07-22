@@ -17,6 +17,7 @@ pnpm runs via corepack (`corepack pnpm ...`); Node 22+. TypeScript is pinned to 
 - the provider bake-off runs from `packages/extraction-core` with keys in env only: `node tools/bakeoff.mjs` (see the runbook's Phase 2.5 section)
 - infra: `corepack pnpm -C infra synth` and `corepack pnpm -C infra test`; the StaticSite snapshot is reviewed on change, never regenerated blindly
 - `node scripts/check-style.mjs` checks every tracked Markdown file; write to the rules the first time
+- `node scripts/check-bundle.mjs` (after `corepack pnpm -C apps/web build`) holds the shell's initial JS to the 180 KB ceiling (main plan §5). Run it before pushing any `apps/web` change that touches imports: on 2026-07-22 two pushes went red on this gate alone, every other check green, and the deploy stayed skipped until it passed. The usual culprit is one static import dragging a feature graph into the entry bundle.
 
 ## The plans are the authority
 
