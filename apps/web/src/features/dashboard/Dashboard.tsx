@@ -11,6 +11,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Fragment, useState, type ReactElement } from 'react';
 
 import { MetricCard, type HistoryEntry } from '../../components/MetricCard';
+import { CompanyDetailsSheet } from './CompanyDetailsSheet';
 import { RedFlagBanner } from '../../components/RedFlagBanner';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { okPoints, type SparkPoint } from '../../components/Sparkline';
@@ -56,12 +57,17 @@ const VIEW_OPTIONS: readonly { value: 'cards' | 'table'; label: string }[] = [
 export function Dashboard({
   metrics,
   metric,
-  onMetricClose
+  onMetricClose,
+  details = false,
+  onDetailsClose
 }: {
   metrics: CompanyMetrics;
   /** The open detail sheet, addressed by the `?metric=` search param. */
   metric?: MetricId;
   onMetricClose: () => void;
+  /** The company details sheet, addressed by `?details=1` (frontend spec §3). */
+  details?: boolean;
+  onDetailsClose?: () => void;
 }): ReactElement {
   const { company, price, report } = metrics;
   const flags = useRedFlags(company.id, report);
@@ -199,10 +205,19 @@ export function Dashboard({
         </Link>
       </header>
 
-      <div className={styles.hero}>
+      {/* The hero is a button into the details sheet, the first edit surface
+          for name and sector (frontend spec §3); its accessible name is the
+          action, the heading inside still announces the company. */}
+      <Link
+        to="/company/$id"
+        params={{ id: company.id }}
+        search={{ details: 1 }}
+        aria-label="Edit company details"
+        className={styles.hero}
+      >
         <h1 className={styles.name}>{company.name}</h1>
         {hero === '' ? null : <p className={styles.heroFacts}>{hero}</p>}
-      </div>
+      </Link>
 
       {report.fyLabels.length === 0 ? (
         <section className={styles.empty}>
@@ -308,6 +323,9 @@ export function Dashboard({
       {metric === undefined ? null : (
         <MetricSheet metricId={metric} metrics={metrics} onClose={onMetricClose} />
       )}
+      {details && onDetailsClose !== undefined ? (
+        <CompanyDetailsSheet company={company} onClose={onDetailsClose} />
+      ) : null}
     </>
   );
 }

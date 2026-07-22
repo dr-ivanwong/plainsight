@@ -153,6 +153,37 @@ describe('the library', () => {
     expect(stored[0]).toMatchObject({ name: 'Cochlear', ticker: 'COH', currency: 'AUD' });
   });
 
+  it('adds a company with a sector picked from the vocabulary, stored as its id', async () => {
+    renderLibrary();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a company' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Add a company' });
+    fireEvent.change(within(dialog).getByLabelText('Name'), {
+      target: { value: 'Commonwealth Bank' }
+    });
+    const picker = within(dialog).getByLabelText('Sector');
+    // The picker offers the vocabulary's labels with None first; free text retired.
+    expect(
+      within(picker).getAllByRole('option').map((option) => option.textContent)
+    ).toEqual([
+      'None',
+      'Healthcare',
+      'Technology',
+      'Banks',
+      'Retail',
+      'Resources',
+      'Property',
+      'Industrials',
+      'Insurance'
+    ]);
+    fireEvent.change(picker, { target: { value: 'banks' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add company' }));
+
+    expect(await screen.findByRole('heading', { name: 'Commonwealth Bank' })).toBeVisible();
+    const stored = await db.companies.toArray();
+    expect(stored[0]?.sector).toBe('banks');
+  });
+
   it('opens the sheet from the toolbar when populated', async () => {
     await createCompany(db, { name: 'Wesfarmers', currency: 'AUD' });
     renderLibrary();

@@ -24,9 +24,14 @@ const statementParam = z.enum(STATEMENT_KINDS as readonly [StatementKind, ...Sta
 const lineItemParam = z.enum(LINE_ITEM_IDS);
 const fyParam = z.custom<FyLabel>((value) => typeof value === 'string' && isFyLabel(value));
 
-/** The dashboard's detail-sheet state: `?metric=roe` opens that metric's sheet. */
+/**
+ * The dashboard's sheet state: `?metric=roe` opens that metric's detail
+ * sheet, `?details=1` the company details sheet (frontend spec §3), each
+ * addressable and closed by the system back gesture.
+ */
 export const dashboardSearchSchema = z.object({
-  metric: metricParam.optional().catch(undefined)
+  metric: metricParam.optional().catch(undefined),
+  details: z.literal(1).optional().catch(undefined)
 });
 
 export type DashboardSearch = z.infer<typeof dashboardSearchSchema>;

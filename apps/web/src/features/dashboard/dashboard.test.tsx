@@ -119,6 +119,43 @@ describe('the company dashboard', () => {
     expect(screen.queryByText('Earnings yield')).not.toBeInTheDocument();
   });
 
+  it('opens the details sheet from the hero, saves name and sector, keeps the rest fixed', async () => {
+    const company = await seedCompany();
+    await seedFullYear(company.id);
+
+    renderAt(`/company/${company.id}`);
+    fireEvent.click(await screen.findByRole('link', { name: 'Edit company details' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Company details' });
+    // The fixed half displays without inputs: a wrong identity or money
+    // field is a re-create, not an edit (frontend spec §3).
+    expect(within(dialog).getByText('Currency')).toBeVisible();
+    expect(within(dialog).getByText('USD')).toBeVisible();
+    expect(within(dialog).queryByLabelText('Currency')).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByText('Ticker, exchange and currency are set when a company is created.')
+    ).toBeVisible();
+
+    fireEvent.change(within(dialog).getByLabelText('Name'), {
+      target: { value: 'Apple Computer' }
+    });
+    fireEvent.change(within(dialog).getByLabelText('Sector'), { target: { value: 'banks' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    // The sheet closes and the hero wears the new name and section label.
+    expect(await screen.findByRole('heading', { name: 'Apple Computer' })).toBeVisible();
+    await waitFor(() => {
+      expect(screen.getByText('Banks · FY2024 · USD')).toBeVisible();
+    });
+
+    const stored = await db.companies.get(company.id);
+    expect(stored?.name).toBe('Apple Computer');
+    expect(stored?.sector).toBe('banks');
+    // A details edit is not a data write: the three statement upserts moved
+    // dataVersion to 3 and the edit left it there (metric memoisation).
+    expect(stored?.dataVersion).toBe(3);
+  });
+
   it('holds the section map to the dictionary card flags, in order', () => {
     expect(DASHBOARD_SECTIONS.flatMap((section) => section.ids)).toEqual(
       METRIC_IDS.filter((id) => METRICS[id].card)

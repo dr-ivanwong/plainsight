@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useState, type FormEvent, type ReactElement } from 'react';
 
 import { SheetShell } from '../../components/SheetShell';
-import { createCompany, db } from '../../db';
+import { createCompany, db, SECTOR_IDS, SECTOR_LABELS } from '../../db';
 import * as buttons from '../../styles/buttons.css';
 import * as styles from './addCompany.css';
 
@@ -82,7 +82,15 @@ export function AddCompanySheet({
         <div className={styles.pair}>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>Sector</span>
-            <input className={styles.input} name="sector" autoComplete="off" placeholder="Optional" />
+            {/* A picker over the pinned vocabulary (data-model spec §12); free text retired with the grouped library. */}
+            <select className={styles.input} name="sector" defaultValue="">
+              <option value="">None</option>
+              {SECTOR_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {SECTOR_LABELS[id]}
+                </option>
+              ))}
+            </select>
           </label>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>Reporting currency</span>

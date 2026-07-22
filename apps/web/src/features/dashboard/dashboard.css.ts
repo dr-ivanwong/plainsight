@@ -48,11 +48,30 @@ const chromeLink = style({
 export const back = chromeLink;
 export const editData = chromeLink;
 
+/**
+ * The hero is the details sheet's door (frontend spec §3): a quiet block
+ * button. The negative inline margin seats the hover surface around the text
+ * while the title keeps the content's left edge.
+ */
 export const hero = style({
   display: 'flex',
   flexDirection: 'column',
+  alignItems: 'flex-start',
   gap: space[4],
-  marginBottom: space[24]
+  margin: `0 calc(-1 * ${space[8]}) ${space[24]}`,
+  padding: `${space[4]} ${space[8]}`,
+  borderRadius: radius.medium,
+  textAlign: 'left',
+  textDecoration: 'none',
+  color: 'inherit',
+  cursor: 'pointer',
+  ':hover': {
+    backgroundColor: colour.surfaceHover
+  },
+  ':focus-visible': {
+    outline: `${focusRing.width} solid ${colour.accent}`,
+    outlineOffset: focusRing.offset
+  }
 });
 
 export const name = style({
