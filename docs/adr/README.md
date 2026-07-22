@@ -26,3 +26,4 @@ Copy [`template.md`](template.md) to `NNNN-kebab-case-title.md` using the next n
 | [0002](0002-zero-vpc.md) | Zero VPC | Accepted |
 | [0003](0003-ssm-securestrings-over-secrets-manager.md) | SSM SecureStrings instead of Secrets Manager | Accepted |
 | [0004](0004-the-not-list.md) | The not-list: no WAF, GuardDuty, Security Hub, Config, CloudTrail trail, or paid monitoring | Accepted |
+| [0005](0005-python-for-the-quant-engine.md) | Python for the quant engine, contained behind the artefact contract | Accepted |

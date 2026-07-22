@@ -1,7 +1,7 @@
 # Pairs research integration: the analyser gains the quant sleeve
 
 **Date:** 2026-07-22
-**Status:** proposal, awaiting owner review. Companion to the pairs trading plan (2026-07-22) and the hedge fund gap plan (2026-07-18). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes a pinned decision, and §6 lists exactly which decisions would bend, and how, if the owner pins this direction. Until then the pairs plan's own boundary stands: the trading experiment is separately operated, and nothing of it is built against this repository.
+**Status:** pinned 2026-07-22 as the pairs sleeve's build contract (owner decision of the same day, main plan §12 entry 17; this document joins the authority set in CLAUDE.md's plan table). Companion to the pairs trading plan (2026-07-22), which keeps governing the strategy itself (universe, capital, stops, criteria, the go/no-go gate), and the hedge fund gap plan (2026-07-18), which stays outside the authority set. Slice 0 landed with the pinning: the charter entry, the two non-goal amendments, ADR 0005, and the CLAUDE.md pass; §6 records how each pinned decision bends or stands. Of §10's questions, the rail name ships as drafted (Pairs) and the pinning question is answered by this status line; halt alerting stays open ahead of live capital, and the backtest-surface split stands as drafted.
 
 **The questions it answers.** The owner asked three things on 2026-07-22: what must be built for Plainsight to serve as the research component of the pairs trading system; whether Plainsight's scope should expand to hold both disciplines, so the same person learns fundamentals research and proceeds from there to the pairs programme; and whether the plan's Python scripts should convert to something else. §1 answers all three in brief; the rest is the reasoning, the architecture, and the staging.
 
@@ -117,7 +117,7 @@ The hedge fund gap plan's stages (universe-wide extraction, factor store, the po
 
 ## 10. Open questions for the owner
 
-1. **The rail name.** "Pairs" is precise and modest; "Trading" claims more than the surfaces do. Proposed: Pairs.
+1. **The rail name.** "Pairs" is precise and modest; "Trading" claims more than the surfaces do. Proposed: Pairs. *(Standing as drafted at pinning, 2026-07-22; recorded in the charter entry.)*
 2. **Backtest surface timing.** Slice 4 could compress into slice 5 if the owner is content reading backtest CSVs during validation; the split above assumes the screen earns its keep during pair selection.
 3. **Halt alerting.** The halt renders in-app and staleness is loud, but no push channel exists. Wiring the engine to the existing alert topic (an SNS publish on halt) is a small later slice; is it wanted before live capital, or is the daily panel check the pairs plan already prescribes sufficient for the POC?
-4. **Pinning.** If this direction is right, the next artefact is the slice 0 record: the charter entry, the non-goal amendments, and the Python ADR, at which point CLAUDE.md's current-state paragraph learns about the sleeve in the same change.
+4. **Pinning.** If this direction is right, the next artefact is the slice 0 record: the charter entry, the non-goal amendments, and the Python ADR, at which point CLAUDE.md's current-state paragraph learns about the sleeve in the same change. *(Done 2026-07-22: main plan §12 entry 17, ADR 0005, and the CLAUDE.md pass landed together as slice 0.)*
