@@ -2,7 +2,7 @@
 ## Bootstrap Quant Fund | $100K POC Capital | 1 Engineer
 
 **Date:** 2026-07-22
-**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
+**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. A second pass the same day added per-pair stops, dividend-adjusted data with short-leg carry, the data licensing terms, an outside-capital gate, and a decision framework sized to what 12 weeks can measure. Remaining limits, accepted for a proof of concept and stated where they bite: the event stop cannot be exercised in a price-only backtest, the universe is today's constituents (survivorship, noted in Week 1), and franking's after-tax drag is flagged rather than modelled.
 
 ---
 
@@ -28,11 +28,11 @@
 - Live POC: $100K across 2-3 pairs
 - Monthly costs: roughly AUD $50 to $100 (EOD data plan plus IB's ASX market data feed); confirm tiers in Week 1
 
-**Success Criteria for POC:**
-- **Live Sharpe > 1.4** (≥77% of backtest Sharpe)
-- Maximum drawdown: < 12%
-- Win rate: > 45%
-- Consistency: In-sample vs. out-of-sample ≈ live (no surprise degradation)
+**Success criteria for the POC (sized to what 12 weeks can measure):**
+- Execution validated: realised cost per round trip at or under the engine's `cost_bps`; live daily P&L tracks the engine on the same closes
+- Operations clean: zero unresolved reconciliation breaks or unfilled legs
+- Risk conformant: max drawdown < 12%; stops fired as specified
+- Sharpe point estimate positive, reported with its confidence interval; 12 weeks cannot confirm the edge and these criteria do not pretend it can
 
 **Outcome at Week 20:**
 - If POC succeeds: **Scale to $500K-$1M AUM**
@@ -995,33 +995,30 @@ async def main():
 - [ ] Logs record every trade, slippage, cost
 - [ ] Risk controls trigger appropriately (no false alarms)
 - [ ] 60-80 trades executed across both pairs
-- [ ] Paper account P&L tracks expected backtest (+/- 10%)
+- [ ] Paper daily P&L tracks the engine run on the same closes (correlation > 0.9); four weeks cannot measure Sharpe and is not asked to
 
 #### Step 5.3: Paper Trading Metrics
 
-Compare paper trading results vs. backtest:
+Compare paper trading against the engine run on the same closes:
 
 ```
 BHP-RIO Pair:
-  Backtest Sharpe: 2.15
-  Paper Trading Sharpe: 1.98  (92% consistency ✓)
-  
+  Engine P&L vs. paper P&L, same closes: correlation 0.96 ✓
+  Realised cost per round trip: 12 bps vs. 15 bps modelled ✓
+
 NAB-ANZ Pair:
-  Backtest Sharpe: 1.87
-  Paper Trading Sharpe: 1.76  (94% consistency ✓)
-  
-Portfolio (2 pairs):
-  Expected Sharpe: ~1.9
-  Paper Sharpe: 1.87
-  
-✅ READY FOR LIVE DEPLOYMENT
+  Engine P&L vs. paper P&L, same closes: correlation 0.94 ✓
+  Realised cost per round trip: 14 bps vs. 15 bps modelled ✓
+
+✅ READY FOR LIVE DEPLOYMENT (plumbing and costs validated; four weeks
+cannot measure edge and did not try)
 ```
 
-**If paper trading undershoots by >20%:**
+**If tracking is loose or costs overshoot the model:**
 - Investigate: Data feed delays? Execution slippage worse than modelled?
 - Adjust thresholds (e.g., entry z-score 2.0 → 2.2)
 - Run another 2 weeks of paper trading
-- Do NOT deploy live until paper matches backtest
+- Do NOT deploy live until paper tracks the engine
 
 ---
 
@@ -1031,8 +1028,8 @@ Portfolio (2 pairs):
 ### Objectives
 - Deploy $100K across 2-3 pairs
 - Accumulate 80-120 real trades over 12 weeks
-- Measure empirical Sharpe vs. backtest (target: ≥1.4)
-- Confirm edge is real, not backtest artefact
+- Measure realised costs and live-versus-engine tracking; report Sharpe with its interval
+- Test for disqualifying evidence; edge confirmation needs quarters, not weeks
 - Collect track record for backer reporting
 
 ### Week 9: Setup & Initial Deployment
@@ -1550,11 +1547,46 @@ def weekly_monitoring():
 
 ---
 
+### What 12 Weeks Can and Cannot Measure
+
+The standard error of an annualised Sharpe ratio estimated over T years is
+roughly sqrt((1 + SR^2/2) / T). Twelve weeks is T = 0.23, so a measured
+Sharpe of 1.4 arrives with a standard error near 3: statistically
+indistinguishable from zero, and from 3. No honest 12-week window can
+"confirm the edge", and a criterion that pretends otherwise selects for
+luck. Quarters of live trading, not weeks, narrow Sharpe to anything
+useful.
+
+What 12 weeks measures well:
+
+1. **Costs.** Realised slippage and commission per round trip against the
+   engine's `cost_bps`; with 100+ trades this converges fast, and it is
+   the assumption most likely to sink the strategy.
+2. **Tracking.** Live daily P&L against the engine run on the same closes:
+   correlation and tracking error prove the system trades the strategy
+   that was tested, which is what the paper and POC phases exist to show.
+3. **Operations.** Reconciliation mismatches, unfilled legs, halts, stop
+   behaviour: countable, and any nonzero count is a finding.
+4. **Risk conformance.** Drawdown and exposure inside their modelled
+   ranges; stops firing as specified.
+
+The Week 20 decision therefore reads: scale if execution is validated
+(costs at or under model, tracking tight, operations clean), risk behaved,
+and the Sharpe point estimate is positive with its interval acknowledged;
+abort on disqualifying evidence (costs far over model, tracking loose,
+stops misfiring, cointegration gone); otherwise extend at current size.
+Even a full scale verdict is a bet sized by judgement, not a proof, and the
+honest posture is that edge confirmation continues at $500K, with the same
+monthly measurements, for at least the first year.
+
+---
+
+
 ### Week 17-20: Prepare for Scaling Decision
 
 **Week 17:**
-- Calculate final empirical Sharpe (12 weeks of live data across 2-3 pairs)
-- Compare vs. backtest Sharpe (acceptance criterion: ≥77% of backtest)
+- Calculate the final empirical Sharpe with its confidence interval (12 weeks of live data across 2-3 pairs)
+- Score the real gates: realised costs vs. `cost_bps`, live-versus-engine tracking, operational and risk conformance
 - Document max drawdown, win rate, profitability
 - Identify any regime changes or cointegration degradation
 
@@ -1566,7 +1598,7 @@ def weekly_monitoring():
 
 **Week 20: Go/No-Go Decision**
 
-**If POC succeeds (Sharpe 1.4+):**
+**If the gates pass (execution validated, operations clean, risk conformant, positive point estimate):**
 ```
 Next step: Scale to $500K-$1M AUM
 Timeline: 4-8 weeks to full deployment
@@ -1579,9 +1611,9 @@ Action items:
 └─ Report monthly to backer
 ```
 
-**If POC fails (Sharpe < 1.0):**
+**If there is disqualifying evidence (costs far over model, loose tracking, stops misfiring, cointegration gone):**
 ```
-Outcome: Strategy doesn't work in practice
+Outcome: disqualified as implemented; the money stops before the theory does
 Cost of learning: $100K (acceptable)
 
 Options:
@@ -1591,9 +1623,9 @@ Options:
 └─ Wind down: Maintain $100K, return to PE/portfolio manager work
 ```
 
-**If POC is in-between (Sharpe 1.0-1.3):**
+**If the picture is mixed:**
 ```
-Outcome: Edge exists but smaller than expected
+Outcome: no disqualifier, but the evidence is thin
 
 Options:
 ├─ Run another 4 weeks to gather more data
@@ -1618,11 +1650,12 @@ Options:
 | 20 | $100K | 3 | 120 | 1.62 | -9% | 🟢 Proven |
 
 **Acceptance Criteria at Week 20:**
-- [ ] Live Sharpe ≥ 1.40 (≥77% of backtest)
-- [ ] Max drawdown ≤ 12%
-- [ ] Win rate ≥ 45%
+- [ ] Realised cost per round trip at or under the engine's `cost_bps`
+- [ ] Live daily P&L tracks the engine on the same closes (correlation > 0.9)
+- [ ] Zero unresolved reconciliation breaks or unfilled legs
+- [ ] Max drawdown ≤ 12%; stops fired as specified
 - [ ] ≥100 real trades executed
-- [ ] In-sample vs. OOS vs. live Sharpe all ≈ consistent
+- [ ] Sharpe point estimate positive, its interval reported beside it
 
 ---
 
@@ -1691,7 +1724,7 @@ Half-lives still < 30 days (mean reversion stable).
 
 ### Why This Edge Is Real
 
-1. **Out-of-Sample Consistency**: Backtest → Paper → Live Sharpe all within 6% of each other. Not a lucky run.
+1. **Tracking**: live P&L follows the engine day by day on the same closes, and realised costs came in at model. The Sharpe interval is wide at 12 weeks and is reported beside the point estimate, not hidden.
 
 2. **Cointegration Stability**: All 3 pairs maintain statistical cointegration over 12 months (not sample-dependent).
 
@@ -1944,13 +1977,13 @@ Backtest Sharpe: 1.80
 Less slippage (0.6%): -0.18 Sharpe
 Empirical POC Sharpe: 1.62
 
-This is still > 1.4 threshold ✅
-But leaves no margin for error
+Plan on the net number and hold margin for error;
+the Week 20 gates score realised costs directly
 ```
 
 ### Early Warning Sign
 
-**If by Week 12 (1 month live), empirical Sharpe < 1.2:**
+**If by Week 12 (1 month live) realised costs overshoot the model or tracking is loose:**
 - Don't continue to Week 20
 - Investigate: Is slippage worse than expected? Are commissions higher? Did edge disappear?
 - Decision point: Abort POC or optimise thresholds and restart
@@ -2006,10 +2039,10 @@ But leaves no margin for error
 |------|-----------|-----------|--------|
 | 2 | 5+ cointegrated pairs identified | p < 0.05 for all | 🟢 Must have |
 | 4 | 5 pairs backtested, 3+ pass OOS validation | Sharpe > 1.5 in-sample, > 1.3 OOS | 🟢 Must have |
-| 8 | Paper trading complete, system validated | Sharpe 80%+ of backtest on paper | 🟢 Must have |
-| 12 | 2 pairs live (1 month), 45+ trades | No critical errors, on-track Sharpe | 🟢 Must have |
-| 16 | 2-3 pairs live (2 months), 80+ trades | Sharpe 1.3+, no cointegration breaks | 🟡 Should have |
-| 20 | POC complete, 120+ trades, Sharpe verified | Sharpe ≥ 1.4 (≥77% of backtest) | 🟢 **GO/NO-GO DECISION** |
+| 8 | Paper trading complete, system validated | P&L tracks the engine; costs at or under model | 🟢 Must have |
+| 12 | 2 pairs live (1 month), 45+ trades | No critical errors; costs and tracking on model | 🟢 Must have |
+| 16 | 2-3 pairs live (2 months), 80+ trades | Tracking tight, no cointegration breaks | 🟡 Should have |
+| 20 | POC complete, 120+ trades, gates scored | Execution, operations and risk gates all pass | 🟢 **GO/NO-GO DECISION** |
 
 ---
 
@@ -2037,7 +2070,7 @@ But leaves no margin for error
 
 ### Post-POC Phase (After Week 20, Scaling to $500K)
 
-**If POC succeeds (Sharpe ≥ 1.4), scale to $500K:**
+**If the Week 20 gates pass, scale to $500K:**
 
 | Scenario | Sharpe | Annual % | Year 1 Return | Year 2 Return | 3-Year AUM |
 |----------|--------|----------|---------------|---------------|-----------|
