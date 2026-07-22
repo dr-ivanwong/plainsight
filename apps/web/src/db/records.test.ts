@@ -217,7 +217,6 @@ describe('quarantine records', () => {
 describe('meta records', () => {
   it('accepts each pinned key with its value shape', () => {
     const rows = [
-      { key: 'onboardingDone', value: true },
       { key: 'lastExportAt', value: T0 },
       { key: 'theme', value: 'dark' },
       { key: 'educationLayerOff', value: false },
@@ -228,9 +227,11 @@ describe('meta records', () => {
     }
   });
 
-  it('rejects wrong value shapes and unknown keys', () => {
+  it('rejects wrong value shapes, unknown keys, and the retired flag', () => {
     expect(metaRecordSchema.safeParse({ key: 'theme', value: 'blue' }).success).toBe(false);
-    expect(metaRecordSchema.safeParse({ key: 'onboardingDone', value: 'yes' }).success).toBe(false);
     expect(metaRecordSchema.safeParse({ key: 'favouriteMetric', value: 'roe' }).success).toBe(false);
+    // The first-launch flag left the union with its retirement (main plan
+    // §12 entry 18); the version-5 migration deletes the stored row.
+    expect(metaRecordSchema.safeParse({ key: 'onboardingDone', value: true }).success).toBe(false);
   });
 });

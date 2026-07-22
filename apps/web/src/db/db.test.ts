@@ -76,7 +76,7 @@ describe('round trips', () => {
 
   it('stores meta settings under their literal keys', async () => {
     await db.meta.put({ key: 'theme', value: 'dark' });
-    await db.meta.put({ key: 'onboardingDone', value: true });
+    await db.meta.put({ key: 'thesisSerif', value: true });
     expect(await db.meta.get('theme')).toEqual({ key: 'theme', value: 'dark' });
   });
 

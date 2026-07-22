@@ -24,18 +24,20 @@ import { validateRows } from './safeRead';
 export const EXPORT_FORMAT = 'plainsight-export';
 export const EXPORT_FORMAT_VERSION = 1;
 
-/** The preference keys a library carries between devices. */
+/**
+ * The preference keys a library carries between devices. The retired
+ * first-launch flag (main plan §12 entry 18) is deliberately absent: older
+ * export files still carry it, and the parse strips it as an unknown key.
+ */
 const CARRIED_SETTINGS = [
   'theme',
   'educationLayerOff',
-  'onboardingDone',
   'sampleBannerDismissed'
 ] as const;
 
 const carriedSettingsSchema = z.object({
   theme: z.enum(['auto', 'light', 'dark']).optional(),
   educationLayerOff: z.boolean().optional(),
-  onboardingDone: z.boolean().optional(),
   sampleBannerDismissed: z.boolean().optional()
 });
 

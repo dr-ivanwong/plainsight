@@ -208,7 +208,7 @@ thesisVersions        ++id, companyId, savedAt, sections, financialsSnapshot?
 flagDismissals        [companyId+ruleId], dismissedAtFy, dismissedAt
 providerCredentials   providerId, key, label, addedAt      // never exported, never synced (§5)
 quarantine            ++id, table, raw, reason, quarantinedAt
-meta                  key, value                            // onboardingDone, lastExportAt, theme, educationLayerOff, schemaVersion
+meta                  key, value                            // lastExportAt, theme, educationLayerOff, schemaVersion
 ```
 
 - **dataVersion** increments in the same Dexie transaction as any `statements`/`prices` write for that company; `useMetrics` memoises on `(companyId, dataVersion)` (main plan §5).

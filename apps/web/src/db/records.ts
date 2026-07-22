@@ -294,7 +294,6 @@ export interface SyncStateRecord {
 
 /** Small app-level settings, one row per pinned key; a typed union keeps every value shape legal by construction. */
 export const metaRecordSchema = z.discriminatedUnion('key', [
-  z.object({ key: z.literal('onboardingDone'), value: z.boolean() }),
   z.object({ key: z.literal('lastExportAt'), value: isoDateTime }),
   z.object({ key: z.literal('theme'), value: enumOf(['auto', 'light', 'dark']) }),
   z.object({ key: z.literal('educationLayerOff'), value: z.boolean() }),

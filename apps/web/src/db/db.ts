@@ -113,6 +113,14 @@ export class PlainsightDb extends Dexie {
       .upgrade(async (tx) => {
         await tx.table('benchmarks').bulkAdd(seededBenchmarks());
       });
+    // The first-launch flag's retirement (main plan §12 entry 18): the
+    // welcome flow left on 2026-07-22 and nothing reads or writes the key,
+    // so this deletes the row a live device still carries. Deleted here
+    // rather than merely dropped from the record union, because a row whose
+    // key leaves the union would quarantine on its next read as noise.
+    this.version(5).upgrade(async (tx) => {
+      await tx.table('meta').delete('onboardingDone');
+    });
   }
 }
 

@@ -206,9 +206,9 @@ describe('dismissals', () => {
 describe('meta', () => {
   it('round-trips each setting with its own value type', async () => {
     await setMeta(db, 'theme', 'dark');
-    await setMeta(db, 'onboardingDone', true);
+    await setMeta(db, 'sampleBannerDismissed', true);
     expect(await getMeta(db, 'theme')).toBe('dark');
-    expect(await getMeta(db, 'onboardingDone')).toBe(true);
+    expect(await getMeta(db, 'sampleBannerDismissed')).toBe(true);
     expect(await getMeta(db, 'schemaVersion')).toBeUndefined();
   });
 

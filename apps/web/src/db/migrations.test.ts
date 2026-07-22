@@ -90,6 +90,38 @@ class V3Db extends Dexie {
   }
 }
 
+/**
+ * The version-4 schema as it shipped: version 3's tables plus benchmarks.
+ * Same rule as the fixtures above: upgrade callbacks empty, because a fresh
+ * fixture never runs them; the store map and the version number are the
+ * fixture's whole truth.
+ */
+class V4Db extends Dexie {
+  constructor(name: string) {
+    super(name);
+    this.version(1).stores({
+      companies: 'id, updatedAt',
+      statements: '[companyId+fy+statement], companyId',
+      prices: 'companyId',
+      theses: 'companyId',
+      thesisVersions: '++id, companyId',
+      flagDismissals: '[companyId+ruleId], companyId',
+      providerCredentials: 'providerId',
+      quarantine: '++id, table',
+      meta: 'key'
+    });
+    this.version(2).stores({
+      syncState: 'recordKey'
+    });
+    this.version(3).upgrade(async () => {});
+    this.version(4)
+      .stores({
+        benchmarks: 'metricId'
+      })
+      .upgrade(async () => {});
+  }
+}
+
 const name = `plainsight-migration-${crypto.randomUUID()}`;
 
 afterEach(async () => {
@@ -104,7 +136,11 @@ describe('the upgrade chain, from a version-1 fixture', () => {
     const statement = incomeStatement({ companyId: 'csl' });
     await v1.table('companies').put(seeded);
     await v1.table('statements').put(statement);
+    // Real version-1 devices carried the first-launch flag; the chain now
+    // ends by retiring it (main plan §12 entry 18), so the fixture carries
+    // both it and a surviving setting.
     await v1.table('meta').put({ key: 'onboardingDone', value: true });
+    await v1.table('meta').put({ key: 'theme', value: 'dark' });
     const firstVersionId = await v1
       .table('thesisVersions')
       .add(thesisVersion({ companyId: 'csl' }));
@@ -113,14 +149,16 @@ describe('the upgrade chain, from a version-1 fixture', () => {
     // The real upgrade runs on open.
     const upgraded = new PlainsightDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(4);
+    expect(upgraded.verno).toBe(5);
     expect(upgraded.tables.map((table) => table.name).sort()).toEqual([...TABLE_NAMES].sort());
 
     // Nothing lost, and still valid under Zod-on-read: the repositories are
-    // the proof, not raw table dumps.
+    // the proof, not raw table dumps. The retired flag is the one deliberate
+    // loss, gone rather than left to quarantine.
     expect(await listCompanies(upgraded)).toEqual([seeded]);
     expect(await listStatements(upgraded, 'csl')).toEqual([statement]);
-    expect(await getMeta(upgraded, 'onboardingDone')).toBe(true);
+    expect(await getMeta(upgraded, 'theme')).toBe('dark');
+    expect(await upgraded.meta.get('onboardingDone')).toBeUndefined();
 
     // The auto-increment generator survived the upgrade rather than being
     // reset by a recreated store: the next id continues the sequence.
@@ -162,7 +200,7 @@ describe('the version-3 upgrade, from a version-2 fixture', () => {
 
     const upgraded = new PlainsightDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(4);
+    expect(upgraded.verno).toBe(5);
 
     // The stored rows themselves are rewritten, not merely normalised on
     // read: raw table dumps are the proof here, deliberately.
@@ -205,12 +243,12 @@ describe('the version-4 upgrade, from a version-3 fixture', () => {
     const v3 = new V3Db(name);
     const seeded = company({ id: 'wow', name: 'Woolworths' });
     await v3.table('companies').put(seeded);
-    await v3.table('meta').put({ key: 'onboardingDone', value: true });
+    await v3.table('meta').put({ key: 'theme', value: 'dark' });
     await v3.close();
 
     const upgraded = new PlainsightDb(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(4);
+    expect(upgraded.verno).toBe(5);
     expect(upgraded.tables.map((table) => table.name).sort()).toEqual([...TABLE_NAMES].sort());
 
     // The defaults as resolved (finance-look gap plan §6): ROE and the
@@ -244,5 +282,34 @@ describe('the version-4 upgrade, from a version-3 fixture', () => {
     expect(rows.get('interestCoverage')).toBe(3);
     expect(rows.size).toBe(2);
     await fresh.close();
+  });
+});
+
+describe('the version-5 upgrade, from a version-4 fixture', () => {
+  it('deletes the retired first-launch flag and touches nothing else', async () => {
+    // The live device's exact shape (main plan §12 entry 18): a version-4
+    // database still carrying the flag the welcome flow wrote before it was
+    // removed, beside settings that must survive.
+    const v4 = new V4Db(name);
+    const seeded = company({ id: 'csl', name: 'CSL' });
+    await v4.table('companies').put(seeded);
+    await v4.table('meta').put({ key: 'onboardingDone', value: true });
+    await v4.table('meta').put({ key: 'theme', value: 'dark' });
+    await v4.table('meta').put({ key: 'sampleBannerDismissed', value: true });
+    await v4.close();
+
+    const upgraded = new PlainsightDb(name);
+    await upgraded.open();
+    expect(upgraded.verno).toBe(5);
+
+    // The row is deleted, not left to quarantine: a key outside the record
+    // union would otherwise move to the quarantine table on its next read
+    // and surface in the data screen's list as noise.
+    expect(await upgraded.meta.get('onboardingDone')).toBeUndefined();
+    expect(await getMeta(upgraded, 'theme')).toBe('dark');
+    expect(await getMeta(upgraded, 'sampleBannerDismissed')).toBe(true);
+    expect(await upgraded.quarantine.count()).toBe(0);
+    expect(await listCompanies(upgraded)).toEqual([seeded]);
+    await upgraded.close();
   });
 });
