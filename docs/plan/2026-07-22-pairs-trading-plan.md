@@ -80,15 +80,15 @@ client = EODHDClient("requests", key="YOUR_API_KEY")
 # Top 50 ASX stocks by market cap
 candidates = [
     'CBA', 'NAB', 'ANZ', 'WBC', 'BOQ',                    # Banks (5)
-    'BHP', 'RIO', 'FMG', 'GLD', 'S32',                    # Miners (5)
+    'BHP', 'RIO', 'FMG', 'NST', 'S32',                    # Miners (5)
     'CSL', 'WES', 'COL', 'SHL', 'AZJ',                    # Healthcare/Diversified (5)
-    'TLS', 'VAS', 'TCL', 'APA', 'STO',                    # Utilities/Energy (5)
+    'TLS', 'ORG', 'TCL', 'APA', 'STO',                    # Utilities/Energy (5)
     'MQG', 'ALL', 'QBE', 'NHF', 'MGR',                    # Financials/Services (5)
-    'AGL', 'ASX', 'IAG', 'AWC', 'GMG',                    # Energy/Materials (5)
-    'SEK', 'JHG', 'SKI', 'CDA', 'WHC',                    # Diversified (5)
-    'DXN', 'REA', 'ORI', 'SCG', 'ASR',                    # Real Estate/Services (5)
-    'EVN', 'LLC', 'URW', 'WOW', 'CWY',                    # Retail/Energy (5)
-    'APT', 'WTC', 'SGP', 'EQT', 'XRO',                    # Growth/Tech (5)
+    'AGL', 'ASX', 'IAG', 'ILU', 'GMG',                    # Energy/Materials (5)
+    'SEK', 'CGF', 'ALX', 'CDA', 'WHC',                    # Diversified (5)
+    'DXS', 'REA', 'ORI', 'SCG', 'VCX',                    # Real Estate/Services (5)
+    'EVN', 'LLC', 'GPT', 'WOW', 'CWY',                    # Retail/Energy (5)
+    'NXT', 'WTC', 'SGP', 'EQT', 'XRO',                    # Growth/Tech (5)
 ]
 
 data = {}
@@ -106,6 +106,10 @@ for ticker in candidates:
         print(f"✓ {ticker}: {len(df_pd)} days")
     except Exception as e:
         print(f"✗ {ticker}: {e}")
+
+missing = [ticker for ticker in candidates if ticker not in data]
+if missing:
+    raise SystemExit(f"No data for {missing}: fix the universe before testing pairs")
 
 # Save to CSV for backup
 for ticker, series in data.items():
@@ -149,8 +153,10 @@ for ticker in candidates:
 
 **Deliverable:** 
 - Data files: `data/{TICKER}_2019_2024.csv` (50 files)
-- All files have same date range and no NaN values
-- Check: `len(data['CBA']) == len(data['BHP'])` (should be True)
+- Files may start on different dates; every pair test aligns the two series on their shared dates
+- Check: every candidate downloaded (the loop aborts on any missing ticker)
+
+**Universe audit (2026-07-22).** The list above was checked ticker by ticker against the ASX listed-companies directory as at 2026-07-22. Nine entries in the original draft failed the check and were replaced with current large caps: APT, AWC, SKI and URW have delisted, JHG's CDIs have been withdrawn, GLD and ASR are not ASX codes, VAS is an ETF rather than a company, and DXN is a data-centre micro-cap where DXS (Dexus) was plainly meant. Re-run the same audit whenever this plan is picked up: tickers rename (WPL became WDS in 2022) and delist, and a downloader that skips failures quietly shrinks the universe. One limit the audit does not cure: choosing today's constituents for a five-year backtest is survivorship bias, and a fully honest run reconstructs membership as at each historical date. This proof of concept accepts that as a known simplification.
 
 ---
 
@@ -540,7 +546,7 @@ ticker1 ticker2  sharpe  half_life  pvalue    beta
 BHP     RIO       2.145       12.3  0.00009  1.2345
 NAB     ANZ       1.873       15.2  0.00023  0.8765
 CBA     NAB       1.652       18.1  0.00051  0.9123
-WPL     STO       1.423       22.1  0.00078  1.1234
+WDS     STO       1.423       22.1  0.00078  1.1234
 CSL     WES       1.312       25.3  0.00145  0.7654
 ```
 
@@ -689,7 +695,7 @@ pair      beta  total_return  annual_sharpe  max_drawdown  num_trades  win_rate 
 BHP-RIO   1.23        185.4           2.15          -8.3         284      47.2         2.34
 NAB-ANZ   0.88        142.3           1.87         -10.1         301      46.8         2.01
 CBA-NAB   0.91        128.5           1.65         -11.9         318      45.3         1.78
-WPL-STO   1.12         98.7           1.42         -13.2         356      44.1         1.54
+WDS-STO   1.12         98.7           1.42         -13.2         356      44.1         1.54
 CSL-WES   0.77         76.4           1.31         -14.8         389      43.2         1.35
 ```
 
