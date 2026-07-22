@@ -2,7 +2,7 @@
 ## Bootstrap Quant Fund | $100K POC Capital | 1 Engineer
 
 **Date:** 2026-07-22
-**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: short-leg borrow and dividend mechanics unaddressed (the backtest still runs on raw rather than adjusted closes), data licensing unconfirmed, no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
+**Status:** draft strategy proposal, awaiting owner review; revised 2026-07-22 after the same-day review (corrected P&L accounting, a clean train-and-holdout protocol, an audited ticker universe, a reconciling execution loop). Not part of the authority set (CLAUDE.md's plan table): nothing here supersedes the pinned decisions, and the product keeps manual price entry (main plan §12.1) and its education-only posture (main plan §15). This document describes a separately operated trading experiment, not a Plainsight feature; if any part of it is ever built against this repository, it arrives through its own decision-log entry. Gaps that remain open after the revision: data licensing unconfirmed, no legal structure for outside capital, and a 12-week live window that can give only a coarse read of the Sharpe ratio, not proof.
 
 ---
 
@@ -105,7 +105,10 @@ for ticker in candidates:
         )
         df_pd = pd.DataFrame(df)
         df_pd['date'] = pd.to_datetime(df_pd['date'])
-        data[ticker] = df_pd.set_index('date')['close']
+        # Adjusted closes, always: raw bank prices drop 2-3% on every
+        # ex-dividend date, which manufactures fake mean reversion in
+        # the backtest and fake signals live.
+        data[ticker] = df_pd.set_index('date')['adjusted_close']
         print(f"✓ {ticker}: {len(df_pd)} days")
     except Exception as e:
         print(f"✗ {ticker}: {e}")
@@ -138,7 +141,7 @@ async def get_historical(ticker):
         endDateTime='',
         durationStr='5 Y',
         barSizeSetting='1 day',
-        whatToShow='TRADES',
+        whatToShow='ADJUSTED_LAST',  # dividend and split adjusted
         useRTH=True
     )
     
@@ -397,7 +400,7 @@ COST_BPS = 15.0  # commission plus expected slippage, per side, on traded notion
 def pair_daily_pnl(price1, price2, beta,
                    lookback=60, entry_zscore=2.0, exit_zscore=0.5,
                    stop_zscore=3.5, max_hold_days=60,
-                   cost_bps=COST_BPS):
+                   cost_bps=COST_BPS, borrow_bps_pa=50.0):
     """
     Daily dollar P&L for one spread unit, net of costs.
 
@@ -406,6 +409,10 @@ def pair_daily_pnl(price1, price2, beta,
     yesterday's position earns today's change in the spread. Never use
     pct_change() on a spread; a spread crosses zero, so percentage returns
     on it are undefined and compound into nonsense.
+
+    Feed adjusted prices: the engine assumes dividends and splits are
+    folded into both legs, and prices the residual the adjusted series
+    cannot carry for you, the borrow fee on the short leg.
 
     Two per-pair stops guard the classic pairs failure, the spread that
     never comes back. The z-stop abandons a position when the spread blows
@@ -460,6 +467,13 @@ def pair_daily_pnl(price1, price2, beta,
     gross_notional = (s1 + beta * s2).values
     traded_units = np.abs(np.diff(position, prepend=0.0))
     pnl -= traded_units * gross_notional * (cost_bps / 10_000)
+
+    # The short leg pays to borrow. Adjusted prices already net
+    # dividends through the spread on both legs; the borrow fee is the
+    # residual carry a total-return series does not include.
+    short_leg = np.where(position > 0, beta * s2.values,
+                         np.where(position < 0, s1.values, 0.0))
+    pnl[1:] -= short_leg[:-1] * (borrow_bps_pa / 10_000 / 252)
 
     return pnl, position, gross_notional
 
@@ -1073,6 +1087,33 @@ python
 
 ---
 
+#### Short Legs: Borrow, Dividends, Franking
+
+Every position here is half short, and the plan must price that half:
+
+- **Borrow.** ASX20 names are usually general collateral (tens of basis
+  points per annum) through IB's stock loan desk, but availability is per
+  name, per day. Check borrow and its fee before deploying a pair, and
+  treat a special (an elevated fee or restricted availability) as
+  disqualifying: the engine's `borrow_bps_pa` assumes general collateral.
+- **Dividends.** The short leg pays the full cash dividend to the lender on
+  every ex-date it is held across. On adjusted prices the backtest already
+  nets this through the spread, so the performance numbers are fair, but
+  the live cash flow is real and lumpy: bank pairs go ex twice a year at
+  2-3% a time, so expect the cash account to breathe.
+- **Franking.** Two asymmetries the backtest does not model. The payment in
+  lieu on a short leg is cash only, while the natural holder it displaced
+  would have received franking credits; and on the long leg the 45-day
+  holding period rule means positions flipped inside 45 days forfeit their
+  franking credits entirely. For an Australian own-money book this is a
+  real after-tax drag on a strategy whose average hold is shorter than the
+  rule. It does not change the gross numbers; it belongs in any honest
+  after-tax appraisal at scale-up.
+- **Short-sale reporting.** ASIC short position reports bind when a short
+  position reaches both AUD 100,000 and 0.01% of issued capital. POC leg
+  sizes sit far under both thresholds; re-check at every scale-up.
+
+
 #### Step 9.2: Build Live Trading System (Updated)
 
 ```python
@@ -1112,7 +1153,10 @@ logging.basicConfig(
 
 STATE = Path('positions.json')     # the local book: {pair: units held}
 TARGETS = Path('targets.json')     # written nightly by the compute job
-CLOSES = Path('data/closes.csv')   # daily closes, appended after each close
+# Adjusted closes. The nightly job refreshes the whole trailing window
+# from the vendor rather than appending, because adjustment factors move
+# on every ex-date and an appended raw close silently mixes two series.
+CLOSES = Path('data/closes.csv')
 
 ENTRY_Z = 2.0
 EXIT_Z = 0.5
