@@ -924,19 +924,23 @@ CBA-NAB   2023-01-03     2023-12-29         7.4        1.29        -9.1         
 
 **Run system identically to live:**
 ```python
-# Same code as weeks 9+, but against paper account
-# Only change: clientId=2 (for paper) instead of clientId=1 (for live)
+# Same code as weeks 9+, pointed at the paper login. Paper and live are
+# different TWS logins listening on different ports (paper 7497, live 7496
+# by default); the clientId only names this API connection and selects
+# nothing.
 
 async def main():
     pairs_config = [
-        {'ticker1': 'BHP', 'ticker2': 'RIO', 'beta': 1.2345, 'capital': 50000},
-        {'ticker1': 'NAB', 'ticker2': 'ANZ', 'beta': 0.8765, 'capital': 50000},
+        {'ticker1': 'BHP', 'ticker2': 'RIO', 'beta': 1.2345, 'capital': 50_000},
+        {'ticker1': 'NAB', 'ticker2': 'ANZ', 'beta': 0.8765, 'capital': 50_000},
     ]
-    
-    trader = PairsTrader(pairs_config)
-    await trader.connect('127.0.0.1', 7497, clientId=2)  # Paper trading
-    await trader.daily_rebalance()
-    await trader.disconnect()
+
+    trader = PairsTrader(pairs_config, state_path='paper_positions.json')
+    await trader.connect(port=7497, client_id=2)  # the paper login's port
+    try:
+        await trader.daily_rebalance()
+    finally:
+        await trader.disconnect()
 ```
 
 **Run for 4 weeks (20 trading days).**
@@ -1010,10 +1014,13 @@ Account Balance: $100,000
 
 **Position Sizing per Pair:**
 ```
-BHP-RIO ($30K allocation):
-├─ ~1,000 shares BHP @ $40/share = ~$40K (on 1.5x leverage)
-├─ ~600 shares RIO @ $120/share = ~$72K (on 1.5x leverage, hedged)
-└─ Net long/short exposure: Market neutral, $30K notional risk
+BHP-RIO ($30K gross allocation, beta 1.23):
+├─ One unit: long 1 BHP (~$40) against short 1.23 RIO (~$148), or the
+│  reverse; roughly $188 gross notional per unit
+├─ Units for $30K gross: ~160, so ~160 BHP shares against ~197 RIO shares
+└─ Beta-neutral by construction (one unit's P&L is exactly the spread move
+   the backtest measured); the dollar legs are deliberately unequal, so
+   watch the single-name exposure on the larger leg
 
 Total portfolio margin: $100K supporting ~$140K gross exposure
 Leverage ratio: 1.4x (conservative, well within IB limits)
@@ -1031,11 +1038,12 @@ This gives you buffer for margin calls/slippage in first month.
 # Install IB client library (if not done)
 pip install ib-insync
 
-# Test connection to LIVE (not paper)
+# Test connection to the LIVE login. Live TWS listens on 7496 by default
+# (paper on 7497); the port and the login select live, the clientId does not.
 python
 >>> from ib_insync import IB
 >>> ib = IB()
->>> ib.connect('127.0.0.1', 7497, clientId=1)  # clientId=1 for LIVE
+>>> ib.connect('127.0.0.1', 7496, clientId=1)
 >>> print(ib.accountSummary())  # Should show real capital
 ```
 
@@ -1046,179 +1054,188 @@ python
 ```python
 """
 PAIRS TRADING LIVE SYSTEM
-Rebalances daily at 10:05 AM AEST (market open + 5 min)
+
+Two jobs, not one:
+  1. compute (after close, 18:30 AEST): append today's closes, update the
+     rolling statistics, decide target units per pair, write targets.json
+  2. execute (10:15 AEST next day, after the ASX staggered open finishes):
+     reconcile broker positions against the local book, then work the
+     deltas with capped limit orders
+
+The local book (positions.json) records what the system believes it holds;
+the broker records what it actually holds. Every run starts by comparing
+the two and halts on any mismatch, because a system that cannot say what
+it owns must not be allowed to trade. Signals come from stored daily
+closes under the same rolling rule the backtest measured, never from live
+quotes against close-based statistics, which would trade a different
+strategy from the tested one.
 """
 
 import asyncio
-from ib_insync import IB, Stock
-import pandas as pd
-import numpy as np
-from datetime import datetime, time
-import logging
 import json
+import logging
+from pathlib import Path
 
-# Setup logging
+import numpy as np
+import pandas as pd
+from ib_insync import IB, LimitOrder, Stock
+
 logging.basicConfig(
     filename='live_trading.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-class PairsTrader:
-    def __init__(self, pairs_config):
-        """
-        pairs_config = [
-            {'ticker1': 'BHP', 'ticker2': 'RIO', 'beta': 1.2345, 'capital': 150000},
-            {'ticker1': 'NAB', 'ticker2': 'ANZ', 'beta': 0.8765, 'capital': 150000},
-        ]
-        """
-        self.pairs = pairs_config
-        self.ib = IB()
-        self.positions = {}  # Track open positions
-        self.metrics = {}    # Track metrics
-        
-    async def connect(self):
-        """Connect to IB"""
-        await self.ib.connectAsync('127.0.0.1', 7497, clientId=1)
-        logging.info("Connected to IB")
-        
-    async def get_current_price(self, ticker):
-        """Get latest price for a ticker"""
-        contract = Stock(ticker, 'ASX', 'AUD')
-        self.ib.qualifyContracts(contract)
-        
-        ticker_data = self.ib.reqMktData(contract)
-        await asyncio.sleep(0.5)  # Wait for data
-        
-        return ticker_data.bid, ticker_data.ask, ticker_data.last
-    
-    async def rebalance_pair(self, pair_config):
-        """Rebalance a single pair"""
-        ticker1 = pair_config['ticker1']
-        ticker2 = pair_config['ticker2']
-        beta = pair_config['beta']
-        capital = pair_config['capital']
-        
-        logging.info(f"Rebalancing {ticker1}-{ticker2}...")
-        
-        # Get prices
-        bid1, ask1, last1 = await self.get_current_price(ticker1)
-        bid2, ask2, last2 = await self.get_current_price(ticker2)
-        
-        # Calculate spread
-        mid1 = (bid1 + ask1) / 2
-        mid2 = (bid2 + ask2) / 2
-        spread = mid1 - beta * mid2
-        
-        # Get rolling statistics (from EOD data)
-        # In production: maintain rolling window of last 60 closes
-        # For now: use pre-calculated historical stats
-        spread_mean = 100.0  # Replace with actual rolling mean
-        spread_std = 10.0    # Replace with actual rolling std
-        
-        z_score = (spread - spread_mean) / spread_std
-        
-        # Determine signal
-        entry_threshold = 2.0
-        exit_threshold = 0.5
-        
-        if z_score > entry_threshold:
-            signal = "SHORT_SPREAD"  # Short ticker1, long ticker2
-        elif z_score < -entry_threshold:
-            signal = "LONG_SPREAD"   # Long ticker1, short ticker2
-        elif abs(z_score) < exit_threshold:
-            signal = "EXIT"
-        else:
-            signal = "HOLD"
-        
-        # Calculate position sizes (equal dollar risk)
-        size1 = int(capital / mid1 * 0.5)  # 50% of capital in ticker1
-        size2 = int((beta * capital) / mid2 * 0.5)  # 50% in ticker2 (scaled by beta)
-        
-        # Place orders
-        try:
-            if signal == "SHORT_SPREAD":
-                logging.info(f"  SHORT {ticker1} ({size1}), LONG {ticker2} ({size2})")
-                # Place sell order for ticker1
-                contract1 = Stock(ticker1, 'ASX', 'AUD')
-                order1 = self.ib.createMarketOrder('SELL', size1)
-                trade1 = self.ib.placeOrder(contract1, order1)
-                
-                # Place buy order for ticker2
-                contract2 = Stock(ticker2, 'ASX', 'AUD')
-                order2 = self.ib.createMarketOrder('BUY', size2)
-                trade2 = self.ib.placeOrder(contract2, order2)
-                
-            elif signal == "LONG_SPREAD":
-                logging.info(f"  LONG {ticker1} ({size1}), SHORT {ticker2} ({size2})")
-                # Place buy order for ticker1
-                contract1 = Stock(ticker1, 'ASX', 'AUD')
-                order1 = self.ib.createMarketOrder('BUY', size1)
-                trade1 = self.ib.placeOrder(contract1, order1)
-                
-                # Place sell order for ticker2
-                contract2 = Stock(ticker2, 'ASX', 'AUD')
-                order2 = self.ib.createMarketOrder('SELL', size2)
-                trade2 = self.ib.placeOrder(contract2, order2)
-                
-            elif signal == "EXIT":
-                logging.info(f"  EXIT positions")
-                # Close all positions (in production)
-                pass
-            
-            # Log metrics
-            self.metrics[f"{ticker1}-{ticker2}"] = {
-                'timestamp': datetime.now().isoformat(),
-                'spread': spread,
-                'z_score': z_score,
-                'signal': signal,
-                'price1': mid1,
-                'price2': mid2,
-            }
-            
-        except Exception as e:
-            logging.error(f"  ERROR: {e}")
-    
-    async def daily_rebalance(self):
-        """Rebalance all pairs daily at market open"""
-        for pair in self.pairs:
-            await self.rebalance_pair(pair)
-        
-        # Log daily summary
-        logging.info(f"Daily rebalance complete at {datetime.now()}")
-        logging.info(json.dumps(self.metrics, indent=2))
-    
-    async def disconnect(self):
-        """Disconnect from IB"""
-        await self.ib.disconnectAsync()
-        logging.info("Disconnected from IB")
+STATE = Path('positions.json')     # the local book: {pair: units held}
+TARGETS = Path('targets.json')     # written nightly by the compute job
+CLOSES = Path('data/closes.csv')   # daily closes, appended after each close
 
-# Run as cron job (10:05 AM AEST every business day)
+ENTRY_Z = 2.0
+EXIT_Z = 0.5
+LOOKBACK = 60
+LIMIT_CAP_BPS = 10  # how far through the touch a limit order may pay
+
+
+def compute_targets(pairs_config):
+    """Nightly job: today's close decides tomorrow's target position."""
+    closes = pd.read_csv(CLOSES, index_col='date', parse_dates=True)
+    book = json.loads(STATE.read_text()) if STATE.exists() else {}
+    targets = {}
+    for pair in pairs_config:
+        t1, t2, beta = pair['ticker1'], pair['ticker2'], pair['beta']
+        spread = closes[t1] - beta * closes[t2]
+        window = spread.tail(LOOKBACK)
+        z = float((spread.iloc[-1] - window.mean()) / window.std())
+
+        name = f'{t1}-{t2}'
+        held = book.get(name, 0)
+        if held == 0:
+            direction = -1 if z > ENTRY_Z else (1 if z < -ENTRY_Z else 0)
+        else:
+            # hold until the z-score is back inside the exit band
+            direction = 0 if abs(z) < EXIT_Z else int(np.sign(held))
+
+        unit_gross = float(closes[t1].iloc[-1] + beta * closes[t2].iloc[-1])
+        units = int(pair['capital'] / unit_gross)
+        targets[name] = {
+            'ticker1': t1, 'ticker2': t2, 'beta': beta,
+            'z': round(z, 2),
+            'target_units': direction * units,
+        }
+        logging.info('compute %s: z=%.2f target=%d units', name, z, direction * units)
+    TARGETS.write_text(json.dumps(targets, indent=2))
+
+
+class PairsTrader:
+    def __init__(self, pairs_config, state_path=STATE):
+        self.pairs = pairs_config
+        self.state_path = Path(state_path)
+        self.ib = IB()
+
+    async def connect(self, host='127.0.0.1', port=7496, client_id=1):
+        # Live TWS listens on 7496 and paper on 7497 by default. The port
+        # and the login select live versus paper; the clientId only names
+        # this API session.
+        await self.ib.connectAsync(host, port, clientId=client_id)
+        logging.info('Connected to IB on port %d', port)
+
+    async def reconcile(self):
+        """Compare the local book with the broker before any order."""
+        book = json.loads(self.state_path.read_text()) if self.state_path.exists() else {}
+        broker = {p.contract.symbol: p.position for p in await self.ib.reqPositionsAsync()}
+        expected = {}
+        for pair in self.pairs:
+            units = book.get(f"{pair['ticker1']}-{pair['ticker2']}", 0)
+            expected[pair['ticker1']] = expected.get(pair['ticker1'], 0) + units
+            expected[pair['ticker2']] = expected.get(pair['ticker2'], 0) - round(units * pair['beta'])
+        for symbol, want in expected.items():
+            have = int(broker.get(symbol, 0))
+            if have != want:
+                raise RuntimeError(
+                    f'book/broker mismatch on {symbol}: book {want}, broker {have}; '
+                    'halting with no orders until a human resolves it'
+                )
+        return book
+
+    async def _work_leg(self, ticker, delta):
+        """One leg as a capped limit order, awaited to completion."""
+        if delta == 0:
+            return
+        contract = Stock(ticker, 'ASX', 'AUD')
+        await self.ib.qualifyContractsAsync(contract)
+        # Snapshot quotes still need an ASX market data subscription on the
+        # account; without one this returns NaN and the run halts here.
+        quote = self.ib.reqMktData(contract, snapshot=True)
+        for _ in range(50):
+            if not np.isnan(quote.bid) and not np.isnan(quote.ask):
+                break
+            await asyncio.sleep(0.2)
+        else:
+            raise RuntimeError(f'no quote for {ticker}; check the market data subscription')
+        side = 'BUY' if delta > 0 else 'SELL'
+        touch = quote.ask if delta > 0 else quote.bid
+        cap = touch * (1 + LIMIT_CAP_BPS / 10_000) if delta > 0 else touch * (1 - LIMIT_CAP_BPS / 10_000)
+        trade = self.ib.placeOrder(contract, LimitOrder(side, abs(delta), round(cap, 2)))
+        while not trade.isDone():
+            await asyncio.sleep(1)
+        logging.info('%s %d %s capped at %.2f: %s', side, abs(delta), ticker, cap, trade.orderStatus.status)
+        if trade.orderStatus.status != 'Filled':
+            # A filled first leg with an unfilled second is naked
+            # single-name exposure; stop and surface it rather than retry.
+            raise RuntimeError(f'unfilled leg {ticker}; resolve before the next run')
+
+    async def daily_rebalance(self):
+        book = await self.reconcile()
+        targets = json.loads(TARGETS.read_text())
+        for name, target in targets.items():
+            delta_units = target['target_units'] - book.get(name, 0)
+            if delta_units == 0:
+                continue
+            # risk gate first (see the risk controls section): loss limits,
+            # position and leverage caps, the drawdown circuit breaker
+            await self._work_leg(target['ticker1'], delta_units)
+            await self._work_leg(target['ticker2'], -round(delta_units * target['beta']))
+            book[name] = target['target_units']
+            # write after every pair, not at the end: a crash mid-run must
+            # not leave filled orders outside the book
+            self.state_path.write_text(json.dumps(book, indent=2))
+        logging.info('Daily rebalance complete')
+
+    async def disconnect(self):
+        await self.ib.disconnectAsync()
+        logging.info('Disconnected from IB')
+
+
+# pairs_execute.py entry point (10:15 AEST): reconcile, then work targets.
 async def main():
     pairs_config = [
-        {'ticker1': 'BHP', 'ticker2': 'RIO', 'beta': 1.2345, 'capital': 150000},
-        {'ticker1': 'NAB', 'ticker2': 'ANZ', 'beta': 0.8765, 'capital': 150000},
+        {'ticker1': 'BHP', 'ticker2': 'RIO', 'beta': 1.2345, 'capital': 30_000},
+        {'ticker1': 'NAB', 'ticker2': 'ANZ', 'beta': 0.8765, 'capital': 30_000},
     ]
-    
     trader = PairsTrader(pairs_config)
-    await trader.connect()
-    await trader.daily_rebalance()
-    await trader.disconnect()
+    await trader.connect(port=7496, client_id=1)  # the live login's port
+    try:
+        await trader.daily_rebalance()
+    finally:
+        await trader.disconnect()
 
 if __name__ == '__main__':
     asyncio.run(main())
 ```
 
-**Deploy as cron job:**
+**Deploy as cron jobs:**
 ```bash
 # Edit crontab
 crontab -e
 
-# Add this line (runs at 10:05 AM daily, Monday-Friday)
-5 10 * * 1-5 /usr/bin/python3 /home/user/pairs_trading_live.py
+# Two jobs. flock stops a slow run from overlapping the next one, which is
+# how one signal becomes a double order.
+30 18 * * 1-5 flock -n /tmp/pairs.compute.lock /usr/bin/python3 /home/user/pairs_compute.py
+15 10 * * 1-5 flock -n /tmp/pairs.execute.lock /usr/bin/python3 /home/user/pairs_execute.py
 
-# Check cron is running
-ps aux | grep cron
+# 10:15, not the open: ASX opens in staggered alphabetical groups from
+# 10:00:00 to about 10:09:15, so an at-the-open job fires while half the
+# board is still in auction.
 ```
 
 ---
@@ -1263,36 +1280,33 @@ ps aux | grep cron
     </table>
     
     <script>
-        // Load data from log file every 30 seconds
+        // The compute job writes status.json beside this page; the page
+        // only renders it. (Parsing free-form log lines as JSON does not
+        // work, and the log stays a log.)
         setInterval(() => {
-            fetch('/live_trading.log')
-                .then(r => r.text())
-                .then(text => {
-                    // Parse latest metrics
-                    const lines = text.split('\n');
-                    const latest = lines[lines.length - 2];
-                    const data = JSON.parse(latest);
-                    
-                    // Update dashboard
+            fetch('/status.json')
+                .then(r => r.json())
+                .then(data => {
                     document.getElementById('daily_pnl').textContent = `Daily P&L: $${data.daily_pnl}`;
                     document.getElementById('ytd_return').textContent = `YTD Return: ${data.ytd_return}%`;
-                    
-                    // Update positions table
-                    for (let pair in data.metrics) {
+                    document.getElementById('sharpe').textContent = `Sharpe: ${data.sharpe}`;
+                    document.getElementById('max_dd').textContent = `Max Drawdown: ${data.max_dd}%`;
+
+                    const table = document.getElementById('positions_table');
+                    for (const [pair, m] of Object.entries(data.pairs)) {
                         let row = document.getElementById(pair);
                         if (!row) {
                             row = document.createElement('tr');
                             row.id = pair;
-                            document.getElementById('positions_table').appendChild(row);
+                            table.appendChild(row);
                         }
-                        
                         row.innerHTML = `
                             <td>${pair}</td>
-                            <td>${data.metrics[pair].signal}</td>
-                            <td>${data.metrics[pair].z_score.toFixed(2)}</td>
-                            <td>--</td>
-                            <td>--</td>
-                            <td>${data.metrics[pair].timestamp}</td>
+                            <td>${m.signal}</td>
+                            <td>${m.z.toFixed(2)}</td>
+                            <td>${m.units}</td>
+                            <td>${m.pnl}</td>
+                            <td>${m.updated}</td>
                         `;
                     }
                 });
@@ -1302,9 +1316,9 @@ ps aux | grep cron
 </html>
 ```
 
-**Serve via Python:**
+**Serve via Python, localhost only (the page carries account P&L):**
 ```bash
-python3 -m http.server 8000
+python3 -m http.server 8000 --bind 127.0.0.1
 # Open: http://localhost:8000/dashboard.html
 ```
 
@@ -1423,7 +1437,7 @@ def weekly_monitoring():
 
 **Deployment:**
 - Capital: Add third pair with remaining $20-40K
-- Same process: deploy at 10:05 AM, same daily rebalancing
+- Same process: the nightly compute job takes the pair on, the 10:15 execute job works it, same daily cycle
 - Monitor correlation matrix (all pairs < 0.3 correlated)
 
 **If 3rd pair breaks cointegration:** Don't deploy, save capital for next iteration.
@@ -1600,7 +1614,7 @@ Expected Year 1 Returns: $90-120K (18-24% on $500K)
 #### Infrastructure Changes Needed
 ```
 Minimal. Current system scales linearly:
-├─ 1 cron job (10:05 AM daily)
+├─ 2 cron jobs (compute 18:30 AEST, execute 10:15 AEST daily)
 ├─ 1 IB account (can handle $1M+ positions)
 ├─ Same monitoring dashboard
 └─ Same risk controls
