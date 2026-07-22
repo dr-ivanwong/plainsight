@@ -946,7 +946,7 @@ Portfolio (2 pairs):
 ```
 
 **If paper trading undershoots by >20%:**
-- Investigate: Data feed delays? Execution slippage worse than modeled?
+- Investigate: Data feed delays? Execution slippage worse than modelled?
 - Adjust thresholds (e.g., entry z-score 2.0 → 2.2)
 - Run another 2 weeks of paper trading
 - Do NOT deploy live until paper matches backtest
@@ -960,7 +960,7 @@ Portfolio (2 pairs):
 - Deploy $100K across 2-3 pairs
 - Accumulate 80-120 real trades over 12 weeks
 - Measure empirical Sharpe vs. backtest (target: ≥1.4)
-- Confirm edge is real, not backtest artifact
+- Confirm edge is real, not backtest artefact
 - Collect track record for backer reporting
 
 ### Week 9: Setup & Initial Deployment
@@ -1774,7 +1774,7 @@ But leaves no margin for error
 **If by Week 12 (1 month live), empirical Sharpe < 1.2:**
 - Don't continue to Week 20
 - Investigate: Is slippage worse than expected? Are commissions higher? Did edge disappear?
-- Decision point: Abort POC or optimize thresholds and restart
+- Decision point: Abort POC or optimise thresholds and restart
 
 ---
 
@@ -1878,32 +1878,32 @@ This means your effective Sharpe IMPROVES as you scale
 ## Key Files & Deliverables
 
 ### Phase 1: Research (Weeks 1-2)
-- `week1_cointegrated_pairs.csv` — All cointegrated pairs
-- `week2_final_pairs_for_backtest.csv` — Top candidates
+- `week1_cointegrated_pairs.csv`: All cointegrated pairs
+- `week2_final_pairs_for_backtest.csv`: Top candidates
 
 ### Phase 2: Backtest (Weeks 3-4)
-- `week3_backtest_results.csv` — Full period backtest metrics
-- `week4_oos_validation.csv` — Out-of-sample validation
-- `week4_final_live_pairs.csv` — Approved for deployment
+- `week3_backtest_results.csv`: Full period backtest metrics
+- `week4_oos_validation.csv`: Out-of-sample validation
+- `week4_final_live_pairs.csv`: Approved for deployment
 
 ### Phase 3: Paper Trading (Weeks 5-8)
-- `paper_trading.log` — Simulated trades, daily P&L
-- `paper_trading_results.csv` — Paper Sharpe, drawdown, consistency check
-- `paper_vs_backtest_comparison.csv` — Validation metrics
+- `paper_trading.log`: Simulated trades, daily P&L
+- `paper_trading_results.csv`: Paper Sharpe, drawdown, consistency check
+- `paper_vs_backtest_comparison.csv`: Validation metrics
 
 ### Phase 4: Live POC (Weeks 9-20)
-- `live_trading.py` — Live trading system code
-- `live_trading.log` — Real trades, daily P&L, risk metrics
-- `dashboard.html` — Monitoring dashboard (updated daily)
-- `daily_report.csv` — Daily position sizes, signals, P&L
-- `weekly_monitoring.csv` — Cointegration tests, rolling Sharpe
-- `week20_poc_report.md` — Final go/no-go decision document
+- `live_trading.py`: Live trading system code
+- `live_trading.log`: Real trades, daily P&L, risk metrics
+- `dashboard.html`: Monitoring dashboard (updated daily)
+- `daily_report.csv`: Daily position sizes, signals, P&L
+- `weekly_monitoring.csv`: Cointegration tests, rolling Sharpe
+- `week20_poc_report.md`: Final go/no-go decision document
 
 ### Backer Materials
-- `poc_pitch_deck.pdf` — Initial $100K POC pitch
-- `month1_report.md` — Weeks 9-12 results
-- `month2_report.md` — Weeks 13-16 results
-- `final_scaling_proposal.md` — $500K deployment plan (if POC succeeds)
+- `poc_pitch_deck.pdf`: Initial $100K POC pitch
+- `month1_report.md`: Weeks 9-12 results
+- `month2_report.md`: Weeks 13-16 results
+- `final_scaling_proposal.md`: $500K deployment plan (if POC succeeds)
 
 ---
 
