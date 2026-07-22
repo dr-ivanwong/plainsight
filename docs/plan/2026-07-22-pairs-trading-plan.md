@@ -358,47 +358,74 @@ CBA     NAB      0.00051  0.9123      18.1            True
 ##### Step 2.2: Calculate Sharpe Ratio
 
 ```python
+COST_BPS = 15.0  # commission plus expected slippage, per side, on traded notional
+
+
+def pair_daily_pnl(price1, price2, beta,
+                   lookback=60, entry_zscore=2.0, exit_zscore=0.5,
+                   cost_bps=COST_BPS):
+    """
+    Daily dollar P&L for one spread unit, net of costs.
+
+    One unit is long 1 share of ticker1 and short beta shares of ticker2
+    (reversed when short the spread). P&L is dollars on the spread itself:
+    yesterday's position earns today's change in the spread. Never use
+    pct_change() on a spread; a spread crosses zero, so percentage returns
+    on it are undefined and compound into nonsense.
+    """
+    s1 = pd.Series(price1, dtype=float)
+    s2 = pd.Series(price2, dtype=float)
+    spread = s1 - beta * s2
+
+    mean = spread.rolling(lookback).mean()
+    std = spread.rolling(lookback).std()
+    z = ((spread - mean) / std).values
+
+    # Explicit position state: enter beyond the entry threshold, hold until
+    # the z-score comes back inside the exit band. (Assigning zeros to the
+    # in-between zone and forward-filling does not implement this rule; it
+    # closes every position a day after it opens.)
+    position = np.zeros(len(spread))
+    for t in range(lookback, len(spread)):
+        held = position[t - 1]
+        if held == 0:
+            if z[t] > entry_zscore:
+                position[t] = -1.0
+            elif z[t] < -entry_zscore:
+                position[t] = 1.0
+        elif abs(z[t]) < exit_zscore:
+            position[t] = 0.0
+        else:
+            position[t] = held
+
+    pnl = np.zeros(len(spread))
+    pnl[1:] = position[:-1] * np.diff(spread.values)
+
+    # Every entry and exit trades both legs of one unit; costs charge on
+    # that gross notional so every number downstream is net.
+    gross_notional = (s1 + beta * s2).values
+    traded_units = np.abs(np.diff(position, prepend=0.0))
+    pnl -= traded_units * gross_notional * (cost_bps / 10_000)
+
+    return pnl, position, gross_notional
+
+
 def calculate_sharpe(ticker1, ticker2, beta, data, lookback=60, entry_zscore=2.0):
-    """
-    Calculate annualized Sharpe ratio of the spread trading signal.
-    
-    Assumes we go long the spread when z < -2.0 and short when z > 2.0
-    """
-    price1 = data[ticker1].values
-    price2 = data[ticker2].values
-    
-    # Calculate spread
-    spread = price1 - beta * price2
-    
-    # Rolling mean and std
-    df = pd.DataFrame({'spread': spread})
-    df['mean'] = df['spread'].rolling(lookback).mean()
-    df['std'] = df['spread'].rolling(lookback).std()
-    
-    # Z-score
-    df['z_score'] = (df['spread'] - df['mean']) / df['std']
-    
-    # Simple trading rule for estimation:
-    # Long spread when z < -2, short when z > 2, exit when |z| < 0.5
-    df['signal'] = 0
-    df.loc[df['z_score'] < -entry_zscore, 'signal'] = 1
-    df.loc[df['z_score'] > entry_zscore, 'signal'] = -1
-    
-    # P&L
-    df['spread_return'] = df['spread'].pct_change()
-    df['pnl'] = df['signal'].shift(1) * df['spread_return']
-    
-    # Remove NaN (warm-up period)
-    df = df.iloc[lookback:]
-    
-    # Calculate Sharpe
-    if len(df) > 0 and df['pnl'].std() > 0:
-        daily_sharpe = df['pnl'].mean() / df['pnl'].std()
-        annual_sharpe = daily_sharpe * np.sqrt(252)
-    else:
-        annual_sharpe = 0
-    
-    return annual_sharpe
+    """Annualised net Sharpe of one pair, for ranking candidates."""
+    # Align the two series on dates first: positional arrays from different
+    # listing calendars silently shift one series against the other.
+    joined = pd.concat([data[ticker1], data[ticker2]], axis=1, join='inner').dropna()
+    pnl, position, gross_notional = pair_daily_pnl(
+        joined.iloc[:, 0].values, joined.iloc[:, 1].values, beta,
+        lookback=lookback, entry_zscore=entry_zscore
+    )
+    # Daily returns against the capital carrying one unit. The constant
+    # cancels inside the Sharpe ratio; the costs above do not.
+    capital = float(np.nanmean(gross_notional))
+    daily = pnl[lookback:] / capital
+    if daily.std() == 0:
+        return 0.0
+    return float(daily.mean() / daily.std() * np.sqrt(252))
 
 # Calculate Sharpe for all pairs
 print("Calculating Sharpe ratio for all pairs...\n")
@@ -432,7 +459,7 @@ print(sharpe_df.head(15).to_string(index=False))
 sharpe_df.to_csv('week2_metrics_sharpe.csv', index=False)
 ```
 
-**Expected Output:**
+**Output shape (illustrative figures, not targets):**
 ```
 ticker1 ticker2  sharpe  half_life  pvalue    beta
 BHP     RIO       2.145       12.3  0.00009  1.2345
@@ -481,7 +508,7 @@ print(f"✅ Saved to: week2_final_pairs_for_backtest.csv")
 - [ ] All pairs have half-life < 30 days
 - [ ] File saved: `week2_final_pairs_for_backtest.csv`
 
-**Deliverable:**
+**Deliverable (illustrative shape; figures are placeholders):**
 ```
 week2_final_pairs_for_backtest.csv
 
@@ -498,10 +525,10 @@ CSL     WES       1.312       25.3  0.00145  0.7654
 ## PHASE 2: BACKTEST (Weeks 3–4)
 ### Validate Pairs via Simulated Trading
 
-### Week 3: Full Period Backtest
+### Week 3: Training-Window Backtest
 
 #### Objectives
-- Simulate trading each pair over 5 years of historical data
+- Simulate trading each pair over the training window, net of costs
 - Measure: Sharpe, drawdown, win rate, # of trades
 - Select top 5 pairs for deployment
 
@@ -515,98 +542,71 @@ import numpy as np
 
 def backtest_pair(ticker1, ticker2, beta, data,
                   entry_zscore=2.0, exit_zscore=0.5,
-                  lookback=60):
+                  lookback=60, cost_bps=COST_BPS):
     """
-    Backtest a single pair trading strategy.
-    
-    Strategy:
-    - When spread z-score > 2.0: SHORT spread (short ticker1, long ticker2)
-    - When spread z-score < -2.0: LONG spread (long ticker1, short ticker2)
-    - When |z-score| < 0.5: EXIT position
-    
-    Returns:
-        dict with backtest metrics
+    Backtest a single pair on the Step 2.2 engine: dollar P&L per spread
+    unit, explicit hold-until-exit state, costs on every entry and exit.
+    Metrics come off the dollar equity curve against a fixed capital base;
+    nothing compounds percentage returns of a zero-crossing series.
     """
-    price1 = data[ticker1].values
-    price2 = data[ticker2].values
-    dates = data[ticker1].index
-    
-    # Calculate spread
-    spread = price1 - beta * price2
-    
-    # Create DataFrame
-    df = pd.DataFrame({
-        'date': dates,
-        'price1': price1,
-        'price2': price2,
-        'spread': spread,
-    })
-    df.set_index('date', inplace=True)
-    
-    # Rolling statistics (60-day window)
-    df['spread_mean'] = df['spread'].rolling(lookback).mean()
-    df['spread_std'] = df['spread'].rolling(lookback).std()
-    
-    # Z-score
-    df['z_score'] = (df['spread'] - df['spread_mean']) / df['spread_std']
-    
-    # Trading signals
-    df['signal'] = 0
-    df.loc[df['z_score'] > entry_zscore, 'signal'] = -1   # Short spread
-    df.loc[df['z_score'] < -entry_zscore, 'signal'] = 1   # Long spread
-    df.loc[np.abs(df['z_score']) < exit_zscore, 'signal'] = 0  # Exit
-    
-    # Forward-fill signal (hold until exit)
-    df['signal'] = df['signal'].fillna(method='ffill').fillna(0)
-    
-    # Daily spread returns
-    df['spread_return'] = df['spread'].pct_change()
-    
-    # P&L
-    df['pnl'] = df['signal'].shift(1) * df['spread_return']
-    
-    # Remove warm-up period
-    df = df.iloc[lookback:]
-    
-    # Calculate metrics
-    cumulative_pnl = (1 + df['pnl']).cumprod()
-    
-    total_return = (cumulative_pnl.iloc[-1] - 1) * 100  # %
-    total_return_annualized = total_return * 252 / len(df)  # Annualized
-    
-    # Sharpe ratio
-    daily_sharpe = df['pnl'].mean() / df['pnl'].std() if df['pnl'].std() > 0 else 0
-    annual_sharpe = daily_sharpe * np.sqrt(252)
-    
-    # Maximum drawdown
-    running_max = cumulative_pnl.expanding().max()
-    drawdown = (cumulative_pnl - running_max) / running_max
-    max_drawdown = drawdown.min() * 100  # %
-    
-    # Trade statistics
-    trades = (df['signal'].diff() != 0).sum()
-    winning_trades = (df['pnl'] > 0).sum()
-    losing_trades = (df['pnl'] < 0).sum()
-    win_rate = winning_trades / (winning_trades + losing_trades) * 100 if (winning_trades + losing_trades) > 0 else 0
-    
-    # Profit factor
-    gross_profit = df[df['pnl'] > 0]['pnl'].sum()
-    gross_loss = abs(df[df['pnl'] < 0]['pnl'].sum())
-    profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
-    
+    joined = pd.concat([data[ticker1], data[ticker2]], axis=1, join='inner').dropna()
+
+    pnl, position, gross_notional = pair_daily_pnl(
+        joined.iloc[:, 0].values, joined.iloc[:, 1].values, beta,
+        lookback=lookback, entry_zscore=entry_zscore,
+        exit_zscore=exit_zscore, cost_bps=cost_bps
+    )
+    pnl = pnl[lookback:]
+    position = position[lookback:]
+
+    capital = float(np.nanmean(gross_notional))  # dollars carrying one unit
+    equity = capital + np.cumsum(pnl)
+    daily_returns = pnl / capital
+
+    total_return = (equity[-1] / capital - 1) * 100
+    annual_return = daily_returns.mean() * 252 * 100
+
+    annual_sharpe = 0.0
+    if daily_returns.std() > 0:
+        annual_sharpe = daily_returns.mean() / daily_returns.std() * np.sqrt(252)
+
+    running_max = np.maximum.accumulate(equity)
+    max_drawdown = ((equity - running_max) / running_max).min() * 100
+
+    # Trade statistics per round trip, not per day: a trade opens when the
+    # position leaves zero and closes when it returns there.
+    trade_pnls = []
+    open_idx = None
+    for t in range(len(position)):
+        if open_idx is None and position[t] != 0:
+            open_idx = t
+        elif open_idx is not None and position[t] == 0:
+            trade_pnls.append(pnl[open_idx:t + 1].sum())
+            open_idx = None
+    if open_idx is not None:
+        trade_pnls.append(pnl[open_idx:].sum())
+
+    num_trades = len(trade_pnls)
+    wins = sum(1 for p in trade_pnls if p > 0)
+    win_rate = wins / num_trades * 100 if num_trades else 0.0
+    gross_profit = sum(p for p in trade_pnls if p > 0)
+    gross_loss = abs(sum(p for p in trade_pnls if p < 0))
+    profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0.0
+
     return {
         'ticker1': ticker1,
         'ticker2': ticker2,
         'pair': f'{ticker1}-{ticker2}',
         'beta': beta,
         'total_return': total_return,
+        'annual_return': annual_return,
         'annual_sharpe': annual_sharpe,
         'max_drawdown': max_drawdown,
-        'num_trades': trades,
+        'num_trades': num_trades,
         'win_rate': win_rate,
         'profit_factor': profit_factor,
-        'pnl_series': df['pnl'],
-        'cumulative_pnl': cumulative_pnl,
+        'daily_pnl': pnl,
+        'equity_curve': equity,
     }
 
 # Load pairs to backtest
@@ -635,7 +635,7 @@ for idx, row in pairs_to_test.iterrows():
 
 # Summary DataFrame
 results_df = pd.DataFrame([
-    {k: v for k, v in r.items() if k not in ['pnl_series', 'cumulative_pnl']}
+    {k: v for k, v in r.items() if k not in ['daily_pnl', 'equity_curve']}
     for r in backtest_results
 ])
 
@@ -655,9 +655,9 @@ print(f"\n✅ Saved to: week3_backtest_results.csv")
 **Acceptance Criteria:**
 - [ ] All 5+ pairs backtested successfully
 - [ ] Results saved to `week3_backtest_results.csv`
-- [ ] At least 3 pairs have Sharpe > 1.5 and DD < -15%
+- [ ] At least 3 pairs have net Sharpe > 1.5 and max drawdown no worse than -15%
 
-**Deliverable:**
+**Deliverable (illustrative shape; figures are placeholders):**
 ```
 week3_backtest_results.csv
 
@@ -681,8 +681,8 @@ results_df = pd.read_csv('week3_backtest_results.csv')
 # Criteria: Sharpe > 1.5, max DD > -15%, win rate > 45%
 live_candidates = results_df[
     (results_df['annual_sharpe'] > 1.5) &
-    (results_df['max_drawdown'] > -0.15) &
-    (results_df['win_rate'] > 0.45)
+    (results_df['max_drawdown'] > -15) &  # percent units, as the engine reports
+    (results_df['win_rate'] > 45)       # percent units; per round trip, not per day
 ].copy()
 
 live_candidates = live_candidates.sort_values('annual_sharpe', ascending=False)
@@ -1694,7 +1694,7 @@ We've successfully proven that pairs trading works on the ASX with:
 
 ### Why This Matters
 
-At $100K capital, transaction costs are **highest as a % of returns**. This is the main risk to POC success.
+At $100K capital, transaction costs are **highest as a % of returns**. This is the main risk to POC success. These figures set the engine's cost assumption (`cost_bps` in Step 2.2), so the backtest, the holdout validation and the go/no-go thresholds are all net of costs; this section calibrates that number, and live fills recalibrate it.
 
 ### Cost Breakdown
 
